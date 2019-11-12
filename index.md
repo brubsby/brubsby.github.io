@@ -1,2 +1,2 @@
 # brubsby
-[twitter](twitter.com/brubsby)
+[twitter](https://twitter.com/brubsby)
