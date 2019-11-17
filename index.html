@@ -42,14 +42,44 @@
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script>
+  var ascii_pixels, canvas_rows, canvas_columns, flat_pixel_list;
+  var frame_count = 0;
+  var animations = [
+    // . to o random
+    () => {
+      var x, y, tries = 0;
+      var max_tries = 10000;
+      do {
+          x = Math.floor(Math.random() * canvas_columns);
+          y = Math.floor(Math.random() * canvas_rows);
+          tries++;
+      }
+      while (ascii_pixels[y][x].text() == "o" && tries < max_tries);
+      if (tries >= max_tries) return;
+      ascii_pixels[y][x].text("o");
+      setTimeout(animations[0], 0);
+    },
+    // . to number wipe
+    () => {
+      if (!flat_pixel_list) {
+        flat_pixel_list = ascii_pixels.flat()
+      }
+      if (flat_pixel_list.length == 0) return;
+      flat_pixel_list.shift().text(Math.floor(Math.random() * 10));
+      setTimeout(animations[1], 0);
+    }
+  ]
+  var animation = animations[Math.floor(Math.random() * animations.length)];
+
   $(document).ready(function() {
     reset_canvas();
+
+    setTimeout(animation, 100);
   });
 
   $(window).on('resize', function() {
     reset_canvas();
   })
-  var ascii_pixels;
 
   var reset_canvas = function() {
       var canvas = $(".ascii");
@@ -57,7 +87,7 @@
       var height = canvas.height();
 
       var rows = Math.max(1, Math.floor(height / 23));
-      var columns = Math.max(1, Math.floor(width / 12));
+      var columns = Math.max(1, Math.floor(width / 12.003));
       var row_text = ".".repeat(columns);
 
       canvas.empty();
@@ -71,7 +101,11 @@
         }
         ascii_pixels.push(ascii_row);
       }
+      canvas_columns = ascii_pixels[0].length;
+      canvas_rows = ascii_pixels.length;
   }
+
+
   </script>
   </head>
   <body>
@@ -79,7 +113,7 @@
       <div class="head">BRUBSBY</div>
       <ol id="links">
         <li id="twitter"><a href="https://twitter.com/brubsby">TWITTER</a></li>
-        <li id="pieces"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative)%20(from%3Abrubsby)&src=typed_query">PIECES</a></li>
+        <li id="art"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative)%20(from%3Abrubsby)&src=typed_query">ART</a></li>
         <li id="support"><a href="https://ko-fi.com/brubsby">SUPPORT</a></li>
       </ol>
     </div>
