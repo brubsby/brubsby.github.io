@@ -231,10 +231,11 @@
       init_flat_index_list(rows, columns);
       var isminmax = constant_random_boolean;
       var center_x = columns / 2;
-      var center_y = rows / 4 - (frame_count * 0.01);
+      var center_y = rows / 4 - (frame_count * 0.0001);
       var heart_multiplier = isminmax ? 2 : 45 * (animation_speed_multiplier + 2);
       var pixels_changed = 0;
       while (pixels_changed < animation_speed_multiplier * 10) {
+        frame_count++;
         var minmax_dist = 9999999 * (isminmax ? 1 : -1);
         var minmax_dist_index = -1;
         for (var i = 0; i < flat_index_list.length; i++) {
@@ -260,7 +261,6 @@
           return;
         }
       }
-      frame_count++;
       setTimeout(animations[5], 0);
     },
     // simplex growth
