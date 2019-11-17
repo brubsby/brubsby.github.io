@@ -50,14 +50,18 @@
 
     gtag('config', 'UA-152720878-1');
   </script>
-  
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
   <script>
-  var canvas, flat_index_list, rows, columns;
+  /*----------- Global init -----------*/
+  var canvas, flat_index_list, rows, columns, animation_speed_multiplier;
   var frame_count = 0;
   var char_height = 23;
   var char_width = 12.003;
+
+
+  /*----------- Helper Functions -----------*/
   var init_flat_index_list = (rows, columns) => {
       if (!flat_index_list) {
         flat_index_list = [];
@@ -91,20 +95,26 @@
     }
   };
   var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
+
+
+  /*----------- Animations -----------*/
   var animations = [
     // . to o random
     () => {
-      var x, y, index, tries = 0;
+      var x, y, index;
       var max_tries = 100000;
-      do {
-          x = Math.floor(Math.random() * columns);
-          y = Math.floor(Math.random() * rows);
-          index = get_canvas_index(columns, x, y);
-          tries++;
+      for (var n = 0; n < animation_speed_multiplier; n++) {
+        var tries = 0;
+        do {
+            x = Math.floor(Math.random() * columns);
+            y = Math.floor(Math.random() * rows);
+            index = get_canvas_index(columns, x, y);
+            tries++;
+        }
+        while (getCharAt(canvas, index) == "o" && tries < max_tries);
+        if (tries >= max_tries) return;
+        setCharAt(canvas, index, "o");
       }
-      while (getCharAt(canvas, index) == "o" && tries < max_tries);
-      if (tries >= max_tries) return;
-      setCharAt(canvas, index, "o");
       setTimeout(animations[0], 0);
     },
     // random hex wipe
@@ -136,67 +146,69 @@
       var isminmax = constant_random_boolean;
       var center_x = columns / 2;
       var center_y = rows / 2;
-      var minmax_dist = 9999999 * (isminmax ? 1 : -1);
-      var minmax_dist_index = -1;
-      for (var i = 0; i < flat_index_list.length; i++) {
-        var coords = get_coords(columns, flat_index_list[i]);
-        var dist = Math.sqrt(Math.pow((center_x - coords[0]) * char_width, 2) + Math.pow((center_y - coords[1])  * char_height, 2))
-        if (isminmax && dist < minmax_dist || !isminmax && dist > minmax_dist) {
-          minmax_dist = dist;
-          minmax_dist_index = i;
+      for (var n = 0; n < animation_speed_multiplier; n++) {
+        var minmax_dist = 9999999 * (isminmax ? 1 : -1);
+        var minmax_dist_index = -1;
+        for (var i = 0; i < flat_index_list.length; i++) {
+          var coords = get_coords(columns, flat_index_list[i]);
+          var dist = Math.sqrt(Math.pow((center_x - coords[0]) * char_width, 2) + Math.pow((center_y - coords[1])  * char_height, 2))
+          if (isminmax && dist < minmax_dist || !isminmax && dist > minmax_dist) {
+            minmax_dist = dist;
+            minmax_dist_index = i;
+          }
         }
-      }
-      setCharAt(canvas, flat_index_list[minmax_dist_index], "o");
-      flat_index_list.splice(minmax_dist_index, 1);
-      if (flat_index_list.length <= 0) {
-        return;
+        setCharAt(canvas, flat_index_list[minmax_dist_index], "o");
+        flat_index_list.splice(minmax_dist_index, 1);
+        if (flat_index_list.length <= 0) {
+          return;
+        }
       }
       setTimeout(animations[3], 0);
     },
     // entombing triangles
     () => {
       init_flat_index_list(rows, columns);
-      var min_dist = 9999999;
-      var max_dist = -9999999;
-      var min_dist_index = -1;
-      var max_dist_index = -1;
       var theta = constant_random_values[0] * Math.PI * 2;
       var a = Math.cos(theta);
       var b = Math.sin(theta);
       var c = constant_random_values[0] * 100000;
-      for (var i = 0; i < flat_index_list.length; i++) {
-        var coords = get_coords(columns, flat_index_list[i]);
-        var pixel_coords = [coords[0] * char_width, coords[1] * char_height];
-        var dist = Math.abs(a * pixel_coords[0] + b * pixel_coords[1] + c) / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-        if (dist < min_dist) {
-          min_dist = dist;
-          min_dist_index = i;
+      for (var n = 0; n < animation_speed_multiplier; n++) {
+        var min_dist = 9999999;
+        var max_dist = -9999999;
+        var min_dist_index = -1;
+        var max_dist_index = -1;
+        for (var i = 0; i < flat_index_list.length; i++) {
+          var coords = get_coords(columns, flat_index_list[i]);
+          var pixel_coords = [coords[0] * char_width, coords[1] * char_height];
+          var dist = Math.abs(a * pixel_coords[0] + b * pixel_coords[1] + c) / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+          if (dist < min_dist) {
+            min_dist = dist;
+            min_dist_index = i;
+          }
+          if (dist > max_dist) {
+            max_dist = dist;
+            max_dist_index = i;
+          }
         }
-        if (dist > max_dist) {
-          max_dist = dist;
-          max_dist_index = i;
+        setCharAt(canvas, flat_index_list[min_dist_index], "o");
+        setCharAt(canvas, flat_index_list[max_dist_index], "o");
+        flat_index_list.splice(max_dist_index, 1);
+        if (max_dist_index != min_dist_index) {
+          if (max_dist_index < min_dist_index) {
+            flat_index_list.splice(min_dist_index - 1, 1);
+          } else {
+            flat_index_list.splice(min_dist_index, 1);
+          }
         }
-      }
-      setCharAt(canvas, flat_index_list[min_dist_index], "o");
-      setCharAt(canvas, flat_index_list[max_dist_index], "o");
-      flat_index_list.splice(max_dist_index, 1);
-      if (max_dist_index != min_dist_index) {
-        if (max_dist_index < min_dist_index) {
-          flat_index_list.splice(min_dist_index - 1, 1);
-        } else {
-          flat_index_list.splice(min_dist_index, 1);
+        if (flat_index_list.length <= 0) {
+          return;
         }
-      }
-      if (flat_index_list.length <= 0) {
-        return;
       }
       setTimeout(animations[4], 0);
     }
   ];
 
-  /**
-    seed based on url param and generate randomness
-  **/
+  /*----------- Random/Seed init -----------*/
   var animation_index;
   var animation_url_param = getUrlParameter("a");
   var parsed = parseInt(animation_url_param, 10);
@@ -221,7 +233,7 @@
   $(document).ready(function() {
     reset_canvas();
 
-    setTimeout(animation, 100);
+    setTimeout(animation, 200);
   });
 
   var reset_canvas = function() {
@@ -231,6 +243,7 @@
 
       rows = Math.max(1, Math.floor(height / char_height));
       columns = Math.max(1, Math.floor(width / char_width));
+      animation_speed_multiplier = Math.max(1, Math.floor(rows * columns / 1000));
       var row_text = ".".repeat(columns);
 
       canvas.empty();
