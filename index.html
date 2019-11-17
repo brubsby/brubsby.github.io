@@ -53,26 +53,42 @@
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
+  <script src="js/simplex-noise.js"></script>
   <script>
   /*----------- Global init -----------*/
-  var canvas, flat_index_list, rows, columns, animation_speed_multiplier;
+  var canvas, flat_index_list, simplex_noise, rows, columns, animation_speed_multiplier, min_dim, max_dim;
   var frame_count = 0;
   var char_height = 23;
   var char_width = 12.003;
 
 
   /*----------- Helper Functions -----------*/
-  var init_flat_index_list = (rows, columns) => {
+  var init_flat_index_list = (rows, columns, sort_func=null) => {
       if (!flat_index_list) {
         flat_index_list = [];
         for (var i = 0; i < (columns + 1) * rows - 1; i++) {
           if (i % (columns + 1) == columns) continue;
           flat_index_list.push(i);
         }
+        if (sort_func) {
+          flat_index_list.sort(sort_func)
+        }
+      }
+  };
+  var init_simplex_noise = () => {
+      if (!simplex_noise) {
+        simplex_noise = new SimplexNoise(Math.random().toString());
       }
   };
   var get_canvas_index = (columns, x, y) => { return x + y * (columns + 1); };
   var get_coords = (columns, index) => { return [index % (columns + 1), Math.floor(index / (columns + 1))];};
+  var get_pixel_coords = (columns, index, char_width, char_height) => {
+    var coords = get_coords(columns, index);
+    return [coords[0] * char_width, coords[1] * char_height];
+  }
+  var get_simplex_noise_at = (coords, frequency, amplitude) => {
+    return amplitude * simplex_noise.noise2D(frequency * coords[0], frequency * coords[1]);
+  }
   var setCharAt = (canvas,index,chr) => {
     var str = canvas.text();
     if(index > str.length-1) return str;
@@ -242,6 +258,26 @@
       }
       frame_count++;
       setTimeout(animations[5], 0);
+    },
+    // simplex growth
+    () => {
+      var simplex_frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
+      var simplex_amplitude = 1;
+      init_simplex_noise();
+      init_flat_index_list(rows, columns, (index1, index2) => {
+        var coords1 = get_pixel_coords(columns, index1, char_width, char_height);
+        var coords2 = get_pixel_coords(columns, index2, char_width, char_height);
+        return get_simplex_noise_at(coords1, simplex_frequency, simplex_amplitude)
+        - get_simplex_noise_at(coords2, simplex_frequency, simplex_amplitude);
+      });
+      for (var n = 0; n < animation_speed_multiplier; n++) {
+        setCharAt(canvas, flat_index_list[0], "o");
+        flat_index_list.shift();
+        if (flat_index_list.length <= 0) {
+          return;
+        }
+      }
+      setTimeout(animations[6], 0);
     }
   ];
 
@@ -281,6 +317,8 @@
       rows = Math.max(1, Math.floor(height / char_height));
       columns = Math.max(1, Math.floor(width / char_width));
       animation_speed_multiplier = Math.max(1, Math.floor(rows * columns / 1000));
+      max_dim = Math.max(1, Math.max(rows, columns));
+      min_dim = Math.max(1, Math.min(rows, columns));
       var row_text = ".".repeat(columns);
 
       canvas.empty();
