@@ -59,13 +59,13 @@
       ascii_pixels[y][x].text("o");
       setTimeout(animations[0], 0);
     },
-    // . to number wipe
+    // random hex wipe
     () => {
       if (!flat_pixel_list) {
         flat_pixel_list = ascii_pixels.flat()
       }
       if (flat_pixel_list.length == 0) return;
-      flat_pixel_list.shift().text(Math.floor(Math.random() * 10));
+      flat_pixel_list.shift().text(Math.floor(Math.random() * 16).toString(16));
       setTimeout(animations[1], 0);
     }
   ]
@@ -76,10 +76,6 @@
 
     setTimeout(animation, 100);
   });
-
-  $(window).on('resize', function() {
-    reset_canvas();
-  })
 
   var reset_canvas = function() {
       var canvas = $(".ascii");
