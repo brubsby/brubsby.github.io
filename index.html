@@ -151,7 +151,7 @@
         var minmax_dist_index = -1;
         for (var i = 0; i < flat_index_list.length; i++) {
           var coords = get_coords(columns, flat_index_list[i]);
-          var dist = Math.sqrt(Math.pow((center_x - coords[0]) * char_width, 2) + Math.pow((center_y - coords[1])  * char_height, 2))
+          var dist = Math.sqrt(Math.pow((center_x - coords[0]) * char_width, 2) + Math.pow((center_y - coords[1]) * char_height, 2))
           if (isminmax && dist < minmax_dist || !isminmax && dist > minmax_dist) {
             minmax_dist = dist;
             minmax_dist_index = i;
@@ -205,6 +205,43 @@
         }
       }
       setTimeout(animations[4], 0);
+    },
+    // growing heart / entombing heart
+    () => {
+      init_flat_index_list(rows, columns);
+      var isminmax = constant_random_boolean;
+      var center_x = columns / 2;
+      var center_y = rows / 4 - (frame_count * 0.01);
+      var heart_multiplier = isminmax ? 2 : 45 * (animation_speed_multiplier + 2);
+      var pixels_changed = 0;
+      while (pixels_changed < animation_speed_multiplier * 10) {
+        var minmax_dist = 9999999 * (isminmax ? 1 : -1);
+        var minmax_dist_index = -1;
+        for (var i = 0; i < flat_index_list.length; i++) {
+          var coords = get_coords(columns, flat_index_list[i]);
+          var dist = Math.sqrt(Math.pow((coords[0] - center_x) * char_width, 2) + Math.pow((coords[1] - center_y) * char_height, 2))
+          var theta = Math.atan2((center_y - coords[1]) * char_height, (center_x - coords[0]) * char_width);
+          var heart_radius =
+            heart_multiplier * (2 - 2 * Math.sin(theta) + Math.sin(theta)
+            * (Math.sqrt(Math.abs(Math.cos(theta))) / (Math.sin(theta) + 1.4)));
+          if (isminmax && dist < minmax_dist && dist < heart_radius || !isminmax && dist > minmax_dist && dist > heart_radius) {
+            minmax_dist = dist;
+            minmax_dist_index = i;
+          }
+        }
+        if (minmax_dist_index == -1) {
+          heart_multiplier += 3 * (isminmax ? 1 : -1);
+          continue;
+        }
+        setCharAt(canvas, flat_index_list[minmax_dist_index], "o");
+        pixels_changed++;
+        flat_index_list.splice(minmax_dist_index, 1);
+        if (flat_index_list.length <= 0) {
+          return;
+        }
+      }
+      frame_count++;
+      setTimeout(animations[5], 0);
     }
   ];
 
