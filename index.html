@@ -34,38 +34,46 @@
   a {
     text-decoration: none;
   }
-  div.char {
-    display: inline;
-    margin: 0;
-  }
   </style>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script>
-  var ascii_pixels, canvas_rows, canvas_columns, flat_pixel_list;
+  var canvas, flat_pixel_list, rows, columns;
   var frame_count = 0;
+  var get_canvas_index = (columns, x, y) => { return x + y * (columns + 1); };
+  var setCharAt = (canvas,index,chr) => {
+    var str = canvas.text();
+    if(index > str.length-1) return str;
+    var new_str = str.substr(0,index) + chr + str.substr(index+1);
+    canvas.text(new_str);
+  };
+  var getCharAt = (canvas,index) => {
+    return canvas.text().charAt(index);
+  };
   var animations = [
     // . to o random
     () => {
-      var x, y, tries = 0;
+      var x, y, index, tries = 0;
       var max_tries = 10000;
       do {
-          x = Math.floor(Math.random() * canvas_columns);
-          y = Math.floor(Math.random() * canvas_rows);
+          x = Math.floor(Math.random() * columns);
+          y = Math.floor(Math.random() * rows);
+          index = get_canvas_index(columns, x, y);
           tries++;
       }
-      while (ascii_pixels[y][x].text() == "o" && tries < max_tries);
+      while (getCharAt(canvas, index) == "o" && tries < max_tries);
       if (tries >= max_tries) return;
-      ascii_pixels[y][x].text("o");
+      setCharAt(canvas, index, "o");
       setTimeout(animations[0], 0);
     },
     // random hex wipe
     () => {
-      if (!flat_pixel_list) {
-        flat_pixel_list = ascii_pixels.flat()
-      }
-      if (flat_pixel_list.length == 0) return;
-      flat_pixel_list.shift().text(Math.floor(Math.random() * 16).toString(16));
+      var x = frame_count % columns;
+      var y = Math.floor(frame_count / columns);
+      var index = get_canvas_index(columns, x, y);
+      var random_hex_char = Math.floor(Math.random() * 16).toString(16);
+      setCharAt(canvas, index, random_hex_char);
+      frame_count++
       setTimeout(animations[1], 0);
     }
   ]
@@ -78,27 +86,18 @@
   });
 
   var reset_canvas = function() {
-      var canvas = $(".ascii");
+      canvas = $(".ascii");
       var width = canvas.width();
       var height = canvas.height();
 
-      var rows = Math.max(1, Math.floor(height / 23));
-      var columns = Math.max(1, Math.floor(width / 12.003));
+      rows = Math.max(1, Math.floor(height / 23));
+      columns = Math.max(1, Math.floor(width / 12.003));
       var row_text = ".".repeat(columns);
 
       canvas.empty();
-      ascii_pixels = [];
       for (var i = 0; i < rows; i++) {
-        var ascii_row = [];
-        for (var j = 0; j < columns; j++) {
-          var to_add = $("<div class='char x" + j + " y" + i + "' " + (j == 0 ? "style='display: inline-block'" : "") + ">.</div>")
-          ascii_row.push(to_add);
-          canvas.append(to_add);
-        }
-        ascii_pixels.push(ascii_row);
+        canvas.append(row_text + "\n");
       }
-      canvas_columns = ascii_pixels[0].length;
-      canvas_rows = ascii_pixels.length;
   }
 
 
