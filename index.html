@@ -125,30 +125,26 @@
   var animations = [
     // . to o random
     () => {
-      var x, y, index;
-      var max_tries = 100000;
+      init_flat_index_list(rows, columns);
       for (var n = 0; n < animation_speed_multiplier; n++) {
-        var tries = 0;
-        do {
-            x = Math.floor(Math.random() * columns);
-            y = Math.floor(Math.random() * rows);
-            index = get_canvas_index(columns, x, y);
-            tries++;
+        var index = Math.floor(Math.random() * flat_index_list.length);
+        setCharAt(canvas, flat_index_list[index], "o");
+        flat_index_list.splice(index, 1);
+        if (flat_index_list.length <= 0) {
+          return;
         }
-        while (getCharAt(canvas, index) == "o" && tries < max_tries);
-        if (tries >= max_tries) return;
-        setCharAt(canvas, index, "o");
       }
       setTimeout(animations[0], 0);
     },
     // random hex wipe
     () => {
-      var x = frame_count % columns;
-      var y = Math.floor(frame_count / columns);
-      var index = get_canvas_index(columns, x, y);
+      init_flat_index_list(rows, columns);
       var random_hex_char = Math.floor(Math.random() * 16).toString(16);
-      setCharAt(canvas, index, random_hex_char);
-      frame_count++
+      setCharAt(canvas, flat_index_list[0], random_hex_char);
+      flat_index_list.shift();
+      if (flat_index_list.length <= 0) {
+        return;
+      }
       setTimeout(animations[1], 0);
     },
     // 10 print up or down
