@@ -37,16 +37,12 @@
   </style>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
   <script>
   var canvas, flat_index_list, rows, columns;
   var frame_count = 0;
   var char_height = 23;
   var char_width = 12.003;
-  var constant_random_boolean = Math.random() < 0.5;
-  var constant_random_values = [];
-  for (var i = 0; i < 10; i++) {
-    constant_random_values.push(Math.random());
-  }
   var init_flat_index_list = (rows, columns) => {
       if (!flat_index_list) {
         flat_index_list = [];
@@ -67,6 +63,19 @@
   var getCharAt = (canvas,index) => {
     return canvas.text().charAt(index);
   };
+  var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = window.location.search.substring(1),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+    for (i = 0; i < sURLVariables.length; i++) {
+      sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] === sParam) {
+        return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+      }
+    }
+  };
+  var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
   var animations = [
     // . to o random
     () => {
@@ -168,8 +177,31 @@
       }
       setTimeout(animations[4], 0);
     }
-  ]
-  var animation = animations[Math.floor(Math.random() * animations.length)];
+  ];
+
+  /**
+    seed based on url param and generate randomness
+  **/
+  var animation_index;
+  var animation_url_param = getUrlParameter("a");
+  var parsed = parseInt(animation_url_param, 10);
+  if (!isNaN(parsed)) animation_index = parsed;
+  if (animation_index === 0 || !!animation_index) {
+    if (animation_index >= animations.length) {
+      Math.seedrandom(animation_index);
+      animation_index = null;
+    }
+  } else if (!!animation_url_param) {
+    Math.seedrandom(animation_url_param);
+  }
+
+  var constant_random_boolean = Math.random() < 0.5;
+  var constant_random_values = [];
+  for (var i = 0; i < 10; i++) {
+    constant_random_values.push(Math.random());
+  }
+
+  var animation = animations[animation_index === 0 ? 0 : (animation_index || (Math.floor(Math.random() * animations.length)))];
 
   $(document).ready(function() {
     reset_canvas();
