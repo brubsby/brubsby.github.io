@@ -42,6 +42,11 @@
   var frame_count = 0;
   var char_height = 23;
   var char_width = 12.003;
+  var constant_random_boolean = Math.random() < 0.5;
+  var constant_random_values = [];
+  for (var i = 0; i < 10; i++) {
+    constant_random_values.push(Math.random());
+  }
   var init_flat_index_list = (rows, columns) => {
       if (!flat_index_list) {
         flat_index_list = [];
@@ -88,11 +93,12 @@
       frame_count++
       setTimeout(animations[1], 0);
     },
-    // 10 print
+    // 10 print up or down
     () => {
+      var isupdown = constant_random_boolean;
       var y = frame_count;
       for (var x = 0; x < columns; x++) {
-        var index = get_canvas_index(columns, x, y);
+        var index = get_canvas_index(columns, x, isupdown ? rows - y : y);
         var random_slash = ['/', '\\'][Math.floor(Math.random()*2)];
         setCharAt(canvas, index, random_slash);
       }
@@ -100,27 +106,67 @@
       frame_count++
       setTimeout(animations[2], 50);
     },
-    // growing circle
+    // growing circle / entombing circle
     () => {
       init_flat_index_list(rows, columns);
+      var isminmax = constant_random_boolean;
       var center_x = columns / 2;
       var center_y = rows / 2;
-      var min_dist = 9999999;
-      var min_dist_index = -1;
+      var minmax_dist = 9999999 * (isminmax ? 1 : -1);
+      var minmax_dist_index = -1;
       for (var i = 0; i < flat_index_list.length; i++) {
         var coords = get_coords(columns, flat_index_list[i]);
         var dist = Math.sqrt(Math.pow((center_x - coords[0]) * char_width, 2) + Math.pow((center_y - coords[1])  * char_height, 2))
-        if (dist < min_dist) {
-          min_dist = dist;
-          min_dist_index = i;
+        if (isminmax && dist < minmax_dist || !isminmax && dist > minmax_dist) {
+          minmax_dist = dist;
+          minmax_dist_index = i;
         }
       }
-      setCharAt(canvas, flat_index_list[min_dist_index], "o");
-      flat_index_list.splice(min_dist_index, 1);
+      setCharAt(canvas, flat_index_list[minmax_dist_index], "o");
+      flat_index_list.splice(minmax_dist_index, 1);
       if (flat_index_list.length <= 0) {
         return;
       }
       setTimeout(animations[3], 0);
+    },
+    // entombing triangles
+    () => {
+      init_flat_index_list(rows, columns);
+      var min_dist = 9999999;
+      var max_dist = -9999999;
+      var min_dist_index = -1;
+      var max_dist_index = -1;
+      var theta = constant_random_values[0] * Math.PI * 2;
+      var a = Math.cos(theta);
+      var b = Math.sin(theta);
+      var c = constant_random_values[0] * 100000;
+      for (var i = 0; i < flat_index_list.length; i++) {
+        var coords = get_coords(columns, flat_index_list[i]);
+        var pixel_coords = [coords[0] * char_width, coords[1] * char_height];
+        var dist = Math.abs(a * pixel_coords[0] + b * pixel_coords[1] + c) / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+        if (dist < min_dist) {
+          min_dist = dist;
+          min_dist_index = i;
+        }
+        if (dist > max_dist) {
+          max_dist = dist;
+          max_dist_index = i;
+        }
+      }
+      setCharAt(canvas, flat_index_list[min_dist_index], "o");
+      setCharAt(canvas, flat_index_list[max_dist_index], "o");
+      flat_index_list.splice(max_dist_index, 1);
+      if (max_dist_index != min_dist_index) {
+        if (max_dist_index < min_dist_index) {
+          flat_index_list.splice(min_dist_index - 1, 1);
+        } else {
+          flat_index_list.splice(min_dist_index, 1);
+        }
+      }
+      if (flat_index_list.length <= 0) {
+        return;
+      }
+      setTimeout(animations[4], 0);
     }
   ]
   var animation = animations[Math.floor(Math.random() * animations.length)];
