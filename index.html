@@ -38,9 +38,21 @@
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script>
-  var canvas, flat_pixel_list, rows, columns;
+  var canvas, flat_index_list, rows, columns;
   var frame_count = 0;
+  var char_height = 23;
+  var char_width = 12.003;
+  var init_flat_index_list = (rows, columns) => {
+      if (!flat_index_list) {
+        flat_index_list = [];
+        for (var i = 0; i < (columns + 1) * rows - 1; i++) {
+          if (i % (columns + 1) == columns) continue;
+          flat_index_list.push(i);
+        }
+      }
+  };
   var get_canvas_index = (columns, x, y) => { return x + y * (columns + 1); };
+  var get_coords = (columns, index) => { return [index % (columns + 1), Math.floor(index / (columns + 1))];};
   var setCharAt = (canvas,index,chr) => {
     var str = canvas.text();
     if(index > str.length-1) return str;
@@ -75,6 +87,40 @@
       setCharAt(canvas, index, random_hex_char);
       frame_count++
       setTimeout(animations[1], 0);
+    },
+    // 10 print
+    () => {
+      var y = frame_count;
+      for (var x = 0; x < columns; x++) {
+        var index = get_canvas_index(columns, x, y);
+        var random_slash = ['/', '\\'][Math.floor(Math.random()*2)];
+        setCharAt(canvas, index, random_slash);
+      }
+      if (frame_count >= rows) return;
+      frame_count++
+      setTimeout(animations[2], 50);
+    },
+    // growing circle
+    () => {
+      init_flat_index_list(rows, columns);
+      var center_x = columns / 2;
+      var center_y = rows / 2;
+      var min_dist = 9999999;
+      var min_dist_index = -1;
+      for (var i = 0; i < flat_index_list.length; i++) {
+        var coords = get_coords(columns, flat_index_list[i]);
+        var dist = Math.sqrt(Math.pow((center_x - coords[0]) * char_width, 2) + Math.pow((center_y - coords[1])  * char_height, 2))
+        if (dist < min_dist) {
+          min_dist = dist;
+          min_dist_index = i;
+        }
+      }
+      setCharAt(canvas, flat_index_list[min_dist_index], "o");
+      flat_index_list.splice(min_dist_index, 1);
+      if (flat_index_list.length <= 0) {
+        return;
+      }
+      setTimeout(animations[3], 0);
     }
   ]
   var animation = animations[Math.floor(Math.random() * animations.length)];
@@ -90,8 +136,8 @@
       var width = canvas.width();
       var height = canvas.height();
 
-      rows = Math.max(1, Math.floor(height / 23));
-      columns = Math.max(1, Math.floor(width / 12.003));
+      rows = Math.max(1, Math.floor(height / char_height));
+      columns = Math.max(1, Math.floor(width / char_width));
       var row_text = ".".repeat(columns);
 
       canvas.empty();
