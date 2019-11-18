@@ -56,10 +56,13 @@
   <script src="js/simplex-noise.js"></script>
   <script>
   /*----------- Global init -----------*/
-  var canvas, flat_index_list, simplex_noise, rows, columns, animation_speed_multiplier, min_dim, max_dim;
+  var canvas, flat_index_list, simplex_noise, rows, columns,
+    animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
+    mapgen_tiles, mapgen_probabilities;
   var frame_count = 0;
   var char_height = 23;
   var char_width = 12.003;
+  var index_lists = [];
 
 
   /*----------- Helper Functions -----------*/
@@ -78,6 +81,20 @@
   var init_simplex_noise = () => {
       if (!simplex_noise) {
         simplex_noise = new SimplexNoise(Math.random().toString());
+      }
+  };
+  var init_mapgen_tiles = () => {
+      if (!mapgen_tiles) {
+        // ≈.,`ⁿ⌠τ↑♠n∩⌂▲
+        mapgen_tiles = ['≈', [',', '.', '`'], 'τ', ['♠', '↑'], '∩', '⌂', '▲'];
+        flat_mapgen_tiles = [];
+        for (var i = 0; i < mapgen_tiles.length; i++) {
+          if (Array.isArray(mapgen_tiles[i])) {
+            flat_mapgen_tiles.push(mapgen_tiles[i][Math.floor(Math.random() * mapgen_tiles[i].length)]);
+          } else {
+            flat_mapgen_tiles.push(mapgen_tiles[i]);
+          }
+        }
       }
   };
   var get_canvas_index = (columns, x, y) => { return x + y * (columns + 1); };
@@ -234,6 +251,7 @@
       var center_y = rows / 4 - (frame_count * 0.0001);
       var heart_multiplier = isminmax ? 2 : 45 * (animation_speed_multiplier + 2);
       var pixels_changed = 0;
+      var tries = 0;
       while (pixels_changed < animation_speed_multiplier * 10) {
         frame_count++;
         var minmax_dist = 9999999 * (isminmax ? 1 : -1);
@@ -251,6 +269,16 @@
           }
         }
         if (minmax_dist_index == -1) {
+          tries++;
+          if (tries > 1000) {
+            while (true) {
+              setCharAt(canvas, flat_index_list[0], "o");
+              flat_index_list.shift();
+              if (flat_index_list.length <= 0) {
+                return;
+              }
+            }
+          }
           heart_multiplier += 3 * (isminmax ? 1 : -1);
           continue;
         }
@@ -283,6 +311,59 @@
         }
       }
       setTimeout(animations[6], 0);
+    },
+    // mapgen
+    () => {
+      var frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
+      var amplitude = 1;
+      var octaves = Math.floor(Math.min(animation_speed_multiplier - 1, 3)) + 1;
+      var lacunarity = 2;
+      var gain = 0.5;
+      var pixels_changed = 0;
+      init_simplex_noise();
+      init_mapgen_tiles();
+      init_flat_index_list(rows, columns, (index1, index2) => {
+        var coords1 = get_pixel_coords(columns, index1, char_width, char_height);
+        var coords2 = get_pixel_coords(columns, index2, char_width, char_height);
+        return get_simplex_noise_at(coords1, frequency, amplitude, octaves, lacunarity, gain)
+        - get_simplex_noise_at(coords2, frequency, amplitude, octaves, lacunarity, gain);
+      });
+      if (!mapgen_probabilities) {
+        mapgen_probabilities = [];
+        var max_amplitude = amplitude * (Math.pow(gain, octaves) - 1) / (gain - 1);
+        mapgen_probabilities.push(max_amplitude);
+        mapgen_probabilities.push(0);
+        for (var i = 0; i < flat_mapgen_tiles.length; i++) {
+          index_lists.push([]);
+        }
+        for (var i = 0; i < flat_mapgen_tiles.length - 2; i++) {
+          mapgen_probabilities.push((i + 1) * amplitude / (flat_mapgen_tiles.length - 1));
+        }
+        mapgen_probabilities.sort();
+        var current_noise;
+        var current_tile_index = 0;
+        for (var i = 0; i < flat_index_list.length; i++) {
+          current_coords = get_pixel_coords(columns, flat_index_list[i], char_width, char_height);
+          current_noise = get_simplex_noise_at(current_coords, frequency, amplitude, octaves, lacunarity, gain);
+          for (var j = 0; j <= current_tile_index; j++) {
+            index_lists[j].push(flat_index_list[i]);
+          }
+          if (current_noise > mapgen_probabilities[current_tile_index]) {
+            current_tile_index = Math.min(current_tile_index + 1, flat_mapgen_tiles.length - 1);
+          }
+        }
+      }
+      var any_pixels = false;
+      for (var i = 0; i < index_lists.length; i++) {
+        while(index_lists[i].length > 0 && pixels_changed < animation_speed_multiplier * 4) {
+          setCharAt(canvas, index_lists[i][0], flat_mapgen_tiles[i]);
+          index_lists[i].shift();
+          pixels_changed++;
+          any_pixels = true;
+        }
+      }
+      if (!any_pixels) return;
+      setTimeout(animations[7], 0);
     }
   ];
 
