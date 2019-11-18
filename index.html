@@ -58,7 +58,7 @@
   /*----------- Global init -----------*/
   var canvas, flat_index_list, simplex_noise, rows, columns,
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
-    mapgen_tiles, mapgen_probabilities;
+    mapgen_tiles, mapgen_probabilities, falloff_map;
   var frame_count = 0;
   var char_height = 23;
   var char_width = 12.003;
@@ -86,7 +86,7 @@
   var init_mapgen_tiles = () => {
       if (!mapgen_tiles) {
         // ≈.,`ⁿ⌠τ↑♠n∩⌂▲
-        mapgen_tiles = ['≈', [',', '.', '`'], 'τ', ['♠', '↑'], '∩', '⌂', '▲'];
+        mapgen_tiles = ['≈', [',', '.', '`'], '∩', '⌂', '▲'];
         flat_mapgen_tiles = [];
         for (var i = 0; i < mapgen_tiles.length; i++) {
           if (Array.isArray(mapgen_tiles[i])) {
@@ -94,6 +94,21 @@
           } else {
             flat_mapgen_tiles.push(mapgen_tiles[i]);
           }
+        }
+      }
+  };
+  var init_falloff_map = (rows, columns, char_width, char_height) => {
+      if (!falloff_map) {
+        falloff_map = (coords) => {
+          var width = columns * char_width;
+          var height = rows * char_height;
+          var x = (coords[0] / width) * 2 - 1;
+          var y = (coords[1] / height) * 2 - 1;
+          var value = Math.max(Math.abs(x), Math.abs(y));
+          var a = 3;
+          var b = 2.2;
+          value = Math.pow(value, a) / (Math.pow(value, a) + Math.pow((b - b * value), a))
+          return value;
         }
       }
   };
@@ -314,37 +329,46 @@
     },
     // mapgen
     () => {
+      var isisland = constant_random_boolean;
       var frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
       var amplitude = 1;
       var octaves = Math.floor(Math.min(animation_speed_multiplier - 1, 3)) + 1;
       var lacunarity = 2;
       var gain = 0.5;
       var pixels_changed = 0;
+      init_falloff_map(rows, columns, char_width, char_height);
       init_simplex_noise();
       init_mapgen_tiles();
+      var value_at = (coords) => {
+        var value = get_simplex_noise_at(coords, frequency, amplitude, octaves, lacunarity, gain);
+        if (isisland) {
+          value -= falloff_map(coords);
+        }
+        return value;
+      }
       init_flat_index_list(rows, columns, (index1, index2) => {
         var coords1 = get_pixel_coords(columns, index1, char_width, char_height);
         var coords2 = get_pixel_coords(columns, index2, char_width, char_height);
-        return get_simplex_noise_at(coords1, frequency, amplitude, octaves, lacunarity, gain)
-        - get_simplex_noise_at(coords2, frequency, amplitude, octaves, lacunarity, gain);
+        return value_at(coords1)
+        - value_at(coords2);
       });
       if (!mapgen_probabilities) {
         mapgen_probabilities = [];
         var max_amplitude = amplitude * (Math.pow(gain, octaves) - 1) / (gain - 1);
         mapgen_probabilities.push(max_amplitude);
-        mapgen_probabilities.push(0);
-        for (var i = 0; i < flat_mapgen_tiles.length; i++) {
-          index_lists.push([]);
-        }
+        mapgen_probabilities.push(-0.15);
         for (var i = 0; i < flat_mapgen_tiles.length - 2; i++) {
           mapgen_probabilities.push((i + 1) * amplitude / (flat_mapgen_tiles.length - 1));
         }
         mapgen_probabilities.sort();
+        for (var i = 0; i < flat_mapgen_tiles.length; i++) {
+          index_lists.push([]);
+        }
         var current_noise;
         var current_tile_index = 0;
         for (var i = 0; i < flat_index_list.length; i++) {
           current_coords = get_pixel_coords(columns, flat_index_list[i], char_width, char_height);
-          current_noise = get_simplex_noise_at(current_coords, frequency, amplitude, octaves, lacunarity, gain);
+          current_noise = value_at(current_coords);
           for (var j = 0; j <= current_tile_index; j++) {
             index_lists[j].push(flat_index_list[i]);
           }
