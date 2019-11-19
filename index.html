@@ -36,9 +36,14 @@
     margin-left: 68px;
     vertical-align: top;
     grid-column: 2 / 2;
+    white-space: pre;
   }
   a {
     text-decoration: none;
+    color: black;
+  }
+  li:hover {
+    text-decoration: underline;
   }
   </style>
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -59,7 +64,7 @@
   var canvas, flat_index_list, simplex_noise, rows, columns,
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
-    position_pixels, bounces;
+    position_pixels, bounces, text_to_print;
   var frame_count = 0;
   var char_height = 23;
   var char_width = 12.003;
@@ -113,6 +118,61 @@
         }
       }
   };
+  var get_ascii_char_from_canvas_index = (ascii_art, canvas_columns, canvas_rows, canvas_index) => {
+    var ascii_width = ascii_art[0].length;
+    var ascii_height = ascii_art.length;
+    var ascii_midpoint = [Math.floor(ascii_width / 2), Math.floor(ascii_height / 2)];
+    var canvas_midpoint = [Math.floor(canvas_columns / 2), Math.floor(canvas_rows / 2)];
+    var canvas_coords = get_coords(canvas_columns, canvas_index);
+    var ascii_x = canvas_coords[0] - canvas_midpoint[0] + ascii_midpoint[0];
+    var ascii_y = canvas_coords[1] - canvas_midpoint[1] + ascii_midpoint[1];
+    ascii_x = Math.min(Math.max(0, ascii_x), ascii_width - 1);
+    ascii_y = Math.min(Math.max(0, ascii_y), ascii_height - 1);
+    return ascii_art[ascii_y][ascii_x];
+  }
+  var get_canvas_index = (columns, x, y) => { return x + y * (columns + 1); };
+  var get_coords = (columns, index) => { return [index % (columns + 1), Math.floor(index / (columns + 1))];};
+  var get_pixel_coords = (columns, index, char_width, char_height) => {
+    var coords = get_coords(columns, index);
+    return [coords[0] * char_width, coords[1] * char_height];
+  }
+  var get_simplex_noise_at = (coords, frequency, amplitude, octaves=1, lacunarity=2, gain=0.5) => {
+    var octave_amplitude = amplitude;
+    var octave_frequency = frequency;
+    var result = 0;
+    for (var i = 0; i < octaves; i++) {
+      result += octave_amplitude * simplex_noise.noise2D(octave_frequency * coords[0], octave_frequency * coords[1]);
+      octave_amplitude *= gain;
+      octave_frequency *= lacunarity;
+    }
+    return result;
+  }
+  var setCharAt = (canvas,index,chr) => {
+    var str = canvas.text();
+    if(index > str.length-1) return str;
+    var new_str = str.substr(0,index) + chr + str.substr(index+1);
+    canvas.text(new_str);
+  };
+  var getCharAt = (canvas,index) => {
+    return canvas.text().charAt(index);
+  };
+  var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = window.location.search.substring(1),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+    for (i = 0; i < sURLVariables.length; i++) {
+      sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] === sParam) {
+        return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+      }
+    }
+  };
+  var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
+
+  /*----------- Data Init -----------*/
+
+
   var init_poob_details = () => {
     poob_detail = [];
     poob_detail.push([
@@ -235,58 +295,29 @@
       poob_detail_dims.push([poob_detail[i][0].length, poob_detail[i].length]);
     }
   }
-  var get_ascii_char_from_canvas_index = (ascii_art, canvas_columns, canvas_rows, canvas_index) => {
-    var ascii_width = ascii_art[0].length;
-    var ascii_height = ascii_art.length;
-    var ascii_midpoint = [Math.floor(ascii_width / 2), Math.floor(ascii_height / 2)];
-    var canvas_midpoint = [Math.floor(canvas_columns / 2), Math.floor(canvas_rows / 2)];
-    var canvas_coords = get_coords(canvas_columns, canvas_index);
-    var ascii_x = canvas_coords[0] - canvas_midpoint[0] + ascii_midpoint[0];
-    var ascii_y = canvas_coords[1] - canvas_midpoint[1] + ascii_midpoint[1];
-    ascii_x = Math.min(Math.max(0, ascii_x), ascii_width - 1);
-    ascii_y = Math.min(Math.max(0, ascii_y), ascii_height - 1);
-    return ascii_art[ascii_y][ascii_x];
-  }
-  var get_canvas_index = (columns, x, y) => { return x + y * (columns + 1); };
-  var get_coords = (columns, index) => { return [index % (columns + 1), Math.floor(index / (columns + 1))];};
-  var get_pixel_coords = (columns, index, char_width, char_height) => {
-    var coords = get_coords(columns, index);
-    return [coords[0] * char_width, coords[1] * char_height];
-  }
-  var get_simplex_noise_at = (coords, frequency, amplitude, octaves=1, lacunarity=2, gain=0.5) => {
-    var octave_amplitude = amplitude;
-    var octave_frequency = frequency;
-    var result = 0;
-    for (var i = 0; i < octaves; i++) {
-      result += octave_amplitude * simplex_noise.noise2D(octave_frequency * coords[0], octave_frequency * coords[1]);
-      octave_amplitude *= gain;
-      octave_frequency *= lacunarity;
-    }
-    return result;
-  }
-  var setCharAt = (canvas,index,chr) => {
-    var str = canvas.text();
-    if(index > str.length-1) return str;
-    var new_str = str.substr(0,index) + chr + str.substr(index+1);
-    canvas.text(new_str);
-  };
-  var getCharAt = (canvas,index) => {
-    return canvas.text().charAt(index);
-  };
-  var getUrlParameter = function getUrlParameter(sParam) {
-    var sPageURL = window.location.search.substring(1),
-        sURLVariables = sPageURL.split('&'),
-        sParameterName,
-        i;
-    for (i = 0; i < sURLVariables.length; i++) {
-      sParameterName = sURLVariables[i].split('=');
-      if (sParameterName[0] === sParam) {
-        return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
-      }
-    }
-  };
-  var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
 
+  var init_lorem_ipsum = () => {
+    lorem_ipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
+      + "do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim"
+      + " ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut al"
+      + "iquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit "
+      + "in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Except"
+      + "eur sint occaecat cupidatat non proident, sunt in culpa qui officia de"
+      + "serunt mollit anim id est laborum. Curabitur pretium tincidunt lacus. "
+      + "Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, "
+      + "est eros bibendum elit, nec luctus magna felis sollicitudin mauris. In"
+      + "teger in mauris eu nibh euismod gravida. Duis ac tellus et risus vulpu"
+      + "tate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorp"
+      + "er, ligula eu tempor congue, eros est euismod turpis, id tincidunt sap"
+      + "ien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pe"
+      + "llentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo"
+      + " eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet"
+      + ", felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cr"
+      + "as mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur "
+      + "augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna "
+      + "nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse pla"
+      + "tea dictumst.";
+  }
 
   /*----------- Animations -----------*/
   var animations = [
@@ -303,16 +334,84 @@
       }
       setTimeout(animations[0], 0);
     },
-    // random hex wipe
+    // random text wipe
     () => {
       init_flat_index_list(rows, columns);
-      var random_hex_char = Math.floor(Math.random() * 16).toString(16);
-      setCharAt(canvas, flat_index_list[0], random_hex_char);
+      if (frame_count == 0) {
+        var char_level_generator = (num_chars, generator) => {
+            var text = "";
+            for (var i = 0; i < num_chars; i++) {
+              text += generator();
+            }
+            return text;
+        };
+        var radix_digit_generator =
+          (num_chars, radix) => char_level_generator(num_chars, () => Math.floor(Math.random() * radix).toString(radix));
+        var textgen_funcs = [
+          (num_chars) => {
+            var text = $('html').html();
+            text = text.replace(/\s/g, "");
+            text = text.substring(0, num_chars);
+            return text;
+          },
+          (num_chars) => { // hex
+            return radix_digit_generator(num_chars, 16);
+          },
+          (num_chars) => { // binary
+            return radix_digit_generator(num_chars, 2);
+          },
+          (num_chars) => { // base 10
+            return radix_digit_generator(num_chars, 10);
+          },
+          (num_chars) => { // octal
+            return radix_digit_generator(num_chars, 8);
+          },
+          (num_chars) => { // hexatridecimal
+            return radix_digit_generator(num_chars, 36);
+          },
+          (num_chars) => { // letters
+            return char_level_generator(num_chars, () => Math.floor(Math.random() * 24 + 10).toString(36));
+          },
+          (num_chars) => { // pi
+            let i = 1n;
+            let x = 3n * (10n ** BigInt(num_chars+20)+20n);
+            let pi = x;
+            while (x > 0) {
+                    x = x * i / ((i + 1n) * 4n);
+                    pi += x / (i + 2n);
+                    i += 2n;
+            }
+            var text = (pi / (10n ** 20n)).toString();
+            text = "3." + text.substring(1);
+            text = text.substring(0, num_chars);
+            return text;
+          },
+          (num_chars) => { // lorem ipsum
+            init_lorem_ipsum();
+            var text = lorem_ipsum;
+            while (text.length < num_chars + columns) {
+              text += " " + lorem_ipsum;
+            }
+            for (var i = 0; i < rows; i++) {
+              var index = i * columns;
+              while (text[index] == " ") {
+                text = text.substr(0, index) + text.substr(index + 1);
+              }
+            }
+            text = text.substring(0, num_chars);
+            return text;
+          }
+        ];
+        text_to_print = textgen_funcs[Math.floor(textgen_funcs.length * Math.random())](columns*rows);
+      }
+      setCharAt(canvas, flat_index_list[0], text_to_print[0]);
       flat_index_list.shift();
+      text_to_print = text_to_print.slice(1);
       if (flat_index_list.length <= 0) {
         return;
       }
       setTimeout(animations[1], 0);
+      frame_count++;
     },
     // 10 print up or down
     () => {
@@ -663,6 +762,16 @@
   $(document).ready(function() {
     reset_canvas();
 
+    // website name will iterate seeds if an integer one is defined
+    var brubsby = $(".head > a:first").get()[0];
+    var old_value = getUrlParameter("a");
+    if (old_value) {
+      var new_value = old_value;
+      var parsed = parseInt(old_value, 10);
+      if (!isNaN(parsed)) new_value = parsed + 1;
+      brubsby.href = "?a=" + new_value;
+    }
+
     setTimeout(animation, 200);
   });
 
@@ -689,7 +798,7 @@
   </head>
   <body>
     <div class="menu">
-      <div class="head">BRUBSBY</div>
+      <div class="head"><a href="">BRUBSBY</a></div>
       <ol id="links">
         <li id="twitter"><a href="https://twitter.com/brubsby">TWITTER</a></li>
         <li id="art"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative)%20(from%3Abrubsby)&src=typed_query">ART</a></li>
