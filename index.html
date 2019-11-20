@@ -1,11 +1,12 @@
 <html>
   <head>
   <meta name="title" content="brubsby">
-  <meta name="description" content="brubsby">
-  <meta name="keywords" content="generative, art, generative art, algorithm, algorithms, brubsby, computational, javascript, mathematics">
+  <meta name="description" content="computer art brubfolio">
+  <meta name="keywords" content="brubsby, computer art, generative art, plotter art">
   <meta name="robots" content="index, follow">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="language" content="English">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
 
   <title>brubsby</title>
 
@@ -801,7 +802,7 @@
     reset_canvas();
 
     // website name will iterate seeds if an integer one is defined
-    var brubsby = $(".head > a:first").get()[0];
+    var brubsby = $("h1 > a:first").get()[0];
     var old_value = getUrlParameter("a");
     if (old_value) {
       var new_value = old_value;
