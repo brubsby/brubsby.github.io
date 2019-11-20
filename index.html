@@ -74,7 +74,7 @@
   var canvas, flat_index_list, simplex_noise, rows, columns,
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
-    position_pixels, bounces, text_to_print;
+    position_pixels, bounces, text_to_print, flip;
   var char_height = 24;
   var char_width = 12;
   var frame_count = 0;
@@ -432,14 +432,30 @@
     // 10 print up or down
     () => {
       var isupdown = constant_random_boolean;
+      if (frame_count == 0) {
+        var character_generators = [
+          () => ['/', '\\'][Math.floor(Math.random()*2)],
+          () => ['/', '\\'][Math.floor(Math.random()+constant_random_values[0])],
+          () => ['\u2502', '\u2500'][Math.floor(Math.random()*2)],
+          () => ['\u2502', '\u2500'][Math.floor(Math.random()+constant_random_values[0])],
+          () => {flip ^= true; return ['/', '\\'][flip];},
+          () => ['/', '\\', ' ', ' '][Math.floor(Math.random()*4)],
+          () => ['/', ' ', ' '][Math.floor(Math.random()*3)],
+          () => ['\\', ' ', ' '][Math.floor(Math.random()*3)],
+          () => ['\u2588', ' '][Math.floor(Math.random()*2)],
+          () => '\\',
+          () => '/'
+        ];
+        character_generator = character_generators[Math.floor(Math.min(Math.random(), Math.random()) * character_generators.length)];
+      }
       var y = frame_count;
       for (var x = 0; x < columns; x++) {
         var index = get_canvas_index(columns, x, isupdown ? rows - y : y);
-        var random_slash = ['/', '\\'][Math.floor(Math.random()*2)];
+        var random_slash = character_generator();
         setCharAt(canvas, index, random_slash);
       }
       if (frame_count >= rows) return;
-      frame_count++
+      frame_count++;
       setTimeout(animations[3], 50);
     },
     // growing circle / entombing circle
