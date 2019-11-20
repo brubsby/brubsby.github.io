@@ -13,7 +13,7 @@
   body {
     background: #fff;
     font-size: 20px;
-    font-family: "Courier New", Courier, monospace, monospace;
+    font-family: Courier, monospace;
     color: #000;
   	padding: 2em 3em 2em 3em;
     display: grid;
@@ -91,8 +91,8 @@
   };
   var init_mapgen_tiles = () => {
       if (!mapgen_tiles) {
-        // ≈.,`ⁿ⌠τ↑♠n∩⌂▲
-        mapgen_tiles = ['≈', [',', '.', '`'], '∩', '⌂', '▲'];
+        // ≈.,`ⁿ⌠τ↑♠ⁿ∩⌂▲ΔΛ
+        mapgen_tiles = ['≈', '.', ',', '⌂', 'Δ'];
         flat_mapgen_tiles = [];
         for (var i = 0; i < mapgen_tiles.length; i++) {
           if (Array.isArray(mapgen_tiles[i])) {
@@ -321,6 +321,8 @@
 
   /*----------- Animations -----------*/
   var animations = [
+    // do nothing
+    () => {},
     // . to o random
     () => {
       init_flat_index_list(rows, columns);
@@ -332,7 +334,7 @@
           return;
         }
       }
-      setTimeout(animations[0], 0);
+      setTimeout(animations[1], 0);
     },
     // random text wipe
     () => {
@@ -372,20 +374,6 @@
           (num_chars) => { // letters
             return char_level_generator(num_chars, () => Math.floor(Math.random() * 24 + 10).toString(36));
           },
-          (num_chars) => { // pi
-            let i = 1n;
-            let x = 3n * (10n ** BigInt(num_chars+20)+20n);
-            let pi = x;
-            while (x > 0) {
-                    x = x * i / ((i + 1n) * 4n);
-                    pi += x / (i + 2n);
-                    i += 2n;
-            }
-            var text = (pi / (10n ** 20n)).toString();
-            text = "3." + text.substring(1);
-            text = text.substring(0, num_chars);
-            return text;
-          },
           (num_chars) => { // lorem ipsum
             init_lorem_ipsum();
             var text = lorem_ipsum;
@@ -402,6 +390,23 @@
             return text;
           }
         ];
+        try {  // pi (some browsers don't have bigint support)
+          animations.push((num_chars) => {
+            let i = BigInt(1);
+            let x = BigInt(3) * (BigInt(10) ** BigInt(num_chars+20)+BigInt(20));
+            let pi = x;
+            while (x > 0) {
+                    x = x * i / ((i + BigInt(1)) * BigInt(4));
+                    pi += x / (i + BigInt(2));
+                    i += BigInt(2);
+            }
+            var text = (pi / (BigInt(10) ** BigInt(20))).toString();
+            text = "3." + text.substring(1);
+            text = text.substring(0, num_chars);
+            return text;
+          });
+        } catch(e) {}
+
         text_to_print = textgen_funcs[Math.floor(textgen_funcs.length * Math.random())](columns*rows);
       }
       setCharAt(canvas, flat_index_list[0], text_to_print[0]);
@@ -410,7 +415,7 @@
       if (flat_index_list.length <= 0) {
         return;
       }
-      setTimeout(animations[1], 0);
+      setTimeout(animations[2], 0);
       frame_count++;
     },
     // 10 print up or down
@@ -424,7 +429,7 @@
       }
       if (frame_count >= rows) return;
       frame_count++
-      setTimeout(animations[2], 50);
+      setTimeout(animations[3], 50);
     },
     // growing circle / entombing circle
     () => {
@@ -449,7 +454,7 @@
           return;
         }
       }
-      setTimeout(animations[3], 0);
+      setTimeout(animations[4], 0);
     },
     // entombing triangles
     () => {
@@ -490,7 +495,7 @@
           return;
         }
       }
-      setTimeout(animations[4], 0);
+      setTimeout(animations[5], 0);
     },
     // growing heart / entombing heart
     () => {
@@ -538,7 +543,7 @@
           return;
         }
       }
-      setTimeout(animations[5], 0);
+      setTimeout(animations[6], 0);
     },
     // simplex growth
     () => {
@@ -559,7 +564,7 @@
           return;
         }
       }
-      setTimeout(animations[6], 0);
+      setTimeout(animations[7], 0);
     },
     // mapgen
     () => {
@@ -621,7 +626,7 @@
         }
       }
       if (!any_pixels) return;
-      setTimeout(animations[7], 0);
+      setTimeout(animations[8], 0);
     },
     // dvd ball
     () => {
@@ -689,7 +694,7 @@
 
 
       frame_count++;
-      setTimeout(animations[8], 0);
+      setTimeout(animations[9], 0);
     },
     //poob
     () => {
@@ -733,7 +738,7 @@
           return;
         }
       }
-      setTimeout(animations[9], 0);
+      setTimeout(animations[10], 0);
     }
   ];
 
