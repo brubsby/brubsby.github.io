@@ -10,10 +10,17 @@
   <title>brubsby</title>
 
   <style>
+
+  @font-face {
+    font-family: 'DF';
+    src: url('assets/LessPerfectDOSVGA.woff') format('woff'), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+     url('assets/LessPerfectDOSVGA.ttf') format('truetype'); /* Chrome 4+, Firefox 3.5, Opera 10+, Safari 3—5 */
+  }
+
   body {
     background: #fff;
     font-size: 20px;
-    font-family: "Lucida Console", monospace;
+    font-family: Courier, monospace;
     color: #000;
   	padding: 2em 3em 2em 3em;
     display: grid;
@@ -37,6 +44,9 @@
     vertical-align: top;
     grid-column: 2 / 2;
     white-space: pre;
+    line-height: 1;
+    font-size: 24px;
+    font-family: "DF", monospace;
   }
   a {
     text-decoration: none;
@@ -65,9 +75,9 @@
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
     position_pixels, bounces, text_to_print;
+  var char_height = 24;
+  var char_width = 12;
   var frame_count = 0;
-  var char_height = 23;
-  var char_width = 12.003;
   var index_lists = [];
 
 
@@ -91,8 +101,9 @@
   };
   var init_mapgen_tiles = () => {
       if (!mapgen_tiles) {
-        // ≈.,`ⁿ⌠τ↑♠ⁿ∩⌂▲ΔΛ
-        mapgen_tiles = ['≈', '.', ',', '⌂', 'Δ'];
+        // drop ttf into fontdrop.info for codepoints
+        // ≈.,`ⁿ⌠τ↑♠ⁿ∩⌂▲ΔΛп
+        mapgen_tiles = ['≈', '.', ',', '∩', '\u007F', '\u001E'];
         flat_mapgen_tiles = [];
         for (var i = 0; i < mapgen_tiles.length; i++) {
           if (Array.isArray(mapgen_tiles[i])) {
@@ -322,7 +333,7 @@
   /*----------- Animations -----------*/
   var animations = [
     // do nothing
-    () => {},
+    () => {return; animations[0];},
     // . to o random
     () => {
       init_flat_index_list(rows, columns);
@@ -762,7 +773,8 @@
     constant_random_values.push(Math.random());
   }
 
-  var animation = animations[animation_index === 0 ? 0 : (animation_index || (Math.floor(Math.random() * animations.length)))];
+  var animation = animations[animation_index === 0 ? 0 :
+    (animation_index || (Math.floor(Math.random() * (animations.length - 1)) + 1))];
 
   $(document).ready(function() {
     reset_canvas();
@@ -787,7 +799,7 @@
 
       rows = Math.max(1, Math.floor(height / char_height));
       columns = Math.max(1, Math.floor(width / char_width));
-      animation_speed_multiplier = Math.max(1, Math.floor(rows * columns / 1000));
+      animation_speed_multiplier = Math.max(1, Math.floor(rows * columns / 750));
       max_dim = Math.max(1, Math.max(rows, columns));
       min_dim = Math.max(1, Math.min(rows, columns));
       var row_text = ".".repeat(columns);
