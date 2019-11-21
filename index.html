@@ -77,6 +77,24 @@
   <script src="js/simplex-noise.js"></script>
   <script>
   /*----------- Global init -----------*/
+  class ObjectSampler {
+    constructor() {this.objects=[];this.total_weight=0;return this;}
+    put(obj, weight=1) {
+      this.total_weight+=weight;
+      this.objects.push({"obj":obj,"weight":weight,"total_weight":this.total_weight});
+      return this;
+    };
+    uniform_sample() {return this.objects[Math.floor(this.objects.length * Math.random())]["obj"];}
+    sample() {
+      var index_val = this.total_weight * Math.random();
+      for (var i = 0; i < this.objects.length; i++) {
+        if (index_val < this.objects[i]["total_weight"]) return this.objects[i]["obj"];
+      }
+      throw "sample error, random value was " + index_val + " but total weight was " + this.total_weight;
+    }
+  }
+
+  /*----------- Global init -----------*/
   var canvas, flat_index_list, simplex_noise, rows, columns,
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
@@ -365,33 +383,18 @@
             return text;
         };
         var radix_digit_generator =
-          (num_chars, radix) => char_level_generator(num_chars, () => Math.floor(Math.random() * radix).toString(radix));
-        var textgen_funcs = [
-          (num_chars) => {
-            var text = $('html').html();
-            text = text.replace(/\s/g, "");
-            text = text.substring(0, num_chars);
-            return text;
-          },
-          (num_chars) => { // hex
-            return radix_digit_generator(num_chars, 16);
-          },
-          (num_chars) => { // binary
-            return radix_digit_generator(num_chars, 2);
-          },
-          (num_chars) => { // base 10
-            return radix_digit_generator(num_chars, 10);
-          },
-          (num_chars) => { // octal
-            return radix_digit_generator(num_chars, 8);
-          },
-          (num_chars) => { // hexatridecimal
-            return radix_digit_generator(num_chars, 36);
-          },
-          (num_chars) => { // letters
-            return char_level_generator(num_chars, () => Math.floor(Math.random() * 24 + 10).toString(36));
-          },
-          (num_chars) => { // lorem ipsum
+          (num_chars, radix) => char_level_generator(num_chars, () =>
+            Math.floor(Math.random() * radix).toString(radix));
+        var textgen_funcs = new ObjectSampler()
+          .put((num_chars) => $('html').html().replace(/\s/g, "").substring(0, num_chars))
+          .put((num_chars) => radix_digit_generator(num_chars, 16), 1) // hex
+          .put((num_chars) => radix_digit_generator(num_chars, 2), 1) // binary
+          .put((num_chars) => radix_digit_generator(num_chars, 10), 0.5) // base 10
+          .put((num_chars) => radix_digit_generator(num_chars, 8), 0.5) // octal
+          .put((num_chars) => radix_digit_generator(num_chars, 36), 0.5) // hexatridecimal
+          .put((num_chars) => char_level_generator(num_chars, () => Math.floor(
+            Math.random() * 24 + 10).toString(36)), 1) // letters
+          .put((num_chars) => { // lorem ipsum
             init_lorem_ipsum();
             var text = lorem_ipsum;
             while (text.length < num_chars + columns) {
@@ -405,10 +408,10 @@
             }
             text = text.substring(0, num_chars);
             return text;
-          }
-        ];
+          }, 1.5);
+
         try {  // pi (some browsers don't have bigint support)
-          animations.push((num_chars) => {
+          textgen_funcs.put((num_chars) => {
             let i = BigInt(1);
             let x = BigInt(3) * (BigInt(10) ** BigInt(num_chars+20)+BigInt(20));
             let pi = x;
@@ -421,10 +424,10 @@
             text = "3." + text.substring(1);
             text = text.substring(0, num_chars);
             return text;
-          });
+          }, 1);
         } catch(e) {}
 
-        text_to_print = textgen_funcs[Math.floor(textgen_funcs.length * Math.random())](columns*rows);
+        text_to_print = textgen_funcs.sample()(columns*rows);
       }
       setCharAt(canvas, flat_index_list[0], text_to_print[0]);
       flat_index_list.shift();
@@ -439,20 +442,19 @@
     () => {
       var isupdown = constant_random_boolean;
       if (frame_count == 0) {
-        var character_generators = [
-          () => ['/', '\\'][Math.floor(Math.random()*2)],
-          () => ['/', '\\'][Math.floor(Math.random()+constant_random_values[0])],
-          () => ['\u2502', '\u2500'][Math.floor(Math.random()*2)],
-          () => ['\u2502', '\u2500'][Math.floor(Math.random()+constant_random_values[0])],
-          () => {flip ^= true; return ['/', '\\'][flip];},
-          () => ['/', '\\', ' ', ' '][Math.floor(Math.random()*4)],
-          () => ['/', ' ', ' '][Math.floor(Math.random()*3)],
-          () => ['\\', ' ', ' '][Math.floor(Math.random()*3)],
-          () => ['\u2588', ' '][Math.floor(Math.random()*2)],
-          () => '\\',
-          () => '/'
-        ];
-        character_generator = character_generators[Math.floor(Math.min(Math.random(), Math.random()) * character_generators.length)];
+        var character_generators = new ObjectSampler()
+          .put(() => ['/', '\\'][Math.floor(Math.random()*2)], 2)
+          .put(() => ['/', '\\'][Math.floor(Math.random()+constant_random_values[0])], 2)
+          .put(() => ['\u2502', '\u2500'][Math.floor(Math.random()*2)], 2)
+          .put(() => ['\u2502', '\u2500'][Math.floor(Math.random()+constant_random_values[0])], 2)
+          .put(() => {flip ^= true; return ['/', '\\'][flip];}, 1.5)
+          .put(() => ['/', '\\', ' ', ' '][Math.floor(Math.random()*4)], 0.75)
+          .put(() => ['/', ' ', ' '][Math.floor(Math.random()*3)], 1)
+          .put(() => ['\\', ' ', ' '][Math.floor(Math.random()*3)], 1)
+          .put(() => ['\u2588', ' '][Math.floor(Math.random()*2)], 0.25)
+          .put(() => '\\', 0.5)
+          .put(() => '/', 0.5);
+        character_generator = character_generators.sample();
       }
       var y = frame_count;
       for (var x = 0; x < columns; x++) {
