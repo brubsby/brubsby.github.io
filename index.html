@@ -214,29 +214,31 @@
   };
   var get_bresenham_half_points = (line_points) => {
     var return_points = [];
-    var x0 = line_points[0][0];
-    var y0 = line_points[0][1];
-    var x1 = line_points[1][0];
-    var y1 = line_points[1][1];
-    if (isNaN(x0) || isNaN(x1) || isNaN(y0) || isNaN(y1)) {
-      throw "NaNs detected";
-    }
-    var dx = Math.abs(x1-x0);
-    var sx = x0<x1 ? 1 : -1;
-    var dy = -Math.abs(y1-y0);
-    var sy = y0<y1 ? 1 : -1;
-    var err = dx+dy;
-    while (true) {
-      return_points.push([x0, y0]);
-      if (x0==x1 && y0==y1) break;
-      var e2 = 2*err;
-      if (e2 >= dy) {
-        err += dy;
-        x0 += sx;
+    for (var i = 0; i < line_points.length - 1; i++) {
+      var x0 = line_points[i][0];
+      var y0 = line_points[i][1];
+      var x1 = line_points[i+1][0];
+      var y1 = line_points[i+1][1];
+      if (isNaN(x0) || isNaN(x1) || isNaN(y0) || isNaN(y1)) {
+        throw "NaNs detected";
       }
-      if (e2 <= dx) {
-        err += dx;
-        y0 += sy;
+      var dx = Math.abs(x1-x0);
+      var sx = x0<x1 ? 1 : -1;
+      var dy = -Math.abs(y1-y0);
+      var sy = y0<y1 ? 1 : -1;
+      var err = dx+dy;
+      while (true) {
+        return_points.push([x0, y0]);
+        if (x0==x1 && y0==y1) break;
+        var e2 = 2*err;
+        if (e2 >= dy) {
+          err += dy;
+          x0 += sx;
+        }
+        if (e2 <= dx) {
+          err += dx;
+          y0 += sy;
+        }
       }
     }
     return return_points;
@@ -830,24 +832,23 @@
       var width = columns * char_width;
       var height = rows * char_height;
       if (frame_count == 0) {
-        line_points = [
-          [Math.floor(Math.random() * columns),
-          Math.floor(Math.random() * rows * 2)],
-          [Math.floor(Math.random() * columns),
-          Math.floor(Math.random() * rows * 2)]];
-
-          bounces = 0;
-          var point_speeds = [Math.random() * 10, Math.random() * 10];
-          var thetas = [Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI];
-          velocity_pixels = [
-            [point_speeds[0] * Math.cos(thetas[0]), point_speeds[0] * Math.sin(thetas[0])],
-            [point_speeds[1] * Math.cos(thetas[1]), point_speeds[1] * Math.sin(thetas[1])]
-          ];
-          position_pixels = [
-            [line_points[0][0] * char_width, line_points[0][1] * char_height / 2],
-            [line_points[1][0] * char_width, line_points[1][1] * char_height / 2]
-          ];
+        var number_points = Math.floor(Math.min(Math.random(), Math.random(), Math.random()) * 5) + 2;
+        bounces = 0;
+        line_points = [];
+        position_pixels = [];
+        velocity_pixels = [];
+        var thetas = [];
+        var point_speeds = [];
+        for (var i = 0; i < number_points; i++) {
+          line_points.push([Math.floor(Math.random() * columns),
+          Math.floor(Math.random() * rows * 2)]);
+          point_speeds.push(Math.random() * 15 + 5);
+          thetas.push(Math.random() * 2 * Math.PI);
+          velocity_pixels.push([point_speeds[i] * Math.cos(thetas[i]), point_speeds[i] * Math.sin(thetas[i])]);
+          position_pixels.push([line_points[i][0] * char_width, line_points[i][1] * char_height / 2]);
+        }
       }
+
       var bresenham_points = get_bresenham_half_points(line_points);
       if(last_points) {
         for (var i = 0; i < last_points.length; i++) {
@@ -860,11 +861,10 @@
         setHalfPixel(canvas, coords[0], coords[1], true);
       }
       last_points = bresenham_points;
-      position_pixels = [
-        [position_pixels[0][0] + velocity_pixels[0][0],
-        position_pixels[0][1] + velocity_pixels[0][1]],
-        [position_pixels[1][0] + velocity_pixels[1][0],
-        position_pixels[1][1] + velocity_pixels[1][1]]];
+      for (var i = 0; i < position_pixels.length; i++) {
+        position_pixels[i][0] = position_pixels[i][0] + velocity_pixels[i][0];
+        position_pixels[i][1] = position_pixels[i][1] + velocity_pixels[i][1];
+      }
       for (var i = 0; i < position_pixels.length; i++) {
         if (position_pixels[i][0] < 0) {
           velocity_pixels[i][0] *= -1;
@@ -885,13 +885,12 @@
           bounces++;
         }
       }
-      line_points = [
-        [Math.floor(position_pixels[0][0] / char_width),
-        Math.floor(position_pixels[0][1] / (char_height / 2))],
-        [Math.floor(position_pixels[1][0] / char_width),
-        Math.floor(position_pixels[1][1] / (char_height / 2))]];
+      for (var i = 0; i < line_points.length; i++) {
+        line_points[i][0] = Math.floor(position_pixels[i][0] / char_width);
+        line_points[i][1] = Math.floor(position_pixels[i][1] / (char_height / 2));
+      }
       frame_count++;
-      setTimeout(animations[11], 0);
+      setTimeout(animations[11], 25);
     }
   ];
 
