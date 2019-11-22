@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
   <script src="js/simplex-noise.js"></script>
   <script>
-  /*----------- Global init -----------*/
+  /*----------- Class Definitions -----------*/
   class ObjectSampler {
     constructor() {this.objects=[];this.total_weight=0;return this;}
     put(obj, weight=1) {
@@ -94,11 +94,49 @@
     }
   }
 
+  class SortedSet {
+    constructor(array = [], compare=() => {if (a === b) return 0; return a < b ? -1 : 1;}) {
+        if (typeof array === 'function') { compare = array; array = []; }
+        this._array = []; this.compare = compare;
+        const length = array.length; let index = 0;
+        while (index < length) { this.add(array[index++]); }
+    }
+    get size() { return this._array.length; }
+    [Symbol.iterator]() { return this._array[Symbol.iterator](); }
+    clear() { this._array = []; return this; }
+    add(element) { let high = this._array.length; let low = 0;
+        while (high > low) {
+            const index = Math.floor((high + low) / 2);
+            const ordering = this.compare(this._array[index], element);
+            if (ordering < 0) { low = index + 1; }
+            else if (ordering > 0) { high = index } else { return this; }
+        }
+        this._array.splice(low, 0, element); return this; }
+    has(element) { return this.indexOf(element) !== -1; }
+    indexOf(element) { let high = this._array.length; let low = 0;
+      while (high > low) {
+            const index = Math.floor((high + low) / 2);
+            const ordering = this.compare(this._array[index], element);
+            if (ordering < 0) { low = index + 1; }
+            else if (ordering > 0) { high = index; }
+            else { return index; }} return -1;}
+    delete(element) {
+        const index = this.indexOf(element);
+        if (index === -1) { return; }
+        const removed = this._array[index]; this._array.splice(index, 1);
+        return removed; }
+    pop_index(index) {
+        const removed = this._array[index]; this._array.splice(index, 1);
+        return removed; }
+    get_index(index) { return this._array[index]; }
+}
+
   /*----------- Global init -----------*/
   var canvas, flat_index_list, simplex_noise, rows, columns,
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
-    position_pixels, bounces, text_to_print, flip, line_points, last_points;
+    position_pixels, bounces, text_to_print, flip, line_points, last_points,
+    empty_half_pixels;
   var char_height = 24;
   var char_width = 12;
   var frame_count = 0;
@@ -182,7 +220,7 @@
     }
     return result;
   }
-  var setCharAt = (canvas,index,chr) => {
+  var setCharAtIndex = (canvas,index,chr) => {
     var str = canvas.text();
     if(index > str.length-1) return str;
     var new_str = str.substr(0,index) + chr + str.substr(index+1);
@@ -192,7 +230,7 @@
     // set "pixel" defined at top or bottom half of char, in this coord system
     // there are twice as many y rows
     var canvas_index = get_canvas_index(columns, x, Math.floor(y/2));
-    var old_char = getCharAt(canvas, canvas_index);
+    var old_char = getCharAtIndex(canvas, canvas_index);
     var old_char_index = rules.indexOf(old_char);
     if (old_char_index == -1) {
       old_char_index = 0; // treat as neight pixel set
@@ -205,11 +243,12 @@
     } else {
       top_val = on_off;
     }
-    var new_char_index = 0 + (bottom_val ? 1 : 0) + (top_val ? 2 : 0);
-    setCharAt(canvas, canvas_index, rules[new_char_index]);
+    var new_char_index = (bottom_val ? 1 : 0) + (top_val ? 2 : 0);
+    setCharAtIndex(canvas, canvas_index, rules[new_char_index]);
     return old_char;
   }
-  var getCharAt = (canvas,index) => {
+  var getOtherHalfCoord = (x, y) => [x,  ((y % 2) ? -1 : 1) + y];
+  var getCharAtIndex = (canvas,index) => {
     return canvas.text().charAt(index);
   };
   var get_bresenham_half_points = (line_points) => {
@@ -415,7 +454,7 @@
       init_flat_index_list(rows, columns);
       for (var n = 0; n < animation_speed_multiplier; n++) {
         var index = Math.floor(Math.random() * flat_index_list.length);
-        setCharAt(canvas, flat_index_list[index], "o");
+        setCharAtIndex(canvas, flat_index_list[index], "o");
         flat_index_list.splice(index, 1);
         if (flat_index_list.length <= 0) {
           return;
@@ -481,7 +520,7 @@
 
         text_to_print = textgen_funcs.sample()(columns*rows);
       }
-      setCharAt(canvas, flat_index_list[0], text_to_print[0]);
+      setCharAtIndex(canvas, flat_index_list[0], text_to_print[0]);
       flat_index_list.shift();
       text_to_print = text_to_print.slice(1);
       if (flat_index_list.length <= 0) {
@@ -490,7 +529,7 @@
       setTimeout(animations[2], 0);
       frame_count++;
     },
-    // 10 print up or down
+    // 10 print styles up or down
     () => {
       var isupdown = constant_random_boolean;
       if (frame_count == 0) {
@@ -512,7 +551,7 @@
       for (var x = 0; x < columns; x++) {
         var index = get_canvas_index(columns, x, isupdown ? rows - y : y);
         var random_slash = character_generator();
-        setCharAt(canvas, index, random_slash);
+        setCharAtIndex(canvas, index, random_slash);
       }
       if (frame_count >= rows) return;
       frame_count++;
@@ -535,7 +574,7 @@
             minmax_dist_index = i;
           }
         }
-        setCharAt(canvas, flat_index_list[minmax_dist_index], "o");
+        setCharAtIndex(canvas, flat_index_list[minmax_dist_index], "o");
         flat_index_list.splice(minmax_dist_index, 1);
         if (flat_index_list.length <= 0) {
           return;
@@ -568,8 +607,8 @@
             max_dist_index = i;
           }
         }
-        setCharAt(canvas, flat_index_list[min_dist_index], "o");
-        setCharAt(canvas, flat_index_list[max_dist_index], "o");
+        setCharAtIndex(canvas, flat_index_list[min_dist_index], "o");
+        setCharAtIndex(canvas, flat_index_list[max_dist_index], "o");
         flat_index_list.splice(max_dist_index, 1);
         if (max_dist_index != min_dist_index) {
           if (max_dist_index < min_dist_index) {
@@ -613,7 +652,7 @@
           tries++;
           if (tries > 1000) {
             while (true) {
-              setCharAt(canvas, flat_index_list[0], "o");
+              setCharAtIndex(canvas, flat_index_list[0], "o");
               flat_index_list.shift();
               if (flat_index_list.length <= 0) {
                 return;
@@ -623,7 +662,7 @@
           heart_multiplier += 3 * (isminmax ? 1 : -1);
           continue;
         }
-        setCharAt(canvas, flat_index_list[minmax_dist_index], "o");
+        setCharAtIndex(canvas, flat_index_list[minmax_dist_index], "o");
         pixels_changed++;
         flat_index_list.splice(minmax_dist_index, 1);
         if (flat_index_list.length <= 0) {
@@ -645,7 +684,7 @@
         - get_simplex_noise_at(coords2, simplex_frequency, simplex_amplitude, octaves);
       });
       for (var n = 0; n < animation_speed_multiplier; n++) {
-        setCharAt(canvas, flat_index_list[0], "o");
+        setCharAtIndex(canvas, flat_index_list[0], "o");
         flat_index_list.shift();
         if (flat_index_list.length <= 0) {
           return;
@@ -706,7 +745,7 @@
       var any_pixels = false;
       for (var i = 0; i < index_lists.length; i++) {
         while(index_lists[i].length > 0 && pixels_changed < animation_speed_multiplier * 4) {
-          setCharAt(canvas, index_lists[i][0], flat_mapgen_tiles[i]);
+          setCharAtIndex(canvas, index_lists[i][0], flat_mapgen_tiles[i]);
           index_lists[i].shift();
           pixels_changed++;
           any_pixels = true;
@@ -819,7 +858,7 @@
       }
       for (var n = 0; n < animation_speed_multiplier; n++) {
         var index = flat_index_list[0];
-        setCharAt(canvas, index, get_ascii_char_from_canvas_index(poob_detail[poob_detail_index], columns, rows, index));
+        setCharAtIndex(canvas, index, get_ascii_char_from_canvas_index(poob_detail[poob_detail_index], columns, rows, index));
         flat_index_list.shift();
         if (flat_index_list.length <= 0) {
           return;
@@ -831,12 +870,16 @@
     () => {
       var width = columns * char_width;
       var height = rows * char_height;
+      var is_growth = constant_random_boolean;
+      var growth_per_frame = Math.floor(constant_random_values[0] * animation_speed_multiplier * 5);
       if (frame_count == 0) {
         var number_points = Math.floor(Math.min(Math.random(), Math.random(), Math.random()) * 5) + 2;
         bounces = 0;
         line_points = [];
         position_pixels = [];
         velocity_pixels = [];
+        var distance_from_edge = (coord) => Math.min(coord[0], coord[1], columns - coord[0] - 1, rows * 2 - coord[1] - 1) + 0.0000001 * coord[0] + 0.0001 * coord[1];
+        empty_half_pixels = new SortedSet((coord1, coord2) => distance_from_edge(coord1) - distance_from_edge(coord2));
         var thetas = [];
         var point_speeds = [];
         for (var i = 0; i < number_points; i++) {
@@ -847,6 +890,11 @@
           velocity_pixels.push([point_speeds[i] * Math.cos(thetas[i]), point_speeds[i] * Math.sin(thetas[i])]);
           position_pixels.push([line_points[i][0] * char_width, line_points[i][1] * char_height / 2]);
         }
+        for (var x = 0; x < columns; x++) {
+          for (var y = 0; y < rows; y++) {
+            empty_half_pixels.add([x, y * 2]);
+          }
+        }
       }
 
       var bresenham_points = get_bresenham_half_points(line_points);
@@ -854,6 +902,20 @@
         for (var i = 0; i < last_points.length; i++) {
           var coords = last_points[i];
           setHalfPixel(canvas, coords[0], coords[1], false);
+          empty_half_pixels.add(coords);
+          empty_half_pixels.add(getOtherHalfCoord(coords[0], coords[1]));
+        }
+      }
+      if (is_growth) {
+        var rules = [" ", "."];
+        var added_pixels = 0;
+        while (empty_half_pixels.size > 0 && added_pixels < growth_per_frame) {
+          var randomness = Math.min(Math.random(), Math.random(), Math.random(), Math.random());
+          var search_window_size = (constant_random_values[1] * 1000 + 200) * animation_speed_multiplier;
+          var index = Math.floor(randomness * Math.min(search_window_size, empty_half_pixels.size));
+          var coords = empty_half_pixels.pop_index(index);
+          setHalfPixel(canvas, coords[0], coords[1], true);
+          added_pixels++;
         }
       }
       for (var i = 0; i < bresenham_points.length; i++) {
