@@ -872,7 +872,7 @@
       var width = columns * char_width;
       var height = rows * char_height;
       var is_growth = constant_random_boolean;
-      var growth_per_frame = Math.floor(constant_random_values[0] * animation_speed_multiplier * 5);
+      var growth_per_frame = Math.floor(constant_random_values[0] * animation_speed_multiplier * 5 + frame_count / 100);
       if (frame_count == 0) {
         var number_points = Math.floor(Math.min(Math.random(), Math.random(), Math.random()) * 5) + 2;
         bounces = 0;
@@ -891,11 +891,9 @@
           velocity_pixels.push([point_speeds[i] * Math.cos(thetas[i]), point_speeds[i] * Math.sin(thetas[i])]);
           position_pixels.push([line_points[i][0] * char_width, line_points[i][1] * half_char_height]);
         }
-        if (is_growth) {
-          for (var x = 0; x < columns; x++) {
-            for (var y = 0; y < rows; y++) {
-              empty_half_pixels.add([x, y * 2]);
-            }
+        for (var x = 0; x < columns; x++) {
+          for (var y = 0; y < rows; y++) {
+            empty_half_pixels.add([x, y * 2]);
           }
         }
       }
@@ -905,22 +903,27 @@
         for (var i = 0; i < last_points.length; i++) {
           var coords = last_points[i];
           setHalfPixel(canvas, coords[0], coords[1], false);
-          if (is_growth) {
-            empty_half_pixels.add(coords);
-            empty_half_pixels.add(getOtherHalfCoord(coords[0], coords[1]));
-          }
+          empty_half_pixels.add(coords);
+          // empty_half_pixels.add(getOtherHalfCoord(coords[0], coords[1]));
         }
       }
       if (is_growth) {
         var rules = [" ", "."];
         var added_pixels = 0;
-        while (empty_half_pixels.size > 0 && added_pixels < growth_per_frame) {
+        while (added_pixels < growth_per_frame) {
           var randomness = Math.min(Math.random(), Math.random(), Math.random(), Math.random());
           var search_window_size = (constant_random_values[1] * 1000 + 200) * animation_speed_multiplier;
           var index = Math.floor(randomness * Math.min(search_window_size, empty_half_pixels.size));
           var coords = empty_half_pixels.pop_index(index);
           setHalfPixel(canvas, coords[0], coords[1], true);
           added_pixels++;
+          if (empty_half_pixels.size <= 0) {
+            return;
+          }
+        }
+      } else {
+        if (empty_half_pixels.size >= rows * 2 * columns) {
+          return;
         }
       }
       for (var i = 0; i < bresenham_points.length; i++) {
