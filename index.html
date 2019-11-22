@@ -138,6 +138,7 @@
     position_pixels, bounces, text_to_print, flip, line_points, last_points,
     empty_half_pixels;
   var char_height = 24;
+  var half_char_height = char_height / 2;
   var char_width = 12;
   var frame_count = 0;
   var index_lists = [];
@@ -884,15 +885,17 @@
         var point_speeds = [];
         for (var i = 0; i < number_points; i++) {
           line_points.push([Math.floor(Math.random() * columns),
-          Math.floor(Math.random() * rows * 2)]);
+          Math.floor(Math.random() * rows) * 2]);
           point_speeds.push(Math.random() * 15 + 5);
           thetas.push(Math.random() * 2 * Math.PI);
           velocity_pixels.push([point_speeds[i] * Math.cos(thetas[i]), point_speeds[i] * Math.sin(thetas[i])]);
-          position_pixels.push([line_points[i][0] * char_width, line_points[i][1] * char_height / 2]);
+          position_pixels.push([line_points[i][0] * char_width, line_points[i][1] * half_char_height]);
         }
-        for (var x = 0; x < columns; x++) {
-          for (var y = 0; y < rows; y++) {
-            empty_half_pixels.add([x, y * 2]);
+        if (is_growth) {
+          for (var x = 0; x < columns; x++) {
+            for (var y = 0; y < rows; y++) {
+              empty_half_pixels.add([x, y * 2]);
+            }
           }
         }
       }
@@ -902,8 +905,10 @@
         for (var i = 0; i < last_points.length; i++) {
           var coords = last_points[i];
           setHalfPixel(canvas, coords[0], coords[1], false);
-          empty_half_pixels.add(coords);
-          empty_half_pixels.add(getOtherHalfCoord(coords[0], coords[1]));
+          if (is_growth) {
+            empty_half_pixels.add(coords);
+            empty_half_pixels.add(getOtherHalfCoord(coords[0], coords[1]));
+          }
         }
       }
       if (is_growth) {
@@ -932,7 +937,7 @@
           velocity_pixels[i][0] *= -1;
           position_pixels[i][0] -= 2 * position_pixels[i][0];
           bounces++;
-        } else if (position_pixels[i][0] > width) {
+        } else if (position_pixels[i][0] >= width) {
           velocity_pixels[i][0] *= -1;
           position_pixels[i][0] -= 2 * (position_pixels[i][0] - width);
           bounces++;
@@ -941,15 +946,15 @@
           velocity_pixels[i][1] *= -1;
           position_pixels[i][1] -= 2 * (position_pixels[i][1]);
           bounces++;
-        } else if (position_pixels[i][1] > height) {
+        } else if (position_pixels[i][1] >= height) {
           velocity_pixels[i][1] *= -1;
-          position_pixels[i][0] -= 2 * (position_pixels[i][1] - height);
+          position_pixels[i][1] -= 2 * (position_pixels[i][1] - height);
           bounces++;
         }
       }
       for (var i = 0; i < line_points.length; i++) {
         line_points[i][0] = Math.floor(position_pixels[i][0] / char_width);
-        line_points[i][1] = Math.floor(position_pixels[i][1] / (char_height / 2));
+        line_points[i][1] = Math.floor(position_pixels[i][1] / half_char_height);
       }
       frame_count++;
       setTimeout(animations[11], 25);
