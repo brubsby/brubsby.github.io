@@ -902,9 +902,11 @@
       if(last_points) {
         for (var i = 0; i < last_points.length; i++) {
           var coords = last_points[i];
+          var other_half_coords = getOtherHalfCoord(coords[0], coords[1]);
           setHalfPixel(canvas, coords[0], coords[1], false);
+          setHalfPixel(canvas, other_half_coords[0], other_half_coords[1], false);
           empty_half_pixels.add(coords);
-          // empty_half_pixels.add(getOtherHalfCoord(coords[0], coords[1]));
+          empty_half_pixels.add(other_half_coords);
         }
       }
       if (is_growth) {
