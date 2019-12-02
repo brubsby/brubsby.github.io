@@ -108,8 +108,8 @@
       }
       throw "sample error, random value was " + index_val + " but total weight was " + this.total_weight;
     }
-    get(i) {return this.objects[i];}
-    size() {return this.objects.size;}
+    get_index(i) {return this.objects[i]["obj"];}
+    size() {return this.objects.length;}
   }
 
   class SortedSet {
@@ -1030,7 +1030,7 @@
   var parsed = parseInt(animation_url_param, 10);
   if (!isNaN(parsed)) animation_index = parsed;
   if (animation_index === 0 || !!animation_index) {
-    if (animation_index >= animations.length) {
+    if (animation_index >= animations.size()) {
       Math.seedrandom(animation_index);
       animation_index = null;
     }
@@ -1044,8 +1044,8 @@
     constant_random_values.push(Math.random());
   }
 
-  var animation = animation_index === 0 ? animations.get(0) :
-    (animation_index ? animations.get(animation_index) : animations.sample());
+  var animation = animation_index === 0 ? animations.get_index(0) :
+    (animation_index ? animations.get_index(animation_index) : animations.sample());
 
   $(document).ready(function() {
     reset_canvas();
