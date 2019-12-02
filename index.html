@@ -19,28 +19,14 @@
   }
 
   @media (orientation: landscape) {
-    body {
-      grid-template-columns: min-content auto;
-      grid-template-rows: 100%;
-    }
-    div.menu {
-      grid-column: 1 / 1;
-    }
     div.ascii {
-      grid-column: 2 / 2;
+      grid-area: 1 / 2 / span 2 / span 1;
     }
   }
 
   @media (orientation: portrait) {
-    body {
-      grid-template-columns: 100%;
-      grid-template-rows: min-content auto;
-    }
-    div.menu {
-      grid-row: 1 / 1;
-    }
     div.ascii {
-      grid-row: 2 / 2;
+      grid-area: 2 / 1 / span 1 / span 2;
     }
   }
 
@@ -50,9 +36,15 @@
     font-family: Courier, monospace;
     color: #000;
   	padding: 2em 3em 2em 3em;
+  }
+
+  div.container {
     display: grid;
     grid-column-gap: 68px;
-    height: 88%
+    grid-row-gap: 10px;
+    grid-template-columns: min-content auto;
+    grid-template-rows: min-content auto;
+    height: 100%;
   }
   div {
   	font-weight: normal;
@@ -63,6 +55,7 @@
   }
   div.menu {
     margin: 0;
+    grid-column: 1 / 1;
   }
   h1 {
     margin: 0;
@@ -1050,15 +1043,17 @@
   </script>
   </head>
   <body>
-    <div class="menu">
-      <h1><a href="">BRUBSBY</a></h1>
-      <ol id="links">
-        <li id="twitter"><a href="https://twitter.com/brubsby">TWITTER</a></li>
-        <li id="art"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative)%20(from%3Abrubsby)&src=typed_query">ART</a></li>
-        <li id="support"><a href="https://ko-fi.com/brubsby">SUPPORT</a></li>
-        <li id="inquiries"><a href="https://twitter.com/messages/compose?recipient_id=2402350662">INQUIRIES</a></li>
-      </ol>
+    <div class="container">
+      <div class="menu">
+        <h1><a href="">BRUBSBY</a></h1>
+        <ol id="links">
+          <li id="twitter"><a href="https://twitter.com/brubsby">TWITTER</a></li>
+          <li id="art"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative)%20(from%3Abrubsby)&src=typed_query">ART</a></li>
+          <li id="support"><a href="https://ko-fi.com/brubsby">SUPPORT</a></li>
+          <li id="inquiries"><a href="https://twitter.com/messages/compose?recipient_id=2402350662">INQUIRIES</a></li>
+        </ol>
+      </div>
+      <div class="ascii"></div>
     </div>
-    <div class="ascii"></div>
   </body>
 </html>
