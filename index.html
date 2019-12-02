@@ -152,7 +152,7 @@
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
     position_pixels, bounces, text_to_print, flip, line_points, last_points,
-    empty_half_pixels;
+    empty_half_pixels, browser_info;
   var char_height = 24;
   var half_char_height = char_height / 2;
   var char_width = 12;
@@ -462,6 +462,38 @@
       + "tea dictumst.";
   }
 
+  var init_browser_info = () => {
+    var info = {};
+    info["timeOpened"] = (new Date()).toString();
+    info["timeZone"] = ((new Date()).getTimezoneOffset()/60).toString();
+    info["javaEnabled"] = navigator.javaEnabled();
+    info["pageon"] = window.location.pathname
+    info["referrer"] = document.referrer;
+    info["previousSites"] = history.length;
+    info["browserName"] = navigator.appName;
+    info["browserEngine"] = navigator.product;
+    info["browserVersion1a"] = navigator.appVersion;
+    info["browserVersion1b"] = navigator.userAgent;
+    info["browserLanguage"] = navigator.language;
+    info["browserOnline"] = navigator.onLine;
+    info["browserPlatform"] = navigator.platform;
+    info["dataCookiesEnabled"] = navigator.cookieEnabled;
+    info["dataCookies2"] = decodeURIComponent(document.cookie.split(";"));
+    info["dataCookies1"] = document.cookie;
+    info["dataStorage"] = localStorage;
+    info["sizeScreenW"] = screen.width;
+    info["sizeScreenH"] = screen.height;
+    info["sizeDocW"] = document.width;
+    info["sizeInW"] = innerWidth;
+    info["sizeDocH"] = document.height;
+    info["sizeInH"] = innerHeight;
+    info["sizeAvailH"] = screen.availHeight;
+    info["sizeAvailW"] = screen.availWidth;
+    info["scrColorDepth"] = screen.colorDepth;
+    info["scrPixelDepth"] = screen.pixelDepth;
+    browser_info = JSON.stringify(info);
+  }
+
   /*----------- Animations -----------*/
   var animations = [
     // do nothing
@@ -493,6 +525,21 @@
         var radix_digit_generator =
           (num_chars, radix) => char_level_generator(num_chars, () =>
             Math.floor(Math.random() * radix).toString(radix));
+        //duplicates text and removes spaces at start of lines for aesthetics
+        var text_formatter = (input_text, num_chars) => {
+          var text = input_text;
+          while (text.length < num_chars + columns) {
+            text += " " + input_text;
+          }
+          for (var i = 0; i < rows; i++) {
+            var index = i * columns;
+            while (text[index] == " ") {
+              text = text.substr(0, index) + text.substr(index + 1);
+            }
+          }
+          text = text.substring(0, num_chars);
+          return text;
+        }
         var textgen_funcs = new ObjectSampler()
           .put((num_chars) => $('html').html().replace(/\s/g, "").substring(0, num_chars))
           .put((num_chars) => radix_digit_generator(num_chars, 16), 1) // hex
@@ -504,19 +551,12 @@
             Math.random() * 24 + 10).toString(36)), 1) // letters
           .put((num_chars) => { // lorem ipsum
             init_lorem_ipsum();
-            var text = lorem_ipsum;
-            while (text.length < num_chars + columns) {
-              text += " " + lorem_ipsum;
-            }
-            for (var i = 0; i < rows; i++) {
-              var index = i * columns;
-              while (text[index] == " ") {
-                text = text.substr(0, index) + text.substr(index + 1);
-              }
-            }
-            text = text.substring(0, num_chars);
-            return text;
-          }, 1.5);
+            return text_formatter(lorem_ipsum, num_chars);
+          }, 1.25)
+          .put((num_chars) => {
+            init_browser_info();
+            return text_formatter(browser_info, num_chars);
+          }, 1.25);
 
         try {  // pi (some browsers don't have bigint support)
           textgen_funcs.put((num_chars) => {
