@@ -149,12 +149,35 @@
     get_index(index) { return this._array[index]; }
 }
 
+  class Particle {
+    constructor(position) {
+      this.position = position;
+      this.velocity = [0, 0];
+      this.framecount = 0;
+    }
+    step(acceleration, timestep) {
+      this.framecount++;
+      this.velocity = [this.velocity[0] + acceleration[0] * timestep,
+        this.velocity[1] + acceleration[1] * timestep];
+      this.position = [this.position[0] + this.velocity[0] * timestep,
+        this.position[1] + this.velocity[1] * timestep];
+    }
+    inbounds(width, height) {
+      return this.position[0] > 0 && this.position[0] < width
+        && this.position[1] > 0 && this.position[1] < height;
+    }
+    framecount_under(test_value) {
+      return this.framecount < test_value;
+    }
+  }
+
   /*----------- Global init -----------*/
   var canvas, flat_index_list, simplex_noise, rows, columns,
     animation_speed_multiplier, min_dim, max_dim, flat_mapgen_tiles,
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
     position_pixels, bounces, text_to_print, flip, line_points, last_points,
-    empty_half_pixels, browser_info;
+    empty_half_pixels, browser_info, remaining_particles, particles,
+    random_edge_point_sampler;
   var char_height = 24;
   var half_char_height = char_height / 2;
   var char_width = 12;
@@ -238,6 +261,10 @@
       octave_frequency *= lacunarity;
     }
     return result;
+  }
+  var simplex_value_to_vector = (amplitude, simplex_value) => {
+    return [amplitude * Math.cos(simplex_value * Math.PI),
+      amplitude * Math.sin(simplex_value * Math.PI)];
   }
   var setCharAtIndex = (canvas,index,chr) => {
     var str = canvas.text();
@@ -1033,7 +1060,71 @@
       }
       frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 25);
-    }, 1);
+    }, 1)
+    // flow field particles
+    .put((this_animation) => {
+      var width = columns * char_width;
+      var height = rows * char_height;
+      if (frame_count == 0) {
+        remaining_particles = 10000;
+        particles = [];
+        random_edge_point_sampler = new ObjectSampler()
+          .put(() => [Math.random() * width, 0], width)
+          .put(() => [Math.random() * width, height], width)
+          .put(() => [0, Math.random() * height], height)
+          .put(() => [width, Math.random() * height], height);
+
+      }
+      var simplex_frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
+      var simplex_amplitude = 1;
+      var octaves = Math.floor(constant_random_values[0] * Math.min(animation_speed_multiplier - 1, 3)) + 1;
+      var particle_lifespan = 10000;
+      var new_particles_per_frame = 1;
+      var acceleration_multiplier = 2;
+      var timestep = 0.05;
+      var max_new_particle_tries = 100;
+      init_simplex_noise();
+      var new_particle_count = 0;
+      var new_particle_tries = 0;
+      while (remaining_particles > 0 && new_particle_count < new_particles_per_frame) {
+        var particle = new Particle(random_edge_point_sampler.sample()());
+        var simplex_value = get_simplex_noise_at(particle.position, simplex_frequency, simplex_amplitude, octaves)
+        var acceleration = simplex_value_to_vector(acceleration_multiplier, simplex_value);
+        particle.step(acceleration, timestep);
+        if (particle.inbounds(width, height)) {
+          particles.push(particle);
+          new_particle_count++;
+        }
+        new_particle_tries++;
+        if (new_particle_tries > max_new_particle_tries) {
+          return;
+        }
+      }
+      remaining_particles -= new_particle_count;
+
+      for (var i = 0; i < particles.length; i++) {
+        var particle = particles[i];
+        var simplex_value = get_simplex_noise_at(particle.position, simplex_frequency, simplex_amplitude, octaves)
+        var acceleration = simplex_value_to_vector(acceleration_multiplier, simplex_value);
+        particle.step(acceleration, timestep);
+      }
+
+      particles = particles.filter(particle => particle.inbounds(width, height));
+      particles = particles.filter(particle => particle.framecount_under(particle_lifespan));
+
+      var text = (".".repeat(columns) + "\n").repeat(rows);
+      for (var i = 0; i < particles.length; i++) {
+        var particle = particles[i];
+        var coordinates = [Math.floor(particle.position[0] / char_width),
+          Math.floor(particle.position[1] / char_height)];
+        var index = get_canvas_index(columns, coordinates[0], coordinates[1]);
+        text = text.substr(0, index) + "o" + text.substr(index + 1);
+      }
+      canvas.text(text);
+      frame_count++;
+      if (particles.length == 0) return;
+      setTimeout(this_animation.bind(null, this_animation), 0);
+    }, 2);
 
   /*----------- Random/Seed init -----------*/
   var animation_index;
