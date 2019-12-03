@@ -270,13 +270,23 @@
   var getCharAtIndex = (canvas,index) => {
     return canvas.text().charAt(index);
   };
-  var get_bresenham_half_points = (line_points) => {
+  var get_bresenham_half_points = (line_points, is_connected) => {
     var return_points = [];
-    for (var i = 0; i < line_points.length - 1; i++) {
+    for (var i = 0; i < line_points.length; i++) {
       var x0 = line_points[i][0];
       var y0 = line_points[i][1];
-      var x1 = line_points[i+1][0];
-      var y1 = line_points[i+1][1];
+      var x1, y1;
+      if (i == line_points.length - 1) {
+        if (is_connected && line_points.length > 2) {
+          x1 = line_points[0][0];
+          y1 = line_points[0][1];
+        } else {
+          break;
+        }
+      } else {
+        x1 = line_points[i+1][0];
+        y1 = line_points[i+1][1];
+      }
       if (isNaN(x0) || isNaN(x1) || isNaN(y0) || isNaN(y1)) {
         throw "NaNs detected";
       }
@@ -931,6 +941,7 @@
       var width = columns * char_width;
       var height = rows * char_height;
       var is_growth = constant_random_boolean;
+      var is_connected = constant_random_values[2] < 0.5;
       var growth_per_frame = Math.floor(constant_random_values[0] * animation_speed_multiplier * 5 + frame_count / 100);
       if (frame_count == 0) {
         var number_points = Math.floor(Math.min(Math.random(), Math.random(), Math.random()) * 5) + 2;
@@ -957,7 +968,7 @@
         }
       }
 
-      var bresenham_points = get_bresenham_half_points(line_points);
+      var bresenham_points = get_bresenham_half_points(line_points, is_connected);
       if(last_points) {
         for (var i = 0; i < last_points.length; i++) {
           var coords = last_points[i];
