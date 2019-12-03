@@ -272,7 +272,7 @@
     var new_str = str.substr(0,index) + chr + str.substr(index+1);
     canvas.text(new_str);
   };
-  var setHalfPixel = (canvas,x,y,on_off,rules=[' ', '.', '`', ':']) => {
+  var setHalfPixel = (canvas,x,y,on_off=true,rules=[' ', '.', '`', ':']) => {
     // set "pixel" defined at top or bottom half of char, in this coord system
     // there are twice as many y rows
     var canvas_index = get_canvas_index(columns, x, Math.floor(y/2));
@@ -297,7 +297,7 @@
   var getCharAtIndex = (canvas,index) => {
     return canvas.text().charAt(index);
   };
-  var get_bresenham_half_points = (line_points, is_connected) => {
+  var get_bresenham_line_points = (line_points, is_connected=false) => {
     var return_points = [];
     for (var i = 0; i < line_points.length; i++) {
       var x0 = line_points[i][0];
@@ -338,6 +338,36 @@
     }
     return return_points;
   }
+  var get_bresenham_circle_points = function (x0, y0, radius) {
+    var return_points = [];
+    if (isNaN(x0) || isNaN(y0) || isNaN(radius)) {
+      throw "NaNs detected";
+    }
+    var x = radius;
+    var y = 0;
+    var radiusError = 1 - x;
+
+    while (x >= y) {
+      return_points.push([x + x0, y + y0]);
+      return_points.push([y + x0, x + y0]);
+      return_points.push([-x + x0, y + y0]);
+      return_points.push([-y + x0, x + y0]);
+      return_points.push([-x + x0, -y + y0]);
+      return_points.push([-y + x0, -x + y0]);
+      return_points.push([x + x0, -y + y0]);
+      return_points.push([y + x0, -x + y0]);
+      y++;
+
+      if (radiusError < 0) {
+          radiusError += 2 * y + 1;
+      }
+      else {
+          x--;
+          radiusError+= 2 * (y - x + 1);
+      }
+    }
+    return return_points;
+  };
   var getUrlParameter = function getUrlParameter(sParam) {
     var sPageURL = window.location.search.substring(1),
         sURLVariables = sPageURL.split('&'),
@@ -995,7 +1025,7 @@
         }
       }
 
-      var bresenham_points = get_bresenham_half_points(line_points, is_connected);
+      var bresenham_points = get_bresenham_line_points(line_points, is_connected);
       if(last_points) {
         for (var i = 0; i < last_points.length; i++) {
           var coords = last_points[i];
@@ -1124,6 +1154,51 @@
       frame_count++;
       if (particles.length == 0) return;
       setTimeout(this_animation.bind(null, this_animation), 0);
+    }, 2)
+    // analog clock
+    .put((this_animation) => {
+      var width = columns * char_width;
+      var height = rows * char_height;
+      var center_point = [Math.floor(columns / 2), rows];
+      var clock_radius = Math.floor(Math.min(columns, rows * 2)/3);
+      var second_hand_radius = clock_radius * 0.75;
+      var minute_hand_radius = clock_radius * 0.9;
+      var hour_hand_radius = clock_radius * 0.6;
+      var current_time = new Date();
+      var normalized_milliseconds = current_time.getMilliseconds() / 1000;
+      var normalized_seconds = (current_time.getSeconds() + normalized_milliseconds) / 60;
+      var normalized_quantized_seconds = current_time.getSeconds() / 60;
+      var normalized_minutes = (current_time.getMinutes() + normalized_seconds) / 60;
+      var normalized_hours = (current_time.getHours() % 12 + normalized_minutes) / 12;
+      var seconds_theta = 2 * Math.PI * (normalized_quantized_seconds - 0.25);
+      var minutes_theta = 2 * Math.PI * (normalized_minutes - 0.25);
+      var hours_theta = 2 * Math.PI * (normalized_hours - 0.25);
+      var second_hand_end_point = [
+        Math.round(second_hand_radius * Math.cos(seconds_theta) + center_point[0]),
+        Math.round(second_hand_radius * Math.sin(seconds_theta) + center_point[1])];
+      var minute_hand_end_point = [
+        Math.round(minute_hand_radius * Math.cos(minutes_theta) + center_point[0]),
+        Math.round(minute_hand_radius * Math.sin(minutes_theta) + center_point[1])];
+      var hour_hand_end_point = [
+        Math.round(hour_hand_radius * Math.cos(hours_theta) + center_point[0]),
+        Math.round(hour_hand_radius * Math.sin(hours_theta) + center_point[1])];
+
+      var circle_points = get_bresenham_circle_points(center_point[0], center_point[1], clock_radius);
+      var second_hand_points = get_bresenham_line_points([center_point, second_hand_end_point]);
+      var minute_hand_points = get_bresenham_line_points([center_point, minute_hand_end_point]);
+      var hour_hand_points = get_bresenham_line_points([center_point, hour_hand_end_point]);
+      var shapes = [circle_points, second_hand_points, minute_hand_points, hour_hand_points];
+
+      var text = (" ".repeat(columns) + "\n").repeat(rows);
+      canvas.text(text);
+      for (var i = 0; i < shapes.length; i++) {
+        var shape_points = shapes[i];
+        for (var j = 0; j < shape_points.length; j++) {
+          var point = shape_points[j];
+          setHalfPixel(canvas, point[0], point[1]);
+        }
+      }
+      setTimeout(this_animation.bind(null, this_animation), 333);
     }, 2);
 
   /*----------- Random/Seed init -----------*/
