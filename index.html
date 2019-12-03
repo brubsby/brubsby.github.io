@@ -150,9 +150,9 @@
 }
 
   class Particle {
-    constructor(position) {
+    constructor(position, velocity=[0, 0]) {
       this.position = position;
-      this.velocity = [0, 0];
+      this.velocity = velocity;
       this.framecount = 0;
     }
     step(vector, timestep, acceleration_or_velocity=true) {
@@ -266,9 +266,15 @@
     }
     return result;
   }
-  var simplex_value_to_vector = (amplitude, simplex_value) => {
-    return [amplitude * Math.cos(simplex_value * Math.PI),
-      amplitude * Math.sin(simplex_value * Math.PI)];
+  var simplex_value_to_vector = (amplitude, simplex_value, jitter_magnitude=0) => {
+    var vector = [amplitude * Math.cos(simplex_value * Math.PI),
+      amplitude * Math.sin(simplex_value * Math.PI) + jitter_magnitude * Math.sin(Math.random() * 2 * Math.PI)];
+    if (jitter_magnitude != 0) {
+      var random_theta = Math.random() * 2 * Math.PI;
+      vector = [vector[0] + jitter_magnitude * Math.cos(random_theta),
+        vector[1] + jitter_magnitude * Math.sin(random_theta)];
+    }
+    return vector;
   }
   var setCharAtIndex = (canvas,index,chr) => {
     var str = canvas.text();
@@ -1117,13 +1123,14 @@
       var vector_multiplier = acceleration_or_velocity ? 2 : 50;
       var timestep = 0.05;
       var max_new_particle_tries = 100;
+      var jitter_magnitude = acceleration_or_velocity ? 0 : 25;
       init_simplex_noise();
       var new_particle_count = 0;
       var new_particle_tries = 0;
       while (remaining_particles > 0 && new_particle_count < new_particles_per_frame) {
         var particle = new Particle(random_edge_point_sampler.sample()());
         var simplex_value = get_simplex_noise_at(particle.position, simplex_frequency, simplex_amplitude, octaves)
-        var vector = simplex_value_to_vector(vector_multiplier, simplex_value);
+        var vector = simplex_value_to_vector(vector_multiplier, simplex_value, jitter_magnitude);
         particle.step(vector, timestep, acceleration_or_velocity);
         if (particle.inbounds(width, height)) {
           particles.push(particle);
@@ -1139,7 +1146,7 @@
       for (var i = 0; i < particles.length; i++) {
         var particle = particles[i];
         var simplex_value = get_simplex_noise_at(particle.position, simplex_frequency, simplex_amplitude, octaves)
-        var vector = simplex_value_to_vector(vector_multiplier, simplex_value);
+        var vector = simplex_value_to_vector(vector_multiplier, simplex_value, jitter_magnitude);
         particle.step(vector, timestep, acceleration_or_velocity);
       }
 
