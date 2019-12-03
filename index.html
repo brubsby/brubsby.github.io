@@ -155,10 +155,14 @@
       this.velocity = [0, 0];
       this.framecount = 0;
     }
-    step(acceleration, timestep) {
+    step(vector, timestep, acceleration_or_velocity=true) {
       this.framecount++;
-      this.velocity = [this.velocity[0] + acceleration[0] * timestep,
-        this.velocity[1] + acceleration[1] * timestep];
+      if(acceleration_or_velocity) {
+        this.velocity = [this.velocity[0] + vector[0] * timestep,
+          this.velocity[1] + vector[1] * timestep];
+      } else {
+        this.velocity = [vector[0], vector[1]];
+      }
       this.position = [this.position[0] + this.velocity[0] * timestep,
         this.position[1] + this.velocity[1] * timestep];
     }
@@ -1095,6 +1099,7 @@
     .put((this_animation) => {
       var width = columns * char_width;
       var height = rows * char_height;
+      var acceleration_or_velocity = constant_random_boolean;
       if (frame_count == 0) {
         remaining_particles = 10000;
         particles = [];
@@ -1103,14 +1108,13 @@
           .put(() => [Math.random() * width, height], width)
           .put(() => [0, Math.random() * height], height)
           .put(() => [width, Math.random() * height], height);
-
       }
       var simplex_frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
       var simplex_amplitude = 1;
       var octaves = Math.floor(constant_random_values[0] * Math.min(animation_speed_multiplier - 1, 3)) + 1;
       var particle_lifespan = 10000;
       var new_particles_per_frame = 1;
-      var acceleration_multiplier = 2;
+      var vector_multiplier = acceleration_or_velocity ? 2 : 50;
       var timestep = 0.05;
       var max_new_particle_tries = 100;
       init_simplex_noise();
@@ -1119,8 +1123,8 @@
       while (remaining_particles > 0 && new_particle_count < new_particles_per_frame) {
         var particle = new Particle(random_edge_point_sampler.sample()());
         var simplex_value = get_simplex_noise_at(particle.position, simplex_frequency, simplex_amplitude, octaves)
-        var acceleration = simplex_value_to_vector(acceleration_multiplier, simplex_value);
-        particle.step(acceleration, timestep);
+        var vector = simplex_value_to_vector(vector_multiplier, simplex_value);
+        particle.step(vector, timestep, acceleration_or_velocity);
         if (particle.inbounds(width, height)) {
           particles.push(particle);
           new_particle_count++;
@@ -1135,8 +1139,8 @@
       for (var i = 0; i < particles.length; i++) {
         var particle = particles[i];
         var simplex_value = get_simplex_noise_at(particle.position, simplex_frequency, simplex_amplitude, octaves)
-        var acceleration = simplex_value_to_vector(acceleration_multiplier, simplex_value);
-        particle.step(acceleration, timestep);
+        var vector = simplex_value_to_vector(vector_multiplier, simplex_value);
+        particle.step(vector, timestep, acceleration_or_velocity);
       }
 
       particles = particles.filter(particle => particle.inbounds(width, height));
