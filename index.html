@@ -201,7 +201,8 @@
     mapgen_tiles, mapgen_probabilities, falloff_map, velocity_pixels,
     position_pixels, bounces, text_to_print, flip, line_points, last_points,
     empty_half_pixels, browser_info, remaining_particles, particles,
-    random_edge_point_sampler;
+    random_edge_point_sampler, active_sand_coords, grid, jitter_offsets,
+    gravity_offset;
   var char_height = 24;
   var half_char_height = char_height / 2;
   var char_width = 12;
@@ -411,6 +412,19 @@
     }
   };
   var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
+  var get_coord_offset = (coord, offset) => [coord[0] + offset[0], coord[1] + offset[1]];
+  var mark_grid = (grid, coord, value) => {grid[coord[0]][coord[1]] = value}
+  var is_grid_offset_in_bounds = (grid, coord, offset) => {
+    var new_coord = get_coord_offset(coord, offset);
+    if (new_coord[0] >= 0 && new_coord[1] >= 0 && new_coord[0] < grid.length && new_coord[1] < grid[0].length) {
+      return true;
+    }
+    return false;
+  }
+  var is_grid_offset_true = (grid, coord, offset) => {
+    var new_coord = get_coord_offset(coord, offset);
+    return grid[new_coord[0]][new_coord[1]];
+  }
 
   /*----------- Data Init -----------*/
 
@@ -1232,7 +1246,87 @@
         }
       }
       setTimeout(this_animation.bind(null, this_animation), 333);
-    }, 1);
+    }, 1)
+    // falling sand
+    .put((this_animation) => {
+      var width = columns * char_width;
+      var height = rows * char_height;
+      var expected_value_new_sand_per_frame = constant_random_values[0];
+      var jitter_chance = constant_random_values[1] * 0.5;
+      var dropper_radius = Math.min(constant_random_values[2], constant_random_values[3]) * char_width * 5;
+      var dropper_position_frequency =  constant_random_values[4] * 0.01 + 0.005;
+      var dropper_direction = constant_random_boolean ? 1 : -1;
+      var dropper_position_pixels = width / 2 + dropper_direction * Math.sin(frame_count * dropper_position_frequency) * width / 2;
+      if (frame_count == 0) {
+        active_sand_coords = [];
+        grid = [];
+        for (var i = 0; i < rows; i++) {
+          grid.push(Array(columns).fill(false));
+        }
+        jitter_offsets = [[1, 1], [1, -1]];
+        gravity_offset = [1, 0];
+      }
+
+      //physics
+      for (var i = 0; i < active_sand_coords.length; i++) {
+        var sand_coord = active_sand_coords[i];
+        var is_jitter = Math.random() < jitter_chance;
+        var jitter_index = Math.floor(Math.random() * jitter_offsets.length);
+        var jitter_offset = jitter_offsets[jitter_index];
+        var has_moved = false;
+        if (is_jitter) {
+          if (is_grid_offset_in_bounds(grid, sand_coord, jitter_offset)) {
+            if (!is_grid_offset_true(grid, sand_coord, jitter_offset)) {
+              active_sand_coords[i] = get_coord_offset(sand_coord, jitter_offset);
+              mark_grid(grid, sand_coord, false);
+              mark_grid(grid, active_sand_coords[i], true);
+              has_moved = true;
+            }
+          }
+        }
+        if (!has_moved && is_grid_offset_in_bounds(grid, sand_coord, gravity_offset)) {
+          if (!is_grid_offset_true(grid, sand_coord, gravity_offset)) {
+            active_sand_coords[i] = get_coord_offset(sand_coord, gravity_offset);
+            mark_grid(grid, sand_coord, false);
+            mark_grid(grid, active_sand_coords[i], true);
+            has_moved = true;
+          }
+        }
+      }
+
+      //dropper code
+      var min_x = Math.max(0, Math.floor(-1 + (dropper_position_pixels - dropper_radius) / char_width));
+      var max_x = Math.min(columns, Math.floor(1 + (dropper_position_pixels + dropper_radius) / char_width));
+      for (var i = min_x; i < max_x; i++) {
+        var x_pixels = (i + 0.5) * char_width;
+        if (x_pixels - dropper_position_pixels <= dropper_radius) {
+          if (!grid[0][i]) {
+            active_sand_coords.push([0, i]);
+            mark_grid(grid, [0, i], true);
+          }
+        }
+      }
+
+      //render
+      var any_empty = false;
+      var text = "";
+      for (var i = 0; i < grid.length; i++) {
+        for (var j = 0; j < grid[0].length; j++) {
+          if (grid[i][j]) {
+            text += "o";
+          } else {
+            text += ".";
+            any_empty = true;
+          }
+        }
+        text += "\n";
+      }
+      canvas.text(text);
+      if (!any_empty) return;
+
+      frame_count++;
+      setTimeout(this_animation.bind(null, this_animation), 25);
+    }, 3);
 
   /*----------- Random/Seed init -----------*/
   var animation_index;
@@ -1256,6 +1350,8 @@
 
   var animation = animation_index === 0 ? animations.get_index(0) :
     (animation_index ? animations.get_index(animation_index) : animations.sample());
+
+  /*----------- on doc ready -----------*/
 
   $(document).ready(function() {
     reset_canvas();
