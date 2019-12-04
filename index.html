@@ -412,6 +412,7 @@
     }
   };
   var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
+  var get_random_int_with_expected_float_average = (expected) => (Math.random() < expected % 1 ? 1 : 0) + Math.floor(expected)
   var get_coord_offset = (coord, offset) => [coord[0] + offset[0], coord[1] + offset[1]];
   var mark_grid = (grid, coord, value) => {grid[coord[0]][coord[1]] = value}
   var is_grid_offset_in_bounds = (grid, coord, offset) => {
@@ -1154,7 +1155,7 @@
       var simplex_amplitude = 1;
       var octaves = Math.floor(constant_random_values[1] * Math.min(animation_speed_multiplier - 1, 3)) + 1;
       var particle_lifespan = constant_random_values[2] * 5000 + 7500;
-      var new_particles_this_frame = (Math.random() < expected_value_new_particles_per_frame % 1 ? 1 : 0) + Math.floor(expected_value_new_particles_per_frame);
+      var new_particles_this_frame = get_random_int_with_expected_float_average(expected_value_new_particles_per_frame);
       var vector_multiplier = acceleration_or_velocity ? constant_random_values[3] * 2 + 1 : 30;
       var timestep = 0.05;
       var max_new_particle_tries = 100;
@@ -1251,10 +1252,11 @@
     .put((this_animation) => {
       var width = columns * char_width;
       var height = rows * char_height;
-      var expected_value_new_sand_per_frame = constant_random_values[0];
+      var expected_value_new_sand_per_frame = constant_random_values[0] * 3;
+      var max_new_sand_this_frame = get_random_int_with_expected_float_average(expected_value_new_sand_per_frame);
       var jitter_chance = constant_random_values[1] * 0.5;
       var dropper_radius = Math.min(constant_random_values[2],
-        constant_random_values[3]) * char_width * 5;
+        constant_random_values[3]) * char_width * 10;
       var dropper_position_frequency =  Math.min(constant_random_values[4],
         constant_random_values[5], constant_random_values[6]) * 0.125 + 0.001;
       var dropper_direction = constant_random_boolean ? 1 : -1;
@@ -1316,14 +1318,23 @@
       var dropper_position_pixels = dropper_position_midpoint + dropper_direction * Math.sin(frame_count * dropper_position_frequency) * dropper_position_amplitude;
       var min_x = Math.max(0, Math.floor((dropper_position_pixels - dropper_radius) / char_width));
       var max_x = Math.min(columns - 1, Math.floor((dropper_position_pixels + dropper_radius) / char_width));
+      var candidate_coordinates = [];
       for (var i = min_x; i <= max_x; i++) {
         var x_pixels = (i + 0.5) * char_width;
         if (x_pixels - dropper_position_pixels <= dropper_radius) {
           if (!grid[0][i]) {
-            active_sand_coords.push([0, i]);
-            mark_grid(grid, [0, i], true);
+            candidate_coordinates.push([0, i]);
           }
         }
+      }
+      var new_sand_count = 0;
+      while(new_sand_count < max_new_sand_this_frame && candidate_coordinates.length > 0) {
+          var random_index = Math.floor(Math.random() * candidate_coordinates.length);
+          var random_candidate_coordinate = candidate_coordinates[random_index];
+          active_sand_coords.push(random_candidate_coordinate);
+          mark_grid(grid, random_candidate_coordinate, true);
+          candidate_coordinates.splice(random_index, 1);
+          new_sand_count++;
       }
 
       //render
