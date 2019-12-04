@@ -1271,23 +1271,29 @@
     }
 
     var dark_link = document.getElementById("dark");
-    dark_link.onclick = () => {
-      if (document.body.style.background == "rgb(255, 255, 255)") {
-        document.body.style.background = "#000";
-        document.body.style.color = "#fff";
+    var theme_switch = (should_dark_mode_func) => {
+      if (should_dark_mode_func()) {
+        document.body.style.background = "black";
+        document.body.style.color = "white";
+        document.cookie = "theme=dark; SameSite=Strict";
         document.getElementById("dark").children[0].text = "LIGHT";
       } else {
-        document.body.style.background = "#fff";
-        document.body.style.color = "#000";
+        document.body.style.background = "white";
+        document.body.style.color = "black";
+        document.cookie = "theme=light; SameSite=Strict";
         document.getElementById("dark").children[0].text = "DARK";
       }
     }
+    var is_background_white = () => document.body.style.background == "rgb(255, 255, 255)";
 
-    if (document.body.style.background == "rgb(255, 255, 255)") {
-    document.getElementById("dark").children[0].text = "DARK";
+    if (is_background_white()) {
+      document.getElementById("dark").children[0].text = "DARK";
     } else {
       document.getElementById("dark").children[0].text = "LIGHT";
     }
+    dark_link.onclick = theme_switch.bind(null, is_background_white);
+    theme_switch(() => !document.cookie.split(';').filter(
+        (item) => item.includes('theme=light')).length);
 
     setTimeout(animation.bind(null, animation), 200);
   });
