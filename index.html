@@ -685,7 +685,7 @@
       }
       setTimeout(this_animation.bind(null, this_animation), 0);
       frame_count++;
-    }, 5)
+    }, 4)
     // 10 print styles up or down
     .put((this_animation) => {
       var isupdown = constant_random_boolean;
@@ -713,7 +713,7 @@
       if (frame_count >= rows) return;
       frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 50);
-    }, 10)
+    }, 7.5)
     // growing circle / entombing circle
     .put((this_animation) => {
       init_flat_index_list(rows, columns);
@@ -827,7 +827,7 @@
         }
       }
       setTimeout(this_animation.bind(null, this_animation), 0);
-    }, 0.25)
+    }, 0.125)
     // simplex growth
     .put((this_animation) => {
       var simplex_frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
@@ -910,7 +910,7 @@
       }
       if (!any_pixels) return;
       setTimeout(this_animation.bind(null, this_animation), 0);
-    }, 1.5)
+    }, 3)
     // dvd ball
     .put((this_animation) => {
       var width = columns * char_width;
