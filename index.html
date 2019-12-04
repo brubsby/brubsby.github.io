@@ -31,11 +31,22 @@
     }
   }
 
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: black;
+      color: white;
+    }
+  }
+  @media (prefers-color-scheme: no-preference), (prefers-color-scheme: light) {
+    body {
+      background: white;
+      color: black;
+    }
+  }
+
   body {
-    background: #fff;
     font-size: 20px;
     font-family: Courier, monospace;
-    color: #000;
   	padding: 2em 3em 2em 3em;
   }
 
@@ -73,7 +84,7 @@
   }
   a {
     text-decoration: none;
-    color: black;
+    color: inherit;
   }
   li:hover {
     text-decoration: underline;
@@ -1259,6 +1270,25 @@
       brubsby.href = "?a=" + new_value;
     }
 
+    var dark_link = document.getElementById("dark");
+    dark_link.onclick = () => {
+      if (document.body.style.background == "rgb(255, 255, 255)") {
+        document.body.style.background = "#000";
+        document.body.style.color = "#fff";
+        document.getElementById("dark").children[0].text = "LIGHT";
+      } else {
+        document.body.style.background = "#fff";
+        document.body.style.color = "#000";
+        document.getElementById("dark").children[0].text = "DARK";
+      }
+    }
+
+    if (document.body.style.background == "rgb(255, 255, 255)") {
+    document.getElementById("dark").children[0].text = "DARK";
+    } else {
+      document.getElementById("dark").children[0].text = "LIGHT";
+    }
+
     setTimeout(animation.bind(null, animation), 200);
   });
 
@@ -1292,6 +1322,7 @@
           <li id="art"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative)%20(from%3Abrubsby)&src=typed_query">ART</a></li>
           <li id="support"><a href="https://ko-fi.com/brubsby">SUPPORT</a></li>
           <li id="inquiries"><a href="https://twitter.com/messages/compose?recipient_id=2402350662">INQUIRIES</a></li>
+          <li id="dark"><a></a></li>
         </ol>
       </div>
       <div class="ascii"></div>
