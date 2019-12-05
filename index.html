@@ -202,7 +202,7 @@
     position_pixels, bounces, text_to_print, flip, line_points, last_points,
     empty_half_pixels, browser_info, remaining_particles, particles,
     random_edge_point_sampler, active_sand_coords, grid, jitter_offsets,
-    gravity_offset;
+    gravity_offset, dropper_movement_funcs, dropper_movement_func;
   var char_height = 24;
   var half_char_height = char_height / 2;
   var char_width = 12;
@@ -281,7 +281,24 @@
     var octave_frequency = frequency;
     var result = 0;
     for (var i = 0; i < octaves; i++) {
-      result += octave_amplitude * simplex_noise.noise2D(octave_frequency * coords[0], octave_frequency * coords[1]);
+      if (Array.isArray(coords)) {
+        switch (coords.length) {
+          case 1:
+            result += octave_amplitude * simplex_noise.noise2D(octave_frequency * coords[0], 0);
+            break;
+          case 2:
+            result += octave_amplitude * simplex_noise.noise2D(octave_frequency * coords[0], octave_frequency * coords[1]);
+            break;
+          case 3:
+            result += octave_amplitude * simplex_noise.noise3D(octave_frequency * coords[0], octave_frequency * coords[1], octave_frequency * coords[2]);
+            break;
+          case 4:
+            result += octave_amplitude * simplex_noise.noise4D(octave_frequency * coords[0], octave_frequency * coords[1], octave_frequency * coords[2], octave_frequency * coords[3]);
+            break;
+        }
+      } else {
+          result += octave_amplitude * simplex_noise.noise2D(octave_frequency * coords, 0);
+      }
       octave_amplitude *= gain;
       octave_frequency *= lacunarity;
     }
@@ -1254,12 +1271,13 @@
       var height = rows * char_height;
       var expected_value_new_sand_per_frame = constant_random_values[0] * 3;
       var max_new_sand_this_frame = get_random_int_with_expected_float_average(expected_value_new_sand_per_frame);
-      var jitter_chance = constant_random_values[1] * 0.5;
+      var jitter_chance = constant_random_values[1] * 0.75;
       var dropper_radius = Math.min(constant_random_values[2],
-        constant_random_values[3]) * char_width * 10;
+        constant_random_values[3]) * char_width * 10 + char_width / 2;
       var dropper_position_frequency =  Math.min(constant_random_values[4],
         constant_random_values[5], constant_random_values[6]) * 0.125 + 0.001;
       var dropper_direction = constant_random_boolean ? 1 : -1;
+      init_simplex_noise();
       if (frame_count == 0) {
         active_sand_coords = [];
         grid = [];
@@ -1268,6 +1286,16 @@
         }
         jitter_offsets = [[1, 1], [1, -1]];
         gravity_offset = [1, 0];
+        // funcs should have range of about -1, 1 and period 2PI
+        dropper_movement_funcs = new ObjectSampler()
+          .put((freq, i) => Math.sin(i * freq), 0.5)
+          .put((freq, i) => Math.cos(i * freq), 0.5)
+          .put((freq, i) => 2 * Math.asin(Math.sin(i * freq)) / Math.PI, 1)
+          .put((freq, i) => -2 * Math.atan(1 / Math.tan(i * freq / 2)) / Math.PI, 1)
+          .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.5), 1)
+          .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.25, 2), 0.5)
+          .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.125, 3), 0.5);
+        dropper_movement_func = dropper_movement_funcs.sample();
       }
 
       //physics
@@ -1298,7 +1326,7 @@
       }
 
       //dropper code
-      var dropper_position_optima = [dropper_radius, width - dropper_radius];
+      var dropper_position_optima = [dropper_radius / 2, width - (dropper_radius / 2)];
       var min_empty_x = -1;
       var max_empty_x = -1;
       for (var i = 0; i < columns; i++) {
@@ -1315,7 +1343,10 @@
         Math.min(dropper_position_optima[1], new_optima[1])];
       var dropper_position_midpoint = (dropper_position_optima[0] + dropper_position_optima[1]) / 2;
       var dropper_position_amplitude = (dropper_position_optima[1] - dropper_position_optima[0]) / 2
-      var dropper_position_pixels = dropper_position_midpoint + dropper_direction * Math.sin(frame_count * dropper_position_frequency) * dropper_position_amplitude;
+      var dropper_position_pixels = dropper_position_midpoint +
+        dropper_direction * dropper_movement_func(dropper_position_frequency, frame_count) * dropper_position_amplitude;
+      if (dropper_position_pixels < dropper_position_optima[0]) dropper_position_pixels = dropper_position_optima[0];
+      if (dropper_position_pixels > dropper_position_optima[1]) dropper_position_pixels = dropper_position_optima[1];
       var min_x = Math.max(0, Math.floor((dropper_position_pixels - dropper_radius) / char_width));
       var max_x = Math.min(columns - 1, Math.floor((dropper_position_pixels + dropper_radius) / char_width));
       var candidate_coordinates = [];
