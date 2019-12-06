@@ -1310,12 +1310,20 @@
         }
         jitter_offsets = [[1, 1], [1, -1]];
         gravity_offset = [1, 0];
-        // funcs should have range of about -1, 1 and period 2PI
+        // funcs range will be clamped to -1, 1 and period 2PI
         dropper_movement_funcs = new ObjectSampler()
           .put((freq, i) => Math.sin(i * freq), 0.5)
           .put((freq, i) => Math.cos(i * freq), 0.5)
-          .put((freq, i) => 2 * Math.asin(Math.sin(i * freq)) / Math.PI, 1)
-          .put((freq, i) => -2 * Math.atan(1 / Math.tan(i * freq / 2)) / Math.PI, 1)
+          //triangle
+          .put((freq, i) => 2.1 * Math.asin(Math.sin(i * freq)) / Math.PI, 1)
+          //sawtooth
+          .put((freq, i) => -2.1 * Math.atan(1 / Math.tan(i * freq / 2)) / Math.PI, 1)
+          //square
+          .put((freq, i) => Math.sign(Math.cos(i * freq)), 0.75)
+          //pulse
+          .put((freq, i) => Math.sign(constant_random_values[7] + Math.cos(i * freq)), 0.5)
+          //one side
+          .put((freq, i) => 1, 0.25)
           .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.5), 1)
           .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.25, 2), 0.5)
           .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.125, 3), 0.5);
