@@ -103,6 +103,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/6.2.2/math.min.js"></script>
+  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/gpu.js/1.10.4/gpu.min.js"></script>-->
   <script src="js/simplex-noise.js"></script>
   <script>
   /*----------- Class Definitions -----------*/
@@ -1419,47 +1420,63 @@
       var framerate = 1000 / (this_timestamp - last_timestamp);
       last_timestamp = this_timestamp;
       if (frame_count == 0) {
-        fractals = new ObjectSampler()
-          //mandelbrot
-          .put({"formula" : (z, c) => math.add(math.pow(z, 2), c),
+        var find_center = (center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal) => {
+          var theta = fractal["theta_func"]();
+          var low = 0;
+          var high = center_finder_max_radius;
+          var candidate_radius = Math.random() * center_finder_max_radius;
+          for (var i = 0; i < center_finder_iterations; i++) {
+            candidate_point = math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
+            if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"])) {
+              low = candidate_radius;
+            } else {
+              high = candidate_radius;
+            }
+            candidate_radius = (low + high) / 2;
+          }
+          return candidate_point;
+        }
+
+        var center_finder_iterations = iterations;
+        var center_finder_max_radius = 4;
+
+        var mandelbrot = {
+          "formula" : (z, c) => math.add(math.pow(z, 2), c),
           "theta_func" : () => Math.random() * 2 * Math.PI,
           "center_finder_iteration_multiplier" : 0.5,
-          "start" : math.complex(0, 0)}, 2)
+          "start_func" : () => math.complex(0, 0)
+        };
+        var julia = {
+          "formula" : (z, c) => math.add(math.pow(z, 2), c),
+          "theta_func" : () => Math.random() * 2 * Math.PI,
+          "center_finder_iteration_multiplier" : 0.75,
+          "start_func" : () => find_center(center_finder_iterations, center_finder_max_radius, iterations, mandelbrot)
+        };
+        fractals = new ObjectSampler()
+          //mandelbrot
+          .put(mandelbrot, 2)
           //tricorn
           .put({"formula" : (z, c) => math.add(math.pow(math.conj(z), 2), c),
           "theta_func" : () => (Math.random() * 2 - 1) * 0.13 + Math.PI + (Math.floor(Math.random() * 3) * 2 * Math.PI / 3),
-          "center_finder_iteration_multiplier" : 1,
-          "start" : math.complex(0, 0)}, 2)
+          "center_finder_iteration_multiplier" : 0.99,
+          "start_func" : () => math.complex(0, 0)}, 2)
           //burning ship
           .put({"formula" : (z, c) => math.add(math.pow(math.complex(math.abs(z.re), math.abs(z.im)), 2), c),
           "theta_func" : () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
-          "center_finder_iteration_multiplier" : 1,
-          "start" : math.complex(0, 0)}, 2);
+          "center_finder_iteration_multiplier" : 0.95,
+          "start_func" : () => math.complex(0, 0)}, 2)
+          .put(julia, 4);
         fractal = fractals.sample();
-        var center_finder_iterations = iterations;
-        var center_finder_radius = 2;
+        fractal["start"] = fractal["start_func"]();
         var center_finder_num_recurses = Math.floor(iterations * fractal["center_finder_iteration_multiplier"]);
         var theta = fractal["theta_func"]();
-        var low = 0;
-        var high = center_finder_radius;
-        var candidate_max_radius = 4;
-        var candidate_radius = Math.random() * candidate_max_radius;
-        for (var i = 0; i < center_finder_iterations; i++) {
-          candidate_point = math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
-          if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"])) {
-            low = candidate_radius;
-          } else {
-            high = candidate_radius;
-          }
-          candidate_radius = (low + high) / 2;
-        }
-        center = candidate_point;
+        center = find_center(center_finder_iterations, center_finder_max_radius, 5000, fractal)
         target_framerate = 30;
         framerate = target_framerate;
         average_framerate = target_framerate;
       }
       var framerate_adjuster_magnitude = 2;
-      var buffered_framecount = 10 + frame_count;
+      var buffered_framecount = 0 + frame_count;
       average_framerate = (average_framerate * buffered_framecount + framerate) / (buffered_framecount + 1);
       iterations = Math.floor(iterations + framerate_adjuster_magnitude * (average_framerate - target_framerate));
 
