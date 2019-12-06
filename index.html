@@ -1434,7 +1434,7 @@
           .put({"formula" : (z, c) => math.add(math.pow(math.complex(math.abs(z.re), math.abs(z.im)), 2), c),
           "theta_func" : () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
           "center_finder_iteration_multiplier" : 1,
-          "start" : math.complex(0, 0)}, 2000);
+          "start" : math.complex(0, 0)}, 2);
         fractal = fractals.sample();
         var center_finder_iterations = iterations;
         var center_finder_radius = 2;
