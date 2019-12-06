@@ -1557,8 +1557,6 @@
   /*----------- on doc ready -----------*/
 
   $(document).ready(function() {
-    reset_canvas();
-
     // website name will iterate seeds if an integer one is defined
     var brubsby = $("h1 > a:first").get()[0];
     var old_value = getUrlParameter("a");
@@ -1594,7 +1592,9 @@
     theme_switch(() => !document.cookie.split(';').filter(
         (item) => item.includes('theme=light')).length);
 
-    setTimeout(animation.bind(null, animation), 200);
+    reset_canvas();
+
+    setTimeout(animation.bind(null, animation), 0);
   });
 
   var reset_canvas = function() {
