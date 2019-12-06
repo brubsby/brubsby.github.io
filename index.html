@@ -1445,7 +1445,7 @@
         average_framerate = target_framerate;
       }
       var framerate_adjuster_magnitude = 0.5;
-      var buffered_framecount = 25 + frame_count;
+      var buffered_framecount = 10 + frame_count;
       average_framerate = (average_framerate * buffered_framecount + framerate) / (buffered_framecount + 1);
       iterations = Math.floor(iterations + framerate_adjuster_magnitude * -Math.pow(average_framerate - target_framerate, 2));
 
