@@ -204,7 +204,7 @@
     empty_half_pixels, browser_info, remaining_particles, particles,
     random_edge_point_sampler, active_sand_coords, grid, jitter_offsets,
     gravity_offset, dropper_movement_funcs, dropper_movement_func, fractals,
-    fractal, center;
+    fractal, center, last_timestamp, average_framerate, target_framerate;
   var char_height = 24;
   var half_char_height = char_height / 2;
   var char_width = 12;
@@ -1415,14 +1415,17 @@
       var width = columns * char_width;
       var height = rows * char_height;
       var iterations = Math.floor(150000 / (rows * columns));
+      var this_timestamp = (new Date()).getTime();
+      var framerate = 1000 / (this_timestamp - last_timestamp);
+      last_timestamp = this_timestamp;
       if (frame_count == 0) {
         fractals = new ObjectSampler()
           .put({"formula" : (z, c) => math.add(math.pow(z, 2), c),
           "start" : 0}, 2);
         fractal = fractals.sample();
-        var center_finder_iterations = 100;
+        var center_finder_iterations = iterations;
         var center_finder_radius = 2;
-        var center_finder_num_recurses = Math.floor(iterations * 0.95);
+        var center_finder_num_recurses = Math.floor(iterations * 0.5);
         var theta = Math.random() * 2 * Math.PI;
         var low = 0;
         var high = center_finder_radius;
@@ -1437,7 +1440,14 @@
           candidate_radius = (low + high) / 2;
         }
         center = candidate_point;
+        target_framerate = 30;
+        framerate = target_framerate;
+        average_framerate = target_framerate;
       }
+      var framerate_adjuster_magnitude = 1;
+      var buffered_framecount = 10 + frame_count;
+      average_framerate = (average_framerate * buffered_framecount + framerate) / (buffered_framecount + 1);
+      iterations = Math.floor(iterations + framerate_adjuster_magnitude * (average_framerate - target_framerate));
 
       var radius = 3 * Math.pow(Math.E, -frame_count * 0.1);
       var min_x, max_x, min_y, max_y, x_radius, y_radius;
@@ -1474,7 +1484,6 @@
       var text = "";
       for (var y = 0; y < rows; y++) {
         for (var x = 0; x < columns; x++) {
-          //if (fractal_iteration(grid[y][x], fractal["formula"], 20, fractal["start"])) {
           if (graphics_grid[y][x]) {
             text += "o";
             any_filled = true;
