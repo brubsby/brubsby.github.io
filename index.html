@@ -1450,10 +1450,9 @@
           "formula" : (z, c) => math.add(math.pow(z, 2), c),
           "theta_func" : () => Math.random() * 2 * Math.PI,
           "center_finder_iteration_multiplier" : 0.75,
-          "start_func" : () => find_center(center_finder_iterations, center_finder_max_radius, iterations, mandelbrot)
+          "start_func" : () => find_center(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot)
         };
         fractals = new ObjectSampler()
-          //mandelbrot
           .put(mandelbrot, 2)
           //tricorn
           .put({"formula" : (z, c) => math.add(math.pow(math.conj(z), 2), c),
@@ -1470,13 +1469,13 @@
         fractal["start"] = fractal["start_func"]();
         var center_finder_num_recurses = Math.floor(iterations * fractal["center_finder_iteration_multiplier"]);
         var theta = fractal["theta_func"]();
-        center = find_center(center_finder_iterations, center_finder_max_radius, 5000, fractal)
+        center = find_center(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal)
         target_framerate = 30;
         framerate = target_framerate;
         average_framerate = target_framerate;
       }
       var framerate_adjuster_magnitude = 2;
-      var buffered_framecount = 0 + frame_count;
+      var buffered_framecount = 10 + frame_count;
       average_framerate = (average_framerate * buffered_framecount + framerate) / (buffered_framecount + 1);
       iterations = Math.floor(iterations + framerate_adjuster_magnitude * (average_framerate - target_framerate));
 
