@@ -1420,14 +1420,21 @@
       last_timestamp = this_timestamp;
       if (frame_count == 0) {
         fractals = new ObjectSampler()
+          //mandelbrot
           .put({"formula" : (z, c) => math.add(math.pow(z, 2), c),
           "theta_func" : () => Math.random() * 2 * Math.PI,
           "center_finder_iteration_multiplier" : 0.5,
-          "start" : 0}, 2)
+          "start" : math.complex(0, 0)}, 2)
+          //tricorn
           .put({"formula" : (z, c) => math.add(math.pow(math.conj(z), 2), c),
           "theta_func" : () => (Math.random() * 2 - 1) * 0.13 + Math.PI + (Math.floor(Math.random() * 3) * 2 * Math.PI / 3),
           "center_finder_iteration_multiplier" : 1,
-          "start" : 0}, 2);
+          "start" : math.complex(0, 0)}, 2)
+          //burning ship
+          .put({"formula" : (z, c) => math.add(math.pow(math.complex(math.abs(z.re), math.abs(z.im)), 2), c),
+          "theta_func" : () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
+          "center_finder_iteration_multiplier" : 1,
+          "start" : math.complex(0, 0)}, 2000);
         fractal = fractals.sample();
         var center_finder_iterations = iterations;
         var center_finder_radius = 2;
