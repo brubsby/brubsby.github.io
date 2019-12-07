@@ -205,7 +205,8 @@
     empty_half_pixels, browser_info, remaining_particles, particles,
     random_edge_point_sampler, active_sand_coords, grid, jitter_offsets,
     gravity_offset, dropper_movement_funcs, dropper_movement_func, fractals,
-    fractal, center, last_timestamp, average_framerate, target_framerate;
+    fractal, center, last_timestamp, average_framerate, target_framerate,
+    universe, rules;
   var char_height = 24;
   var half_char_height = char_height / 2;
   var char_width = 12;
@@ -1537,6 +1538,57 @@
 
       frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 0)
+    }, 3)
+    // 1D cellular automata
+    // https://www.stephenwolfram.com/publications/academic/cellular-automaton-properties.pdf
+    .put((this_animation) => {
+      if (frame_count == 0) {
+        var universe_generators = new ObjectSampler()
+        //uniform random
+        .put(length => Array(length).fill(null).map(_ => Math.random() < 0.5))
+        //skewed uniform random
+        .put(length => Array(length).fill(null).map(_ => Math.random() < constant_random_values[0]));
+        var rulesets = new ObjectSampler();
+        for (var i = 0; i < 256; i++) {
+          var ruleset = {"dec" : i};
+          var weight = 1;
+          if ([30, 90, 110, 184].includes(i)) {
+            weight = 4;
+          }
+          rulesets.put(ruleset, weight);
+        }
+        universe = universe_generators.sample()(columns);
+        rules = rulesets.sample();
+        console.log("Rule " + rules["dec"]);
+        tile_rules = [".", "o"];
+        var RuleLookup = class {
+          constructor(wolfram_rule) {
+            this.lookup = Array(8).fill(null).map((_, index) => (Math.pow(2, index) & wolfram_rule) != 0);
+          }
+          next_state(left, center, right) {
+            var index = (right ? 1 : 0) + (center ? 2 : 0) + (left ? 4 : 0);
+            return this.lookup[index];
+          }
+        };
+        rules["lookup"] = new RuleLookup(rules["dec"]);
+
+      }
+      var y = frame_count;
+      for (var x = 0; x < columns; x++) {
+        var index = get_canvas_index(columns, x, y);
+        setCharAtIndex(canvas, index, tile_rules[universe[x] ? 1 : 0]);
+      }
+      var next_state = [];
+      for (var i = 0; i < universe.length; i++) {
+        var left = universe[(i + universe.length - 1) % universe.length];
+        var center = universe[i];
+        var right = universe[(i + 1) % universe.length];
+        next_state.push(rules["lookup"].next_state(left, center, right));
+      }
+      universe = next_state;
+      if (frame_count >= rows) return;
+      frame_count++;
+      setTimeout(this_animation.bind(null, this_animation), 50);
     }, 3);
 
   /*----------- Random/Seed init -----------*/
