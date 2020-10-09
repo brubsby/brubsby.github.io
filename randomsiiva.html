@@ -108,8 +108,6 @@
     }
     a:hover {
       cursor: pointer;
-    }
-    li:hover {
       text-decoration: underline;
     }
     </style>
@@ -124,8 +122,8 @@
           <li id="copy"><a>COPY RIP LINK</a></li>
           <li id="previous"><a>PREVIOUS RIP</a></li>
           <li id="skip"><a>NEXT RIP</a></li>
-          <li id="autoplay"><a><span class="checkbox">☑</span> AUTOPLAY</a></li>
           <li id="dark"><a>LIGHT</a></li>
+          <li id="autoplay"><a><span class="checkbox">☑</span> AUTOPLAY</a></li>
         </ol>
       </div>
       <div class="playercontainer"><div id="player"></div></div>
@@ -226,13 +224,20 @@
         newVid();
       }
 
-      function copyRipLink() {
+      function copyToClipboard(text) {
         var input = document.createElement('textarea');
-        input.innerHTML = "https://www.youtube.com/watch?v=" + currentVidId;
+        input.innerHTML = text;
         document.body.appendChild(input);
         input.select();
-        var result = document.execCommand('copy');
-        document.body.removeChild(input);
+        document.execCommand('copy');
+        return document.body.removeChild(input);
+      }
+
+      function copyRipLink() {
+        var yt_link = "https://www.youtube.com/watch?v=" + currentVidId;
+        copyToClipboard(yt_link);
+        document.querySelector("li#copy > a").text = "COPIED.......";
+        setTimeout(() => document.querySelector("li#copy > a").text = "COPY RIP LINK", 1000);
       }
 
       function newVid() {
