@@ -124,8 +124,10 @@
           <li id="rip_wiki_link"><a target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
           <li id="autowiki"><a>AUTO WIKI POPUP</a></li>
           <li id="copy"><a>COPY RIP LINK</a></li>
+          <li>&nbsp</li>
           <li id="previous"><a>PREVIOUS RIP</a></li>
           <li id="skip"><a>NEXT RIP</a></li>
+          <li>&nbsp</li>
           <li id="dark"><a>LIGHT</a></li>
           <li id="skipduration"><a>SKIP RIPS <span class="checkbox">☒</span></a></li>
           <li id="autoplay"><a><span class="checkbox">☑</span> AUTOPLAY</a></li>
@@ -163,16 +165,16 @@
         } else {
           document.getElementById("dark").children[0].text = "LIGHT";
         }
-        dark_link.onclick = theme_switch.bind(null, is_background_white);
+        document.querySelector("li#dark > a").onclick = theme_switch.bind(null, is_background_white);
         theme_switch(() => !document.cookie.split(';').filter(
             (item) => item.includes('theme=light')).length);
 
-        document.getElementById("copy").onclick = copyRipLink;
-        document.getElementById("previous").onclick = previousVid;
-        document.getElementById("skip").onclick = skipVid;
-        document.getElementById("autoplay").onclick = toggleAutoplay;
-        document.getElementById("autowiki").onclick = autoWikiPopup;
-        document.getElementById("skipduration").onclick = skipDurationClicked;
+        document.querySelector("li#copy > a").onclick = copyRipLink;
+        document.querySelector("li#previous > a").onclick = previousVid;
+        document.querySelector("li#skip > a").onclick = skipVid;
+        document.querySelector("li#autoplay > a").onclick = toggleAutoplay;
+        document.querySelector("li#autowiki > a").onclick = autoWikiPopup;
+        document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
       });
 
       window.addEventListener('beforeunload', function() {
