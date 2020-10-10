@@ -130,6 +130,7 @@
           <li>&nbsp</li>
           <li id="dark"><a>LIGHT</a></li>
           <li id="skipduration"><a>SKIP RIPS <span class="checkbox">☒</span></a></li>
+          <li id="skipkfad"><a><span class="checkbox">☐</span> SKIP KF*D</a></li>
           <li id="autoplay"><a><span class="checkbox">☑</span> AUTOPLAY</a></li>
           <li id="channels"><a>CHANNELS:</a></li>
           <li id="siiva"><a><span class="checkbox">☑</span> <span class="channel">SIIVA<span></a></li>
@@ -225,6 +226,7 @@
         document.querySelector("li#autoplay > a").onclick = toggleAutoplay;
         document.querySelector("li#autowiki > a").onclick = autoWikiPopup;
         document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
+        document.querySelector("li#skipkfad > a").onclick = skipKFADClicked;
         document.querySelector("li#channels > a").onclick = () => toggleChannel("");
         document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
         document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
@@ -239,13 +241,17 @@
 
       getAndProcessSheetsJSON();
 
+      var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day"];
 
       var previousVidId;
       var currentVidTitle;
+      var isCurrentVidKFAD;
       var previousChannel;
       var currentChannel;
+      var isPreviousVidKFAD;
       var isInfoReady = false;
-      var autoplay = true;
+      var isAutoplay = true;
+      var isSkipKFAD = false;
       var isSiivaCheck = true;
       var isTTGDCheck = false;
       var isVAVRCheck = false;
@@ -270,7 +276,8 @@
       var currentVidId = randomVidId();
 
       function updateCheckboxes() {
-        document.querySelector("li#autoplay > a > span.checkbox").textContent = autoplay ? "☑":"☐";
+        document.querySelector("li#autoplay > a > span.checkbox").textContent = isAutoplay ? "☑":"☐";
+        document.querySelector("li#skipkfad > a > span.checkbox").textContent = isSkipKFAD ? "☑":"☐";
         document.querySelector("li#siiva > a > span.checkbox").textContent = isSiivaCheck ? "☑":"☐";
         document.querySelector("li#ttgd > a > span.checkbox").textContent = isTTGDCheck ? "☑":"☐";
         document.querySelector("li#vavr > a > span.checkbox").textContent = isVAVRCheck ? "☑":"☐";
@@ -280,6 +287,14 @@
         skipDurationIndex = (skipDurationIndex + 1) % skipDurations.length;
         document.querySelector("li#skipduration > a > span.checkbox").textContent = skipDurations[skipDurationIndex][0];
         durationOfVidToSkip = skipDurations[skipDurationIndex][1];
+      }
+
+      function skipKFADClicked() {
+        isSkipKFAD = !isSkipKFAD;
+        updateCheckboxes();
+        if(isCurrentVidKFAD && isSkipKFAD) {
+          newVid();
+        }
       }
 
       function pickUniformRandomFromArray(toSample) {
@@ -337,6 +352,11 @@
 
       function onTitleReady() {
           currentVidTitle = player.getVideoData().title;
+          isCurrentVidKFAD = KFAD_FILTERS.some((filter) => currentVidTitle.toLowerCase().includes(filter));
+          if(isCurrentVidKFAD && isSkipKFAD) {
+            newVid();
+            return;
+          }
           currentChannel = player.getVideoData().author || "SiIvaGunner";
           isInfoReady = true;
           updateWikiLink();
@@ -390,6 +410,7 @@
         previousVidId = currentVidId;
         currentVidId = randomVidId();
         previousChannel = currentChannel;
+        isPreviousVidKFAD = isCurrentVidKFAD;
         isInfoReady = false;
         player.loadVideoById(currentVidId);
       }
@@ -402,7 +423,7 @@
 
       function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.ENDED) {
-          if (autoplay) {
+          if (isAutoplay) {
             newVid();
           }
         } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
@@ -424,8 +445,8 @@
       }
 
       function toggleAutoplay() {
-        autoplay = !autoplay;
-        if (autoplay && player.getPlayerState() == YT.PlayerState.ENDED) {
+        isAutoplay = !isAutoplay;
+        if (isAutoplay && player.getPlayerState() == YT.PlayerState.ENDED) {
           newVid();
         }
         updateCheckboxes();
@@ -443,9 +464,15 @@
         } else if (channel == "vavr") {
           isVAVRCheck = !isVAVRCheck;
         } else if (channel == "") {
-          isSiivaCheck = true;
-          isTTGDCheck = true;
-          isVAVRCheck = true;
+          if (isSiivaCheck && isTTGDCheck && isVAVRCheck) {
+            isSiivaCheck = true;
+            isTTGDCheck = false;
+            isVAVRCheck = false;
+          } else {
+            isSiivaCheck = true;
+            isTTGDCheck = true;
+            isVAVRCheck = true;
+          }
         }
         if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck) {
           isSiivaCheck = true;
