@@ -127,6 +127,7 @@
           <li id="previous"><a>PREVIOUS RIP</a></li>
           <li id="skip"><a>NEXT RIP</a></li>
           <li id="dark"><a>LIGHT</a></li>
+          <li id="skipduration"><a>SKIP RIPS <span class="checkbox">☒</span></a></li>
           <li id="autoplay"><a><span class="checkbox">☑</span> AUTOPLAY</a></li>
         </ol>
       </div>
@@ -171,6 +172,7 @@
         document.getElementById("skip").onclick = skipVid;
         document.getElementById("autoplay").onclick = toggleAutoplay;
         document.getElementById("autowiki").onclick = autoWikiPopup;
+        document.getElementById("skipduration").onclick = skipDurationClicked;
       });
 
       window.addEventListener('beforeunload', function() {
@@ -184,13 +186,34 @@
       var currentVidId = randomSiivaId();
       var previousVidId;
       var currentVidTitle;
-      var titleUpdated = false;
+      var isInfoReady = false;
       var autoplay = true;
+      var durationOfVidToSkip = Number.MAX_SAFE_INTEGER;
+      var skipDurations = [
+        ["☒", Number.MAX_SAFE_INTEGER],
+        [">5 HR", 18000],
+        [">2 HR", 7200],
+        [">1 HR", 3600],
+        [">30 MIN", 1800],
+        [">15 MIN", 900],
+        [">10 MIN", 600],
+        [">5 MIN", 300],
+        [">2 MIN", 120],
+        [">1 MIN", 60],
+        [">30 SEC", 30]
+      ];
+      var skipDurationIndex = 0;
 
       var autoWikiWindow;
 
       function updateCheckboxes() {
         document.querySelector("li#autoplay > a > span.checkbox").textContent = autoplay ? "☑":"☐";
+      }
+
+      function skipDurationClicked() {
+        skipDurationIndex = (skipDurationIndex + 1) % skipDurations.length;
+        document.querySelector("li#skipduration > a > span.checkbox").textContent = skipDurations[skipDurationIndex][0];
+        durationOfVidToSkip = skipDurations[skipDurationIndex][1];
       }
 
       function randomSiivaId() {
@@ -228,7 +251,7 @@
 
       function onTitleReady() {
           currentVidTitle = player.getVideoData().title;
-          titleUpdated = true;
+          isInfoReady = true;
           updateWikiLink();
           updateNowPlaying();
       }
@@ -278,7 +301,7 @@
       function newVid() {
         previousVidId = currentVidId;
         currentVidId = randomSiivaId();
-        titleUpdated = false;
+        isInfoReady = false;
         player.loadVideoById(currentVidId);
       }
 
@@ -288,16 +311,18 @@
         }
       }
 
-      // 5. The API calls this function when the player's state changes.
-      //    The function indicates that when playing a video (state=1),
-      //    the player should play for six seconds and then stop.
       function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.ENDED) {
           if (autoplay) {
             newVid();
           }
-        } else if (event.data == YT.PlayerState.PLAYING && !titleUpdated) {
-          onTitleReady();
+        } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
+          if (player.getDuration() > durationOfVidToSkip) {
+            newVid();
+            return;
+          } else {
+            onTitleReady();
+          }
         }
       }
 
@@ -305,7 +330,7 @@
         var swap = currentVidId;
         currentVidId = previousVidId;
         previousVidId = swap;
-        titleUpdated = false;
+        isInfoReady = false;
         player.loadVideoById(currentVidId);
       }
 
