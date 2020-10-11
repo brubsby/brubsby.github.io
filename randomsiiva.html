@@ -2,13 +2,14 @@
 <html>
   <head>
     <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
-    <meta name="title" content="random siivagunner player">
+    <meta name="title" content="Brubsby's Random Rip Player">
     <meta name="description" content="page that automatically plays random siivagunner rips">
     <meta name="keywords" content="siivagunner autoplay, siivagunner random, siivagunner random autoplay">
     <meta name="robots" content="index, follow">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="language" content="English">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <title>Random Rip Player</title>
     <style>
 
     @font-face {
@@ -71,6 +72,13 @@
       padding-left: 8px;
       white-space: nowrap;
       line-height: 1.25em;
+      -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+         -khtml-user-select: none; /* Konqueror HTML */
+           -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
     }
     div.menu {
       margin: 0;
@@ -162,8 +170,28 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script>
 
+      class ObjectSampler {
+        constructor() {this.objects=[];this.total_weight=0;return this;}
+        put(obj, weight=1) {
+          this.total_weight+=weight;
+          this.objects.push({"obj":obj,"weight":weight,"total_weight":this.total_weight});
+          return this;
+        };
+        uniform_sample() {return this.objects[Math.floor(this.objects.length * Math.random())]["obj"];}
+        sample() {
+          var index_val = this.total_weight * Math.random();
+          for (var i = 0; i < this.objects.length; i++) {
+            if (index_val < this.objects[i]["total_weight"]) return this.objects[i]["obj"];
+          }
+          throw "sample error, random value was " + index_val + " but total weight was " + this.total_weight;
+        }
+        get_index(i) {return this.objects[i]["obj"];}
+        size() {return this.objects.length;}
+      }
+
       var browserHasLocalStorage = typeof(Storage) !== "undefined";
 
+      // Date.now() polyfill
       if (!Date.now) {
         Date.now = function now() {
           return new Date().getTime();
@@ -173,6 +201,7 @@
       var LOCALSTORAGE_SHEET_TIMESTAMP = "sheet_timestamp";
       var LOCALSTORAGE_VID_DB = "vid_db";
       var LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP = "twitter_ignore_timestamp";
+      var LOCALSTORAGE_WATCHED_VID_IDS = "watched_vid_ids"
 
       var TESTING_KEY = 'AIzaSyAUpx3K3IcUsPAIicY8CSPbtUTjFVw7BSA';
       var PUBLIC_SHEETS_API_KEY = 'AIzaSyAzQyLBAF5kiOZHVLVMLfs_rn1wdCMVnmM';
@@ -180,6 +209,43 @@
       var SHEET_ID = '1B7b9jEaWiqZI8Z8CzvFN1cBvLVYwjb5xzhWtrgs4anI';
       var RANGES = ['SiIvaGunner!A2:A','TimmyTurnersGrandDad!A2:A','VvvvvaVvvvvvr!A2:A'];
       var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
+
+
+      var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day"];
+
+      var previousVidId;
+      var currentVidTitle;
+      var isCurrentVidKFAD;
+      var previousChannel;
+      var currentChannel;
+      var isPreviousVidKFAD;
+      var isInfoReady = false;
+      var isAutoplay = true;
+      var isSkipKFAD = false;
+      var isSiivaCheck = true;
+      var isTTGDCheck = false;
+      var isVAVRCheck = false;
+      var durationOfVidToSkip = Number.MAX_SAFE_INTEGER;
+      var watchedVidIds;
+      var skipDurations = [
+        ["☒", Number.MAX_SAFE_INTEGER],
+        [">5 HR", 18000],
+        [">2 HR", 7200],
+        [">1 HR", 3600],
+        [">30 MIN", 1800],
+        [">15 MIN", 900],
+        [">10 MIN", 600],
+        [">5 MIN", 300],
+        [">2 MIN", 120],
+        [">1 MIN", 60],
+        [">30 SEC", 30]
+      ];
+      var skipDurationIndex = 0;
+
+      var autoWikiWindow;
+
+      checkSheets();
+      var currentVidId = randomVidId();
 
       function makeGetRequest(url){
         var Httpreq = new XMLHttpRequest(); // a new request
@@ -210,31 +276,23 @@
         vavr_vids = sheetsjson["valueRanges"][2]["values"];
       }
 
-      class ObjectSampler {
-        constructor() {this.objects=[];this.total_weight=0;return this;}
-        put(obj, weight=1) {
-          this.total_weight+=weight;
-          this.objects.push({"obj":obj,"weight":weight,"total_weight":this.total_weight});
-          return this;
-        };
-        uniform_sample() {return this.objects[Math.floor(this.objects.length * Math.random())]["obj"];}
-        sample() {
-          var index_val = this.total_weight * Math.random();
-          for (var i = 0; i < this.objects.length; i++) {
-            if (index_val < this.objects[i]["total_weight"]) return this.objects[i]["obj"];
-          }
-          throw "sample error, random value was " + index_val + " but total weight was " + this.total_weight;
-        }
-        get_index(i) {return this.objects[i]["obj"];}
-        size() {return this.objects.length;}
-      }
-
       $(document).ready(function() {
         if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
           && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
           document.querySelector("h3#twitter").style.display = "none";
         } else {
           document.querySelector("h3#twitter").style.display = "";
+        }
+
+
+        if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS)) {
+            try {
+              watchedVidIds = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS));
+            } catch (error) {
+              watchedVidIds = [];
+            }
+        } else {
+          watchedVidIds = [];
         }
 
         var dark_link = document.getElementById("dark");
@@ -284,42 +342,6 @@
           autoWikiWindow.close();
         }
       });
-
-      checkSheets();
-
-      var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day"];
-
-      var previousVidId;
-      var currentVidTitle;
-      var isCurrentVidKFAD;
-      var previousChannel;
-      var currentChannel;
-      var isPreviousVidKFAD;
-      var isInfoReady = false;
-      var isAutoplay = true;
-      var isSkipKFAD = false;
-      var isSiivaCheck = true;
-      var isTTGDCheck = false;
-      var isVAVRCheck = false;
-      var durationOfVidToSkip = Number.MAX_SAFE_INTEGER;
-      var skipDurations = [
-        ["☒", Number.MAX_SAFE_INTEGER],
-        [">5 HR", 18000],
-        [">2 HR", 7200],
-        [">1 HR", 3600],
-        [">30 MIN", 1800],
-        [">15 MIN", 900],
-        [">10 MIN", 600],
-        [">5 MIN", 300],
-        [">2 MIN", 120],
-        [">1 MIN", 60],
-        [">30 SEC", 30]
-      ];
-      var skipDurationIndex = 0;
-
-      var autoWikiWindow;
-
-      var currentVidId = randomVidId();
 
       function tooltip(msg = "") {
         document.querySelector("h3#tooltip").textContent = msg;
@@ -405,7 +427,7 @@
           currentVidTitle = player.getVideoData().title;
           isCurrentVidKFAD = KFAD_FILTERS.some((filter) => currentVidTitle.toLowerCase().includes(filter));
           if(isCurrentVidKFAD && isSkipKFAD) {
-            newVid();
+            newVid(false);
             return;
           }
           currentChannel = player.getVideoData().author || "SiIvaGunner";
@@ -438,7 +460,7 @@
       }
 
       function skipVid() {
-        newVid();
+        newVid(true);
       }
 
       function copyToClipboard(text) {
@@ -457,7 +479,10 @@
         setTimeout(() => document.querySelector("li#copy > a").text = "COPY RIP LINK", 1000);
       }
 
-      function newVid() {
+      function newVid(markWatched) {
+        if (markWatched) {
+          markVidWatched(currentVidId);
+        }
         previousVidId = currentVidId;
         currentVidId = randomVidId();
         previousChannel = currentChannel;
@@ -466,20 +491,25 @@
         player.loadVideoById(currentVidId);
       }
 
+      function markVidWatched(vidId) {
+        watchedVidIds.push(vidId);
+        window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
+      }
+
       function onError(event) {
         if (event.data >= 100) {
-          newVid();
+          newVid(true);
         }
       }
 
       function onPlayerStateChange(event) {
         if (event.data == YT.PlayerState.ENDED) {
           if (isAutoplay) {
-            newVid();
+            newVid(true);
           }
         } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
           if (player.getDuration() > durationOfVidToSkip) {
-            newVid();
+            newVid(false);
             return;
           } else {
             onTitleReady();
