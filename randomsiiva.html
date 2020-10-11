@@ -138,6 +138,11 @@
     .percentcomplete {
       font-size: .75em;
       font-family: "DF", monospace;
+      cursor: default !important;
+    }
+    .percentcomplete:hover {
+      text-decoration: none;
+      font-style: oblique;
     }
     </style>
   </head>
@@ -145,15 +150,15 @@
     <h3 id="tooltip">&nbsp</h2>
     <div class="container">
       <div class="menu">
-        <h3><a href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h3>
+        <h3><a  onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h3>
         <h1>RANDOM RIP PLAYER</h1>
         <ol id="links">
+          <li id="skip"><a onmouseover="tooltip('pulls up the next random rip (skipping rips based on your filters)')" onmouseout="tooltip()">NEXT RIP</a></li>
+          <li id="previous"><a onmouseover="tooltip('go back to the previous rip')" onmouseout="tooltip()">PREVIOUS RIP</a></li>
+          <li>&nbsp</li>
           <li id="rip_wiki_link"><a onmouseover="tooltip('opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!)')" onmouseout="tooltip()" target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
           <li id="autowiki"><a onmouseover="tooltip('creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)')" onmouseout="tooltip()">AUTO WIKI POPUP</a></li>
           <li id="copy"><a onmouseover="tooltip('copies this rip\'s youtube url to your clipboard!')" onmouseout="tooltip()">COPY RIP LINK</a></li>
-          <li>&nbsp</li>
-          <li id="previous"><a onmouseover="tooltip('go back to the previous rip')" onmouseout="tooltip()">PREVIOUS RIP</a></li>
-          <li id="skip"><a onmouseover="tooltip('pulls up the next random rip (skipping rips based on your filters)')" onmouseout="tooltip()">NEXT RIP</a></li>
           <li>&nbsp</li>
           <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
           <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
