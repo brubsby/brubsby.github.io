@@ -100,10 +100,22 @@
       style: none;
       font-size: .75em;
       font-family: "DF", monospace;
+    }
+    h3 > a {
       text-decoration: underline;
     }
     h3 > a:hover {
       font-style: oblique;
+    }
+    h3#tooltip {
+      position: absolute;
+      top: .25em;
+      left: .25em;
+    }
+    h3#twitter {
+      position: absolute;
+      bottom: .25em;
+      left: .25em;
     }
     a {
       text-decoration: none;
@@ -116,26 +128,27 @@
     </style>
   </head>
   <body>
+    <h3 id="tooltip">&nbsp</h2>
     <div class="container">
       <div class="menu">
         <h3><a href="https://brubsby.com">BRUBSBY'S</a></h3>
         <h1>RANDOM RIP PLAYER</h1>
         <ol id="links">
-          <li id="rip_wiki_link"><a target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
-          <li id="autowiki"><a>AUTO WIKI POPUP</a></li>
-          <li id="copy"><a>COPY RIP LINK</a></li>
+          <li id="rip_wiki_link"><a onmouseover="tooltip('opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!)')" onmouseout="tooltip()" target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
+          <li id="autowiki"><a onmouseover="tooltip('creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)')" onmouseout="tooltip()">AUTO WIKI POPUP</a></li>
+          <li id="copy"><a onmouseover="tooltip('copies this rip\'s youtube url to your clipboard!')" onmouseout="tooltip()">COPY RIP LINK</a></li>
           <li>&nbsp</li>
-          <li id="previous"><a>PREVIOUS RIP</a></li>
-          <li id="skip"><a>NEXT RIP</a></li>
+          <li id="previous"><a onmouseover="tooltip('go back to the previous rip')" onmouseout="tooltip()">PREVIOUS RIP</a></li>
+          <li id="skip"><a onmouseover="tooltip('pulls up the next random rip (skipping rips based on your filters)')" onmouseout="tooltip()">NEXT RIP</a></li>
           <li>&nbsp</li>
-          <li id="dark"><a>LIGHT</a></li>
-          <li id="skipduration"><a>SKIP RIPS <span class="checkbox">☒</span></a></li>
-          <li id="skipkfad"><a><span class="checkbox">☐</span> SKIP KF*D</a></li>
-          <li id="autoplay"><a><span class="checkbox">☑</span> AUTOPLAY</a></li>
-          <li id="channels"><a>CHANNELS:</a></li>
-          <li id="siiva"><a><span class="checkbox">☑</span> <span class="channel">SIIVA<span></a></li>
-          <li id="ttgd"><a><span class="checkbox">☐</span> <span class="channel">TTGD<span></a></li>
-          <li id="vavr"><a><span class="checkbox">☐</span> <span class="channel">VAVR<span></a></li>
+          <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
+          <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
+          <li id="skipkfad"><a onmouseover="tooltip('skip rips that have variants of \'king for a day\' in the title')" onmouseout="tooltip()"><span class="checkbox">☐</span> SKIP KF*D</a></li>
+          <li id="autoplay"><a onmouseover="tooltip('pull up a new random rip (according to filters) when the current rip ends playback')" onmouseout="tooltip()"><span class="checkbox">☑</span> AUTOPLAY</a></li>
+          <li id="channels"><a onmouseover="tooltip('select specific ripping channels to play random rips from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a></li>
+          <li id="siiva"><a onmouseover="tooltip('play rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA<span></a></li>
+          <li id="ttgd"><a onmouseover="tooltip('play rips from TimmyTurnersGrandDad')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">TTGD<span></a></li>
+          <li id="vavr"><a onmouseover="tooltip('play rips from VvvvvaVvvvvvr')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">VAVR<span></a></li>
         </ol>
       </div>
       <div class="playercontainer">
@@ -145,7 +158,7 @@
         <div id="player"></div>
       </div>
     </div>
-
+    <h3 hidden id="twitter"><a  target="_blank" rel="noopener noreferrer" href="https://twitter.com/brubsby">follow me on twitter</a> or <a  target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/brubsby">buy me a coffee</a> if you like the page!</h3>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script>
       TESTING_KEY = 'AIzaSyAUpx3K3IcUsPAIicY8CSPbtUTjFVw7BSA';
@@ -231,6 +244,7 @@
         document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
         document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
         document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
+
       });
 
       window.addEventListener('beforeunload', function() {
@@ -274,6 +288,10 @@
       var autoWikiWindow;
 
       var currentVidId = randomVidId();
+
+      function tooltip(msg = "") {
+        document.querySelector("h3#tooltip").textContent = msg;
+      }
 
       function updateCheckboxes() {
         document.querySelector("li#autoplay > a > span.checkbox").textContent = isAutoplay ? "☑":"☐";
