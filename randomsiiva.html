@@ -153,6 +153,7 @@
           <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
           <li id="skipkfad"><a onmouseover="tooltip('skip rips that have variants of \'king for a day\' in the title')" onmouseout="tooltip()"><span class="checkbox">☐</span> SKIP KF*D</a></li>
           <li id="autoplay"><a onmouseover="tooltip('pull up a new random rip (according to filters) when the current rip ends playback')" onmouseout="tooltip()"><span class="checkbox">☑</span> AUTOPLAY</a></li>
+          <li id="allowrepeats"><a onmouseover="tooltip('allow rips to be repeated (rip watch history is stored across sessions (and can be cleared by clearing your localstorage for this page))')" onmouseout="tooltip()"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
           <li id="channels"><a onmouseover="tooltip('select specific ripping channels to play random rips from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a></li>
           <li id="siiva"><a onmouseover="tooltip('play rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA<span></a></li>
           <li id="ttgd"><a onmouseover="tooltip('play rips from TimmyTurnersGrandDad')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">TTGD<span></a></li>
@@ -221,6 +222,7 @@
       var isPreviousVidKFAD;
       var isInfoReady = false;
       var isAutoplay = true;
+      var allowRepeats = false;
       var isSkipKFAD = false;
       var isSiivaCheck = true;
       var isTTGDCheck = false;
@@ -245,6 +247,7 @@
       var autoWikiWindow;
 
       checkSheets();
+      initWatchedVids();
       var currentVidId = randomVidId();
 
       function makeGetRequest(url){
@@ -259,6 +262,7 @@
       }
 
       var siiva_vids, ttgd_vids, vavr_vids;
+      var unwatched_siiva_vids, unwatched_ttgd_vids, unwatched_vavr_vids;
 
       function checkSheets() {
         var sheetsjson;
@@ -276,15 +280,7 @@
         vavr_vids = sheetsjson["valueRanges"][2]["values"];
       }
 
-      $(document).ready(function() {
-        if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
-          && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
-          document.querySelector("h3#twitter").style.display = "none";
-        } else {
-          document.querySelector("h3#twitter").style.display = "";
-        }
-
-
+      function initWatchedVids() {
         if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS)) {
             try {
               watchedVidIds = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS));
@@ -293,6 +289,19 @@
             }
         } else {
           watchedVidIds = [];
+        }
+        var differenceWatched = x => !watchedVidIds.includes(x[0]);
+        unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
+        unwatched_ttgd_vids = ttgd_vids.filter(differenceWatched);
+        unwatched_vavr_vids = vavr_vids.filter(differenceWatched);
+      }
+
+      $(document).ready(function() {
+        if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
+          && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
+          document.querySelector("h3#twitter").style.display = "none";
+        } else {
+          document.querySelector("h3#twitter").style.display = "";
         }
 
         var dark_link = document.getElementById("dark");
@@ -324,6 +333,7 @@
         document.querySelector("li#previous > a").onclick = previousVid;
         document.querySelector("li#skip > a").onclick = skipVid;
         document.querySelector("li#autoplay > a").onclick = toggleAutoplay;
+        document.querySelector("li#allowrepeats > a").onclick = toggleAllowRepeats;
         document.querySelector("li#autowiki > a").onclick = autoWikiPopup;
         document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
         document.querySelector("li#skipkfad > a").onclick = skipKFADClicked;
@@ -349,6 +359,7 @@
 
       function updateCheckboxes() {
         document.querySelector("li#autoplay > a > span.checkbox").textContent = isAutoplay ? "☑":"☐";
+        document.querySelector("li#allowrepeats > a > span.checkbox").textContent = allowRepeats ? "☑":"☐";
         document.querySelector("li#skipkfad > a > span.checkbox").textContent = isSkipKFAD ? "☑":"☐";
         document.querySelector("li#siiva > a > span.checkbox").textContent = isSiivaCheck ? "☑":"☐";
         document.querySelector("li#ttgd > a > span.checkbox").textContent = isTTGDCheck ? "☑":"☐";
@@ -365,7 +376,7 @@
         isSkipKFAD = !isSkipKFAD;
         updateCheckboxes();
         if(isCurrentVidKFAD && isSkipKFAD) {
-          newVid();
+          newVid(true);
         }
       }
 
@@ -376,13 +387,13 @@
       function randomVidId() {
         var sampler = new ObjectSampler();
         if (isSiivaCheck) {
-          sampler.put(() => pickUniformRandomFromArray(siiva_vids), siiva_vids.length);
+          sampler.put(() => pickUniformRandomFromArray(allowRepeats ? siiva_vids : unwatched_siiva_vids), siiva_vids.length);
         }
         if (isTTGDCheck) {
-          sampler.put(() => pickUniformRandomFromArray(ttgd_vids), ttgd_vids.length);
+          sampler.put(() => pickUniformRandomFromArray(allowRepeats ? ttgd_vids : unwatched_ttgd_vids), ttgd_vids.length);
         }
         if (isVAVRCheck) {
-          sampler.put(() => pickUniformRandomFromArray(vavr_vids), vavr_vids.length);
+          sampler.put(() => pickUniformRandomFromArray(allowRepeats ? vavr_vids : unwatched_vavr_vids), vavr_vids.length);
         }
         return sampler.sample()()[0];
       }
@@ -494,6 +505,10 @@
       function markVidWatched(vidId) {
         watchedVidIds.push(vidId);
         window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
+        notVidFilter = x => x[0] != vidId;
+        unwatched_siiva_vids = unwatched_siiva_vids.filter(notVidFilter);
+        unwatched_ttgd_vids = unwatched_ttgd_vids.filter(notVidFilter);
+        unwatched_vavr_vids = unwatched_vavr_vids.filter(notVidFilter);
       }
 
       function onError(event) {
@@ -528,8 +543,13 @@
       function toggleAutoplay() {
         isAutoplay = !isAutoplay;
         if (isAutoplay && player.getPlayerState() == YT.PlayerState.ENDED) {
-          newVid();
+          newVid(true);
         }
+        updateCheckboxes();
+      }
+
+      function toggleAllowRepeats() {
+        allowRepeats = !allowRepeats;
         updateCheckboxes();
       }
 
