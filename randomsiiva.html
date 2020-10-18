@@ -54,12 +54,13 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100%;
     }
 
     body {
       font-size: 1.25em;
       font-family: Courier, monospace;
+      min-height: 100vh;
+      margin: 0;
       /*padding: 2em 3em 2em 3em;*/
     }
 
@@ -72,7 +73,7 @@
       height: 100%;
     }
     div.embedcontainer {
-      width: 640px;
+      width: min(100vw, 640px);
       height: 390px;
     }
     div {
@@ -137,6 +138,7 @@
       position: absolute;
       bottom: .25em;
       left: .25em;
+      background: black;
     }
     a {
       text-decoration: none;
