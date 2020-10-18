@@ -364,6 +364,14 @@
         document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
         document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
 
+
+
+        document.addEventListener('keyup', event => {
+          if (event.code === 'Space') {
+            onSpaceBarPressed();
+          }
+        });
+
       });
 
       window.addEventListener('beforeunload', function() {
@@ -641,6 +649,20 @@
         document.querySelector("h3#twitter").style.display = "none";
         if (browserHasLocalStorage) {
           window.localStorage.setItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP, perma ? Number.MAX_SAFE_INTEGER : Date.now() + 80000000)
+        }
+      }
+
+      function onSpaceBarPressed() {
+        if (player.getPlayerState() == YT.PlayerState.ENDED && !isAutoplay) {
+          newVid(true);
+        } else if (player.getPlayerState() == YT.PlayerState.PLAYING
+            || player.getPlayerState() == YT.PlayerState.BUFFERING) {
+          player.pauseVideo();
+        }
+        else if (player.getPlayerState() == YT.PlayerState.PAUSED
+            || player.getPlayerState() == YT.PlayerState.CUED
+            || player.getPlayerState() == YT.PlayerState.UNSTARTED) {
+          player.playVideo();
         }
       }
     </script>
