@@ -71,6 +71,10 @@
       grid-template-rows: min-content auto;
       height: 100%;
     }
+    div.embedcontainer {
+      width: 640px;
+      height: 390px;
+    }
     div {
     	font-weight: normal;
     }
@@ -157,7 +161,7 @@
     <h3 id="tooltip">&nbsp</h2>
     <div class="container">
       <div class="menu">
-        <h3><a  onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h3>
+        <h3><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h3>
         <h1>RANDOM RIP PLAYER</h1>
         <ol id="links">
           <li id="skip"><a onmouseover="tooltip('pulls up the next random rip (skipping rips based on your filters)')" onmouseout="tooltip()">NEXT RIP</a></li>
@@ -182,7 +186,9 @@
         <h2>NOW PLAYING:</h2>
         <h2 id="nowplaying">&nbsp</h2>
         <h2 id="author">&nbsp</h2>
-        <div id="player"></div>
+        <div class="embedcontainer">
+          <div id="player"></div>
+        </div>
       </div>
     </div>
     <h3 id="twitter" style="display:none"><a  target="_blank" rel="noopener noreferrer" href="https://twitter.com/brubsby">follow me on twitter</a> or <a  target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/brubsby">buy me a coffee</a> if you like the page! (<a id="hidetwitter">not today</a> / <a id="permahidetwitter">not ever</a>)</h3>
@@ -475,9 +481,10 @@
       //    after the API code downloads.
       var player;
       function onYouTubeIframeAPIReady() {
+        var embedcontainerElement = document.querySelector('div.embedcontainer');
         player = new YT.Player('player', {
-          height: '390',
-          width: '640',
+          height: parseInt(embedcontainerElement.offsetHeight),
+          width: parseInt(embedcontainerElement.offsetWidth),
           videoId: currentVidId,
           autoplay: '1',
           enablejsapi: '1',
