@@ -35,11 +35,17 @@
         div.playercontainer {
           grid-area: 1 / 2 / span 2 / span 1;
         }
+        div.menu {
+          grid-area: 1 / 1 / span 2 / span 1;
+        }
       }
 
     @media (orientation: portrait) {
       div.playercontainer {
         grid-area: 2 / 1 / span 1 / span 2;
+      }
+      div.menu {
+        grid-area: 1 / 1 / span 2 / span 1;
       }
     }
 
@@ -54,12 +60,12 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100%;
     }
 
     body {
       font-size: 1.25em;
       font-family: Courier, monospace;
-      min-height: 100vh;
       margin: 0;
       /*padding: 2em 3em 2em 3em;*/
     }
@@ -71,7 +77,7 @@
       grid-template-columns: min-content auto;
       grid-template-rows: min-content auto;
       height: 100%;
-      margin-top: 1em;
+      margin: 1em;
     }
     div.embedcontainer {
       width: min(100vw, 640px);
@@ -140,6 +146,7 @@
       bottom: .25em;
       left: .25em;
       background: inherit;
+      white-space: normal;
     }
     a {
       text-decoration: none;
