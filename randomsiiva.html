@@ -37,11 +37,18 @@
         }
       }
 
-      @media (orientation: portrait) {
-        div.playercontainer {
-          grid-area: 2 / 1 / span 1 / span 2;
-        }
+    @media (orientation: portrait) {
+      div.playercontainer {
+        grid-area: 2 / 1 / span 1 / span 2;
       }
+    }
+
+    @media (pointer: none), (pointer: coarse) {
+      /* remove autowiki popup on mobile*/
+      li#autowiki {
+        display: none;
+      }
+    }
 
     html {
       display: flex;
