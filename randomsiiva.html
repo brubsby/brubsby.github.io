@@ -177,16 +177,17 @@
         <ol id="links">
           <li id="skip"><a onmouseover="tooltip('pulls up the next random rip (skipping rips based on your filters)')" onmouseout="tooltip()">NEXT RIP</a></li>
           <li id="previous"><a onmouseover="tooltip('go back to the previous rip')" onmouseout="tooltip()">PREVIOUS RIP</a></li>
+          <li id="autoplay"><a onmouseover="tooltip('pull up a new random rip (according to filters) when the current rip ends playback')" onmouseout="tooltip()"><span class="checkbox">☑</span> AUTOPLAY</a></li>
           <li>&nbsp</li>
           <li id="rip_wiki_link"><a onmouseover="tooltip('opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!)')" onmouseout="tooltip()" target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
           <li id="autowiki"><a onmouseover="tooltip('creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)')" onmouseout="tooltip()">AUTO WIKI POPUP</a></li>
           <li id="copy"><a onmouseover="tooltip('copies this rip\'s youtube url to your clipboard!')" onmouseout="tooltip()">COPY RIP LINK</a></li>
-          <li>&nbsp</li>
           <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
+          <li>&nbsp</li>
+          <li id="sort"><a onmouseover="tooltip('sort rips instead of random (click to cycle through sort options)')" onmouseout="tooltip()">SORT BY: <span class="sortoption">RANDOM</span></a></li>
           <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
           <li id="skipkfad"><a onmouseover="tooltip('skip rips that have variants of \'king for a day\' in the title')" onmouseout="tooltip()"><span class="checkbox">☐</span> SKIP KF*D</a></li>
-          <li id="autoplay"><a onmouseover="tooltip('pull up a new random rip (according to filters) when the current rip ends playback')" onmouseout="tooltip()"><span class="checkbox">☑</span> AUTOPLAY</a></li>
-          <li id="allowrepeats"><a onmouseover="tooltip('allow rips to be repeated (rip watch history is stored across sessions (and can be cleared by clearing your localstorage for this page))')" onmouseout="tooltip()"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
+          <li id="allowrepeats"><a onmouseover="tooltip('allow rips to be repeated (only available when unsorted) (rip watch history is stored across sessions (and can be cleared by clearing your localstorage for this page))')" onmouseout="tooltip()"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
           <li id="channels"><a onmouseover="tooltip('select specific ripping channels to play random rips from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a> <a class="percentcomplete" onmouseover="channelProgressTooltip()" onmouseout="tooltip()"></a></li>
           <li id="siiva"><a onmouseover="tooltip('play rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('siiva')" onmouseout="tooltip()"></a></li>
           <li id="ttgd"><a onmouseover="tooltip('play rips from TimmyTurnersGrandDad')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">TTGD</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('ttgd')" onmouseout="tooltip()"></a></li>
@@ -206,25 +207,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="js/lz-string.min.js"></script>
     <script>
-
-      class ObjectSampler {
-        constructor() {this.objects=[];this.total_weight=0;return this;}
-        put(obj, weight=1) {
-          this.total_weight+=weight;
-          this.objects.push({"obj":obj,"weight":weight,"total_weight":this.total_weight});
-          return this;
-        };
-        uniform_sample() {return this.objects[Math.floor(this.objects.length * Math.random())]["obj"];}
-        sample() {
-          var index_val = this.total_weight * Math.random();
-          for (var i = 0; i < this.objects.length; i++) {
-            if (index_val < this.objects[i]["total_weight"]) return this.objects[i]["obj"];
-          }
-          throw "sample error, random value was " + index_val + " but total weight was " + this.total_weight;
-        }
-        get_index(i) {return this.objects[i]["obj"];}
-        size() {return this.objects.length;}
-      }
 
       var browserHasLocalStorage = typeof(Storage) !== "undefined";
 
@@ -259,6 +241,7 @@
       var isInfoReady = false;
       var isAutoplay = true;
       var allowRepeats = false;
+      var allowRepeatLock = false;
       var isSkipKFAD = false;
       var isSiivaCheck = true;
       var isTTGDCheck = false;
@@ -279,6 +262,22 @@
         [">30 SEC", 30]
       ];
       var skipDurationIndex = 0;
+      // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
+      var sortOptions = [
+        ["RANDOM", null, null],
+        ["OLDEST", v => v[3], Math.min, v => v[3]],
+        ["NEWEST", v => v[3], Math.max, v => v[3]],
+        ["SHORTEST", v => v[4], Math.min, v => v[4]],
+        ["LONGEST", v => v[4], Math.max, v => v[4]],
+        ["LEAST VIEWs", v => v[5], Math.min, v => v[5]],
+        ["MOST VIEWS", v => v[5], Math.max, v => v[5]],
+        ["BEST L/D", v => v[6] / (v[7] + 1), Math.max, v => v[6] && v[7]],
+        ["WORST L/D", v => v[6] / (v[7] + 1), Math.min, v => v[6] && v[7]],
+        ["MOST CMNTS", v => v[8], Math.max, v => v[5]],
+        ["LEAST CMNTS", v => v[8], Math.min, v => v[5]]
+      ];
+      var sortIndex = 0;
+      var sortOption = "RANDOM";
 
       var autoWikiWindow;
 
@@ -426,6 +425,7 @@
         document.querySelector("li#allowrepeats > a").onclick = toggleAllowRepeats;
         document.querySelector("li#autowiki > a").onclick = autoWikiPopup;
         document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
+        document.querySelector("li#sort > a").onclick = sortClicked;
         document.querySelector("li#skipkfad > a").onclick = skipKFADClicked;
         document.querySelector("li#channels > a").onclick = () => toggleChannel("");
         document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
@@ -499,6 +499,19 @@
         durationOfVidToSkip = skipDurations[skipDurationIndex][1];
       }
 
+      function sortClicked() {
+        sortIndex = (sortIndex + 1) % sortOptions.length;
+        if (sortIndex == 0) {
+          allowRepeatLock = false;
+        } else {
+          allowRepeatLock = true;
+          allowRepeats = false;
+          updateCheckboxes();
+        }
+        sortOption = sortOptions[sortIndex][0];
+        document.querySelector("li#sort > a > span.sortoption").textContent = sortOption;
+      }
+
       function skipKFADClicked() {
         isSkipKFAD = !isSkipKFAD;
         updateCheckboxes();
@@ -539,7 +552,14 @@
         if (skipDurationIndex != 0) {
           filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[4] < durationOfVidToSkip);
         }
-        return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
+        if (sortOption == "RANDOM") {
+          return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
+        } else {
+          var mapped_vids = filteredSortedVids.filter(sortOptions[sortIndex][3]).map(sortOptions[sortIndex][1])
+          var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
+          //if (vid_index == -1) {} // no more vids for these filters
+          return filteredSortedVids[vid_index][0];
+        }
       }
 
       function wikiLinkFromTitle(title, wikia='siivagunner') {
@@ -689,8 +709,10 @@
       }
 
       function toggleAllowRepeats() {
-        allowRepeats = !allowRepeats;
-        updateCheckboxes();
+        if (!allowRepeatLock) {
+          allowRepeats = !allowRepeats;
+          updateCheckboxes();
+        }
       }
 
       function toggleChannel(channel) {
