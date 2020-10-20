@@ -204,6 +204,7 @@
     </div>
     <h3 id="twitter" style="display:none"><a  target="_blank" rel="noopener noreferrer" href="https://twitter.com/brubsby">follow me on twitter</a> or <a  target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/brubsby">buy me a coffee</a> if you like the page! (<a id="hidetwitter">not today</a> / <a id="permahidetwitter">not ever</a>)</h3>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="js/lz-string.min.js"></script>
     <script>
 
       class ObjectSampler {
@@ -243,7 +244,7 @@
       var PUBLIC_SHEETS_API_KEY = 'AIzaSyAzQyLBAF5kiOZHVLVMLfs_rn1wdCMVnmM';
       var API_KEY = window.location.href.split(":")[0] == "file" ? TESTING_KEY : PUBLIC_SHEETS_API_KEY;
       var SHEET_ID = '1B7b9jEaWiqZI8Z8CzvFN1cBvLVYwjb5xzhWtrgs4anI';
-      var RANGES = ['SiIvaGunner!A2:A','TimmyTurnersGrandDad!A2:A','VvvvvaVvvvvvr!A2:A'];
+      var RANGES = ['SiIvaGunner!A2:K','TimmyTurnersGrandDad!A2:K','VvvvvaVvvvvvr!A2:K'];
       var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
 
 
@@ -298,21 +299,62 @@
 
       var siiva_vids, ttgd_vids, vavr_vids;
       var unwatched_siiva_vids, unwatched_ttgd_vids, unwatched_vavr_vids;
+      var vid_db;
 
       function checkSheets() {
-        var sheetsjson;
-        if (!browserHasLocalStorage || !(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP)) > Date.now())) {
-          sheetsjson = makeJSONRequest(SHEETS_QUERY);
+        if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP)) > Date.now())) {
+          var sheetsjson = makeJSONRequest(SHEETS_QUERY);
+          vid_db = processSheetsJSON(sheetsjson);
           if (browserHasLocalStorage) {
-            window.localStorage.setItem(LOCALSTORAGE_VID_DB, JSON.stringify(sheetsjson));
-            window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 3600000); // one hour
+            setTimeout(() => {
+                window.localStorage.setItem(LOCALSTORAGE_VID_DB, LZString.compressToUTF16(JSON.stringify(vid_db)));
+                window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 3600000); // one hour
+            }, 0)
           }
         } else {
-          sheetsjson = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_VID_DB));
+          try {
+            vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_VID_DB)));
+            if (!vid_db) {
+              throw 'empty db from localstorage';
+            }
+          } catch (e) {
+            window.localStorage.removeItem(LOCALSTORAGE_VID_DB);
+            window.localStorage.removeItem(LOCALSTORAGE_SHEET_TIMESTAMP);
+            checkSheets();
+            return;
+          }
         }
-        siiva_vids = sheetsjson["valueRanges"][0]["values"];
-        ttgd_vids = sheetsjson["valueRanges"][1]["values"];
-        vavr_vids = sheetsjson["valueRanges"][2]["values"];
+        siiva_vids = vid_db[0];
+        ttgd_vids = vid_db[1];
+        vavr_vids = vid_db[2];
+      }
+
+      async function compressAndSave(vid_db) {
+      }
+
+      var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
+
+      function parseISO8601Duration(iso8601Duration) {
+          var matches = iso8601Duration.match(iso8601DurationRegex);
+
+          return {
+              sign: matches[1] === undefined ? '+' : '-',
+              years: matches[2] === undefined ? 0 : matches[2],
+              months: matches[3] === undefined ? 0 : matches[3],
+              weeks: matches[4] === undefined ? 0 : matches[4],
+              days: matches[5] === undefined ? 0 : matches[5],
+              hours: matches[6] === undefined ? 0 : matches[6],
+              minutes: matches[7] === undefined ? 0 : matches[7],
+              seconds: matches[8] === undefined ? 0 : matches[8]
+          };
+      };
+
+      function processSheetsJSON(sheetsjson) {
+          // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 view, 8 likes, 9 dislikes, 10 comments
+          var filter_func = row => !["Private", "Deleted"].includes(row[3]);
+          var mapping_func = row => [row[0], row[1], row[2] == "Documented", Date.parse(row[4]), parseISO8601Duration(row[5]), parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+          var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
+          return [0,1,2].map(outer_mapping_func);
       }
 
       function initWatchedVids() {
