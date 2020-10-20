@@ -187,6 +187,7 @@
           <li id="sort"><a onmouseover="tooltip('sort rips instead of random (click to cycle through sort options)')" onmouseout="tooltip()">SORT BY: <span class="sortoption">RANDOM</span></a></li>
           <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
           <li id="skipkfad"><a onmouseover="tooltip('skip rips that have variants of \'king for a day\' in the title')" onmouseout="tooltip()"><span class="checkbox">☐</span> SKIP KF*D</a></li>
+          <li id="nowiki"><a onmouseover="tooltip('only plays rips in need of a wiki article')" onmouseout="tooltip()"><span class="checkbox">☐</span> NO WIKI ONLY</a></li>
           <li id="allowrepeats"><a onmouseover="tooltip('allow rips to be repeated (only available when unsorted) (rip watch history is stored across sessions (and can be cleared by clearing your localstorage for this page))')" onmouseout="tooltip()"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
           <li id="channels"><a onmouseover="tooltip('select specific ripping channels to play random rips from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a> <a class="percentcomplete" onmouseover="channelProgressTooltip()" onmouseout="tooltip()"></a></li>
           <li id="siiva"><a onmouseover="tooltip('play rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('siiva')" onmouseout="tooltip()"></a></li>
@@ -243,6 +244,7 @@
       var allowRepeats = false;
       var allowRepeatLock = false;
       var isSkipKFAD = false;
+      var isNoWiki = false;
       var isSiivaCheck = true;
       var isTTGDCheck = false;
       var isVAVRCheck = false;
@@ -363,7 +365,9 @@
           // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 views, 8 likes, 9 dislikes, 10 comments
           // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
           var filter_func = row => !["Private", "Deleted"].includes(row[3]);
-          var mapping_func = row => [row[0], row[1], row[2] == "Documented", Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]), parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+          var mapping_func = row => [row[0], row[1], row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
+            Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+            parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
           var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
           return [0,1,2].map(outer_mapping_func);
       }
@@ -427,6 +431,7 @@
         document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
         document.querySelector("li#sort > a").onclick = sortClicked;
         document.querySelector("li#skipkfad > a").onclick = skipKFADClicked;
+        document.querySelector("li#nowiki > a").onclick = noWikiClicked;
         document.querySelector("li#channels > a").onclick = () => toggleChannel("");
         document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
         document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
@@ -481,6 +486,7 @@
         document.querySelector("li#autoplay > a > span.checkbox").textContent = isAutoplay ? "☑":"☐";
         document.querySelector("li#allowrepeats > a > span.checkbox").textContent = allowRepeats ? "☑":"☐";
         document.querySelector("li#skipkfad > a > span.checkbox").textContent = isSkipKFAD ? "☑":"☐";
+        document.querySelector("li#nowiki > a > span.checkbox").textContent = isNoWiki ? "☑":"☐";
         document.querySelector("li#siiva > a > span.checkbox").textContent = isSiivaCheck ? "☑":"☐";
         document.querySelector("li#ttgd > a > span.checkbox").textContent = isTTGDCheck ? "☑":"☐";
         document.querySelector("li#vavr > a > span.checkbox").textContent = isVAVRCheck ? "☑":"☐";
@@ -520,6 +526,11 @@
         }
       }
 
+      function noWikiClicked() {
+        isNoWiki = !isNoWiki;
+        updateCheckboxes();
+      }
+
       function pickUniformRandomFromArray(toSample) {
         return toSample[Math.floor(Math.random()*toSample.length)];
       }
@@ -551,6 +562,9 @@
         }
         if (skipDurationIndex != 0) {
           filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[4] < durationOfVidToSkip);
+        }
+        if (isNoWiki) {
+          filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[2] === false);
         }
         if (sortOption == "RANDOM") {
           return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
