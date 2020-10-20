@@ -247,8 +247,8 @@
       var RANGES = ['SiIvaGunner!A2:K','TimmyTurnersGrandDad!A2:K','VvvvvaVvvvvvr!A2:K'];
       var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
 
-
       var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day"];
+      var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
 
       var previousVidId;
       var currentVidTitle;
@@ -284,7 +284,7 @@
 
       checkSheets();
       initWatchedVids();
-      var currentVidId = randomVidId();
+      var currentVidId = nextVidId();
 
       function makeGetRequest(url){
         var Httpreq = new XMLHttpRequest(); // a new request
@@ -332,8 +332,6 @@
       async function compressAndSave(vid_db) {
       }
 
-      var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
-
       function parseISO8601Duration(iso8601Duration) {
           var matches = iso8601Duration.match(iso8601DurationRegex);
 
@@ -349,10 +347,24 @@
           };
       };
 
+      function parseISO8601DurationToSeconds(iso8601Duration) {
+        var matches = iso8601Duration.match(iso8601DurationRegex);
+
+        return matches ? (matches[1] === undefined ? 1 : -1) *
+        ((matches[2] === undefined ? 0 : parseInt(matches[2])) * 31536000
+        + (matches[3] === undefined ? 0 : parseInt(matches[3])) * 2592000
+        + (matches[4] === undefined ? 0 : parseInt(matches[4])) * 604800
+        + (matches[5] === undefined ? 0 : parseInt(matches[5])) * 86400
+        + (matches[6] === undefined ? 0 : parseInt(matches[6])) * 3600
+        + (matches[7] === undefined ? 0 : parseInt(matches[7])) * 60
+        + (matches[8] === undefined ? 0 : parseInt(matches[8]))) : 0;
+      }
+
       function processSheetsJSON(sheetsjson) {
-          // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 view, 8 likes, 9 dislikes, 10 comments
+          // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 views, 8 likes, 9 dislikes, 10 comments
+          // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
           var filter_func = row => !["Private", "Deleted"].includes(row[3]);
-          var mapping_func = row => [row[0], row[1], row[2] == "Documented", Date.parse(row[4]), parseISO8601Duration(row[5]), parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+          var mapping_func = row => [row[0], row[1], row[2] == "Documented", Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]), parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
           var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
           return [0,1,2].map(outer_mapping_func);
       }
@@ -499,18 +511,35 @@
         return toSample[Math.floor(Math.random()*toSample.length)];
       }
 
-      function randomVidId() {
-        var sampler = new ObjectSampler();
+      function arraysEqual(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+
+        for (var i = 0; i < a.length; ++i) {
+          if (a[i] !== b[i]) return false;
+        }
+        return true;
+      }
+
+      function nextVidId() {
+        filteredSortedVids = [];
         if (isSiivaCheck) {
-          sampler.put(() => pickUniformRandomFromArray(allowRepeats ? siiva_vids : unwatched_siiva_vids), siiva_vids.length);
+          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? siiva_vids : unwatched_siiva_vids);
         }
         if (isTTGDCheck) {
-          sampler.put(() => pickUniformRandomFromArray(allowRepeats ? ttgd_vids : unwatched_ttgd_vids), ttgd_vids.length);
+          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? ttgd_vids : unwatched_ttgd_vids);
         }
         if (isVAVRCheck) {
-          sampler.put(() => pickUniformRandomFromArray(allowRepeats ? vavr_vids : unwatched_vavr_vids), vavr_vids.length);
+          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? vavr_vids : unwatched_vavr_vids);
         }
-        return sampler.sample()()[0];
+        if (isSkipKFAD) {
+          filteredSortedVids = filteredSortedVids.filter((vid_info) => !KFAD_FILTERS.some((filter) => vid_info[1].toLowerCase().includes(filter)));
+        }
+        if (skipDurationIndex != 0) {
+          filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[4] < durationOfVidToSkip);
+        }
+        return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
       }
 
       function wikiLinkFromTitle(title, wikia='siivagunner') {
@@ -523,15 +552,12 @@
         return 'https://' + wikia + '.fandom.com/wiki/' + title.replaceAll(' ', '_').replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')');
       }
 
-      // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
 
       tag.src = "https://www.youtube.com/iframe_api";
       var firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-      // 3. This function creates an <iframe> (and YouTube player)
-      //    after the API code downloads.
       var player;
       function onYouTubeIframeAPIReady() {
         var embedcontainerElement = document.querySelector('div.embedcontainer');
@@ -611,7 +637,7 @@
           markVidWatched(currentVidId);
         }
         previousVidId = currentVidId;
-        currentVidId = randomVidId();
+        currentVidId = nextVidId();
         previousChannel = currentChannel;
         isPreviousVidKFAD = isCurrentVidKFAD;
         isInfoReady = false;
@@ -642,12 +668,7 @@
             newVid(true);
           }
         } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
-          if (player.getDuration() > durationOfVidToSkip) {
-            newVid(false);
-            return;
-          } else {
             onTitleReady();
-          }
         }
       }
 
