@@ -128,7 +128,7 @@
       font-weight: normal;
       white-space: nowrap;
       style: none;
-      font-size: .75em;
+      font-size: .85em;
       font-family: "DF", monospace;
     }
     h3 > a {
@@ -149,6 +149,20 @@
       background: inherit;
       white-space: normal;
     }
+    h4 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: .75em;
+      font-family: "DF", monospace;
+    }
+    h4 > a {
+      text-decoration: underline;
+    }
+    h4 > a:hover {
+      font-style: oblique;
+    }
     a {
       text-decoration: none;
       color: inherit;
@@ -166,29 +180,34 @@
       text-decoration: none;
       font-style: oblique;
     }
+    hr {
+      border-style: solid;
+      margin-top: .3em;
+      margin-bottom: .3em;
+    }
     </style>
   </head>
   <body>
     <h3 id="tooltip">&nbsp</h2>
     <div class="container">
       <div class="menu">
-        <h3><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h3>
+        <h4><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h3>
         <h1>RANDOM RIP PLAYER</h1>
         <ol id="links">
-          <li id="skip"><a onmouseover="tooltip('pulls up the next random rip (skipping rips based on your filters)')" onmouseout="tooltip()">NEXT RIP</a></li>
+          <li id="skip"><a onmouseover="tooltip('pulls up the next random rip according to your filters and sorting')" onmouseout="tooltip()">NEXT RIP</a></li>
           <li id="previous"><a onmouseover="tooltip('go back to the previous rip')" onmouseout="tooltip()">PREVIOUS RIP</a></li>
-          <li id="autoplay"><a onmouseover="tooltip('pull up a new random rip (according to filters) when the current rip ends playback')" onmouseout="tooltip()"><span class="checkbox">☑</span> AUTOPLAY</a></li>
-          <li>&nbsp</li>
+          <li id="autoplay"><a onmouseover="tooltip('pull up a new random rip (according to filters and sorting) when the current rip ends')" onmouseout="tooltip()"><span class="checkbox">☑</span> AUTOPLAY</a></li>
+          <hr>
           <li id="rip_wiki_link"><a onmouseover="tooltip('opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!)')" onmouseout="tooltip()" target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
           <li id="autowiki"><a onmouseover="tooltip('creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)')" onmouseout="tooltip()">AUTO WIKI POPUP</a></li>
           <li id="copy"><a onmouseover="tooltip('copies this rip\'s youtube url to your clipboard!')" onmouseout="tooltip()">COPY RIP LINK</a></li>
           <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
-          <li>&nbsp</li>
+          <hr>
           <li id="sort"><a onmouseover="tooltip('sort rips instead of random (click to cycle through sort options)')" onmouseout="tooltip()">SORT BY: <span class="sortoption">RANDOM</span></a></li>
           <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
           <li id="skipkfad"><a onmouseover="tooltip('skip rips that have variants of \'king for a day\' in the title')" onmouseout="tooltip()"><span class="checkbox">☐</span> SKIP KF*D</a></li>
           <li id="nowiki"><a onmouseover="tooltip('only plays rips in need of a wiki article')" onmouseout="tooltip()"><span class="checkbox">☐</span> NO WIKI ONLY</a></li>
-          <li id="allowrepeats"><a onmouseover="tooltip('allow rips to be repeated (only available when unsorted) (rip watch history is stored across sessions (and can be cleared by clearing your localstorage for this page))')" onmouseout="tooltip()"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
+          <li id="allowrepeats"><a onmouseover="tooltip('allow rips to be repeated (only available when unsorted) (rip watch history is stored in your localstorage)')" onmouseout="tooltip()"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
           <li id="channels"><a onmouseover="tooltip('select specific ripping channels to play random rips from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a> <a class="percentcomplete" onmouseover="channelProgressTooltip()" onmouseout="tooltip()"></a></li>
           <li id="siiva"><a onmouseover="tooltip('play rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('siiva')" onmouseout="tooltip()"></a></li>
           <li id="ttgd"><a onmouseover="tooltip('play rips from TimmyTurnersGrandDad')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">TTGD</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('ttgd')" onmouseout="tooltip()"></a></li>
@@ -227,6 +246,7 @@
       var PUBLIC_SHEETS_API_KEY = 'AIzaSyAzQyLBAF5kiOZHVLVMLfs_rn1wdCMVnmM';
       var API_KEY = window.location.href.split(":")[0] == "file" ? TESTING_KEY : PUBLIC_SHEETS_API_KEY;
       var SHEET_ID = '1B7b9jEaWiqZI8Z8CzvFN1cBvLVYwjb5xzhWtrgs4anI';
+      var BOOTLEG_SHEET_ID = '1Q_L84zZ2rzS57ZcDcCdmxMsguqjpnbLGr5_QVX5LVKA';
       var RANGES = ['SiIvaGunner!A2:K','TimmyTurnersGrandDad!A2:K','VvvvvaVvvvvvr!A2:K'];
       var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
 
