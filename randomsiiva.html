@@ -212,6 +212,7 @@
           <li id="siiva"><a onmouseover="tooltip('play rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('siiva')" onmouseout="tooltip()"></a></li>
           <li id="ttgd"><a onmouseover="tooltip('play rips from TimmyTurnersGrandDad')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">TTGD</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('ttgd')" onmouseout="tooltip()"></a></li>
           <li id="vavr"><a onmouseover="tooltip('play rips from VvvvvaVvvvvvr')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">VAVR</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('vavr')" onmouseout="tooltip()"></a></li>
+          <li id="bootleg"><a onmouseover="tooltip('play vids from all other fan channels (inclusion based on the siiva wiki list of fan channels) i do not endorse anything that appears lol')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">OTHER</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('bootleg')" onmouseout="tooltip()"></a></li>
         </ol>
       </div>
       <div class="playercontainer">
@@ -219,7 +220,7 @@
         <h2 id="nowplaying">&nbsp</h2>
         <h2 id="author">&nbsp</h2>
         <div class="embedcontainer">
-          <div id="player"></div>
+          <div id="player">Loading metadata for every public rip on every channel... should be about 5 seconds...</div>
         </div>
       </div>
     </div>
@@ -239,6 +240,8 @@
 
       var LOCALSTORAGE_SHEET_TIMESTAMP = "sheet_timestamp";
       var LOCALSTORAGE_VID_DB = "vid_db";
+      var LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP = "bootleg_sheet_timestamp";
+      var LOCALSTORAGE_BOOTLEG_VID_DB = "bootleg_vid_db";
       var LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP = "twitter_ignore_timestamp";
       var LOCALSTORAGE_WATCHED_VID_IDS = "watched_vid_ids"
 
@@ -249,8 +252,10 @@
       var BOOTLEG_SHEET_ID = '1Q_L84zZ2rzS57ZcDcCdmxMsguqjpnbLGr5_QVX5LVKA';
       var RANGES = ['SiIvaGunner!A2:K','TimmyTurnersGrandDad!A2:K','VvvvvaVvvvvvr!A2:K'];
       var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
+      var BOOTLEG_SHEET_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}?key=${API_KEY}`;
+      var BOOTLEG_SHEETS_BATCH_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}/values:batchGet?key=${API_KEY}`;
 
-      var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day"];
+      var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day", "host for a day", "king for a gay", "teacher for a day", "queen for another day", "king for a week", "king 4 a day"];
       var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
 
       var previousVidId;
@@ -268,6 +273,7 @@
       var isSiivaCheck = true;
       var isTTGDCheck = false;
       var isVAVRCheck = false;
+      var isBootlegCheck = false;
       var durationOfVidToSkip = Number.MAX_SAFE_INTEGER;
       var watchedVidIds;
       var skipDurations = [
@@ -304,6 +310,7 @@
       var autoWikiWindow;
 
       checkSheets();
+      checkBootlegSheets();
       initWatchedVids();
       var currentVidId = nextVidId();
 
@@ -318,9 +325,9 @@
         return JSON.parse(makeGetRequest(url));
       }
 
-      var siiva_vids, ttgd_vids, vavr_vids;
-      var unwatched_siiva_vids, unwatched_ttgd_vids, unwatched_vavr_vids;
-      var vid_db;
+      var siiva_vids, ttgd_vids, vavr_vids, bootleg_vids;
+      var unwatched_siiva_vids, unwatched_ttgd_vids, unwatched_vavr_vids, unwatched_bootleg_vids;
+      var vid_db, bootleg_vid_db;
 
       function checkSheets() {
         if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP)) > Date.now())) {
@@ -329,7 +336,7 @@
           if (browserHasLocalStorage) {
             setTimeout(() => {
                 window.localStorage.setItem(LOCALSTORAGE_VID_DB, LZString.compressToUTF16(JSON.stringify(vid_db)));
-                window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 3600000); // one hour
+                window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 7200000); // two hours
             }, 0)
           }
         } else {
@@ -350,7 +357,32 @@
         vavr_vids = vid_db[2];
       }
 
-      async function compressAndSave(vid_db) {
+      function checkBootlegSheets() {
+        if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
+          var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
+          var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title));
+          var bootlegSheetsJSON = makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + bootlegSheetNames.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join(''));
+          bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
+          if (browserHasLocalStorage) {
+            setTimeout(() => {
+                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_VID_DB, LZString.compressToUTF16(JSON.stringify(bootleg_vid_db)));
+                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP, Date.now() + 7200000); // two hours
+            }, 0)
+          }
+        } else {
+          try {
+            bootleg_vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB)));
+            if (!bootleg_vid_db) {
+              throw 'empty bootleg db from localstorage';
+            }
+          } catch (e) {
+            window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_VID_DB);
+            window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP);
+            checkBootlegSheets();
+            return;
+          }
+        }
+        bootleg_vids = bootleg_vid_db;
       }
 
       function parseISO8601Duration(iso8601Duration) {
@@ -392,6 +424,15 @@
           return [0,1,2].map(outer_mapping_func);
       }
 
+      function processBootlegSheetsJSON(bootlegSheetsJSON) {
+          var filter_func = row => !["Private", "Deleted"].includes(row[3]) && row[5] != null && row[1] != null;
+          var mapping_func = row => [row[0], row[1], row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
+            Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+            parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+          var outer_mapping_func = n => bootlegSheetsJSON["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
+          return [].concat.apply([], Array.from(Array(bootlegSheetsJSON["valueRanges"].length).keys()).map(outer_mapping_func));
+      }
+
       function initWatchedVids() {
         if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS)) {
             try {
@@ -406,6 +447,7 @@
         unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
         unwatched_ttgd_vids = ttgd_vids.filter(differenceWatched);
         unwatched_vavr_vids = vavr_vids.filter(differenceWatched);
+        unwatched_bootleg_vids = bootleg_vids.filter(differenceWatched);
         updateWatchPercentages();
       }
 
@@ -456,7 +498,7 @@
         document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
         document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
         document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
-        document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
+        document.querySelector("li#bootleg > a").onclick = () => toggleChannel("bootleg");
         document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
         document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
 
@@ -483,9 +525,9 @@
       function channelProgressTooltip(channel="") {
         var num_total_vids, num_unwatched_vids, channelText;
         if (channel == "") {
-          num_total_vids = siiva_vids.length + ttgd_vids.length + vavr_vids.length;
-          num_unwatched_vids = unwatched_siiva_vids.length + unwatched_ttgd_vids.length + unwatched_vavr_vids.length;
-          channelText = 'siiva, ttgd, and vavr';
+          num_total_vids = siiva_vids.length + ttgd_vids.length + vavr_vids.length + bootleg_vids.length;
+          num_unwatched_vids = unwatched_siiva_vids.length + unwatched_ttgd_vids.length + unwatched_vavr_vids.length + unwatched_bootleg_vids.length;
+          channelText = 'siiva and all fan channels';
         } else if (channel == "siiva") {
           num_total_vids = siiva_vids.length;
           num_unwatched_vids = unwatched_siiva_vids.length;
@@ -498,6 +540,10 @@
           num_total_vids = vavr_vids.length;
           num_unwatched_vids = unwatched_vavr_vids.length;
           channelText = 'VvvvvaVvvvvvr\'s channel';
+        } else if (channel == "bootleg"){
+          num_total_vids = bootleg_vids.length;
+          num_unwatched_vids = unwatched_bootleg_vids.length;
+          channelText = 'all remaining fan channels';
         }
         document.querySelector("h3#tooltip").textContent = `you've watched ${(num_total_vids - num_unwatched_vids).toLocaleString()} out of ${num_total_vids.toLocaleString()} total rips on ${channelText}, only ${num_unwatched_vids.toLocaleString()} more to go!`;
       }
@@ -510,6 +556,7 @@
         document.querySelector("li#siiva > a > span.checkbox").textContent = isSiivaCheck ? "☑":"☐";
         document.querySelector("li#ttgd > a > span.checkbox").textContent = isTTGDCheck ? "☑":"☐";
         document.querySelector("li#vavr > a > span.checkbox").textContent = isVAVRCheck ? "☑":"☐";
+        document.querySelector("li#bootleg > a > span.checkbox").textContent = isBootlegCheck ? "☑":"☐";
       }
 
       function updateWatchPercentages() {
@@ -517,6 +564,7 @@
         document.querySelector("li#siiva > a.percentcomplete").text = `(${(100 * (1 - unwatched_siiva_vids.length / siiva_vids.length)).toFixed(2)}% watched)`;
         document.querySelector("li#ttgd > a.percentcomplete").text = `(${(100 * (1 - unwatched_ttgd_vids.length / ttgd_vids.length)).toFixed(2)}% watched)`;
         document.querySelector("li#vavr > a.percentcomplete").text = `(${(100 * (1 - unwatched_vavr_vids.length / vavr_vids.length)).toFixed(2)}% watched)`;
+        document.querySelector("li#bootleg > a.percentcomplete").text = `(${(100 * (1 - unwatched_bootleg_vids.length / bootleg_vids.length)).toFixed(2)}% watched)`;
       }
 
       function skipDurationClicked() {
@@ -577,6 +625,9 @@
         if (isVAVRCheck) {
           filteredSortedVids = filteredSortedVids.concat(allowRepeats ? vavr_vids : unwatched_vavr_vids);
         }
+        if (isBootlegCheck) {
+          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? bootleg_vids : unwatched_bootleg_vids);
+        }
         if (isSkipKFAD) {
           filteredSortedVids = filteredSortedVids.filter((vid_info) => !KFAD_FILTERS.some((filter) => vid_info[1].toLowerCase().includes(filter)));
         }
@@ -596,12 +647,15 @@
         }
       }
 
-      function wikiLinkFromTitle(title, wikia='siivagunner') {
-        if (wikia == "TimmyTurnersGrandDad") {
+      function wikiLinkFromTitle(title, wikia) {
+        if (wikia == 'SiIvaGunner') {
+          wikia == "siivagunner"
+        } else if (wikia == "TimmyTurnersGrandDad") {
           wikia = "ttgd";
-        }
-        if (wikia == "VvvvvaVvvvvvr") {
+        } else if (wikia == "VvvvvaVvvvvvr") {
           wikia = "vvvvvavvvvvr";
+        } else {
+          return "";
         }
         return 'https://' + wikia + '.fandom.com/wiki/' + title.replaceAll(' ', '_').replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')');
       }
@@ -660,8 +714,12 @@
 
       function updateWikiLink() {
         var wikiLink = wikiLinkFromTitle(currentVidTitle, currentChannel);
-        document.querySelector("#rip_wiki_link > a").href = wikiLink;
-        if (!!autoWikiWindow && !autoWikiWindow.closed) {
+        var wikiLinkElem = document.querySelector("#rip_wiki_link > a");
+        wikiLinkElem.href = wikiLink;
+        if (!wikiLink) {
+          wikiLinkElem.removeAttribute("href");
+        }
+        if (!!autoWikiWindow && !autoWikiWindow.closed && !!wikiLink) {
           autoWikiWindow.location.href = wikiLink;
         }
       }
@@ -707,6 +765,7 @@
         unwatched_siiva_vids = unwatched_siiva_vids.filter(notVidFilter);
         unwatched_ttgd_vids = unwatched_ttgd_vids.filter(notVidFilter);
         unwatched_vavr_vids = unwatched_vavr_vids.filter(notVidFilter);
+        unwatched_bootleg_vids = unwatched_bootleg_vids.filter(notVidFilter);
         updateWatchPercentages();
       }
 
@@ -752,33 +811,42 @@
       function toggleChannel(channel) {
         if (channel == "siiva") {
           isSiivaCheck = !isSiivaCheck;
-          if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck) {
+          if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck && !isBootlegCheck) {
             isTTGDCheck = true;
             isVAVRCheck = true;
+            isBootlegCheck = true;
           }
         } else if (channel == "ttgd") {
           isTTGDCheck = !isTTGDCheck;
         } else if (channel == "vavr") {
           isVAVRCheck = !isVAVRCheck;
+        } else if (channel == "bootleg") {
+          isBootlegCheck = !isBootlegCheck;
         } else if (channel == "") {
-          if (isSiivaCheck && isTTGDCheck && isVAVRCheck) {
+          if (isSiivaCheck && isTTGDCheck && isVAVRCheck && isBootlegCheck) {
             isSiivaCheck = true;
             isTTGDCheck = false;
             isVAVRCheck = false;
+            isBootlegCheck = false;
           } else {
             isSiivaCheck = true;
             isTTGDCheck = true;
             isVAVRCheck = true;
+            isBootlegCheck = true;
           }
         }
-        if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck) {
+        if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck && !isBootlegCheck) {
           isSiivaCheck = true;
         }
         updateCheckboxes();
       }
 
       function autoWikiPopup() {
-        autoWikiWindow = window.open(wikiLinkFromTitle(currentVidTitle, currentChannel),
+        var wikiLink = wikiLinkFromTitle(currentVidTitle, currentChannel);
+        if (!wikiLink) {
+          wikiLink = "https://siivagunner.fandom.com/wiki/SiIvaGunner_Wikia";
+        }
+        autoWikiWindow = window.open(wikiLink,
         "Auto Updating Wiki Popup", ["resizable", "scrollbars", "status"]);
       }
 
