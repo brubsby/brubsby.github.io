@@ -238,6 +238,18 @@
         };
       }
 
+      const cyrb53 = function(str, seed = 0) {
+        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+        for (let i = 0, ch; i < str.length; i++) {
+          ch = str.charCodeAt(i);
+          h1 = Math.imul(h1 ^ ch, 2654435761);
+          h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+        return 4294967296 * (2097151 & h2) + (h1>>>0);
+      };
+
       var LOCALSTORAGE_SHEET_TIMESTAMP = "sheet_timestamp";
       var LOCALSTORAGE_VID_DB = "vid_db";
       var LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP = "bootleg_sheet_timestamp";
@@ -256,6 +268,8 @@
       var BOOTLEG_SHEETS_BATCH_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}/values:batchGet?key=${API_KEY}`;
 
       var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day", "host for a day", "king for a gay", "teacher for a day", "queen for another day", "king for a week", "king 4 a day"];
+      var CHANNEL_BLOCKLIST = [7792455746889010];
+      var RIP_BLOCKLIST = [];
       var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
 
       var previousVidId;
@@ -360,7 +374,7 @@
       function checkBootlegSheets() {
         if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
           var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
-          var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title));
+          var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title) && !CHANNEL_BLOCKLIST.includes(cyrb53(title)));
           var bootlegSheetsJSON = makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + bootlegSheetNames.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join(''));
           bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
           if (browserHasLocalStorage) {
@@ -426,7 +440,7 @@
 
       function processBootlegSheetsJSON(bootlegSheetsJSON) {
           var filter_func = row => !["Private", "Deleted"].includes(row[3]) && row[5] != null && row[1] != null;
-          var mapping_func = row => [row[0], row[1], row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
+          var mapping_func = row => [row[0], row[1], false,
             Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
             parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
           var outer_mapping_func = n => bootlegSheetsJSON["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
@@ -637,6 +651,7 @@
         if (isNoWiki) {
           filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[2] === false);
         }
+        filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
         if (sortOption == "RANDOM") {
           return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
         } else {
