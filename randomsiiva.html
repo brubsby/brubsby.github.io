@@ -3,12 +3,18 @@
   <head>
     <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
     <meta name="title" content="Brubsby's Random Rip Player">
-    <meta name="description" content="page that automatically plays random siivagunner rips">
-    <meta name="keywords" content="siivagunner autoplay, siivagunner random, siivagunner random autoplay">
+    <meta name="description" content="Play random rips from SiIvaGunner and (most) SiIvaGunner fan channels.">
+    <meta name="keywords" content="siivagunner autoplay, random siivagunner, siivagunner random autoplay, random rip player, random siiva rip, random siiva video">
     <meta name="robots" content="index, follow">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="language" content="English">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@brubsby" />
+    <meta name="twitter:creator" content="@brubsby" />
+    <meta property="og:url" content="https://brubsby.com/randomsiiva" />
+    <meta property="og:title" content="Brubsby's Random Rip Player" />
+    <meta property="og:description" content="Play random rips from SiIvaGunner and (most) SiIvaGunner fan channels." />
     <title>Random Rip Player</title>
     <style>
 
@@ -350,7 +356,7 @@
           if (browserHasLocalStorage) {
             setTimeout(() => {
                 window.localStorage.setItem(LOCALSTORAGE_VID_DB, LZString.compressToUTF16(JSON.stringify(vid_db)));
-                window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 7200000); // two hours
+                window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 86400000); // one day
             }, 0)
           }
         } else {
@@ -380,7 +386,7 @@
           if (browserHasLocalStorage) {
             setTimeout(() => {
                 window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_VID_DB, LZString.compressToUTF16(JSON.stringify(bootleg_vid_db)));
-                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP, Date.now() + 7200000); // two hours
+                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP, Date.now() + 172800000); // two days
             }, 0)
           }
         } else {
