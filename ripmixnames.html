@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
+    <meta name="title" content="SiIvaGunner Mix Name Statistics">
+    <meta name="description" content="Page that shows up to date mix name statistics for SiIvaGunner (and most fan channel) rips.">
+    <meta name="keywords" content="siivagunner mix names, high quality rip mix names, mix name statistics, siivagunner mix name statistics, mix name statistics">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@brubsby" />
+    <meta name="twitter:creator" content="@brubsby" />
+    <meta property="og:url" content="https://brubsby.com/ripmixnames" />
+    <meta property="og:title" content="SiIvaGunner Mix Name Statistics" />
+    <meta property="og:description" content="Page that shows up to date mix name statistics for SiIvaGunner (and most fan channel) rips." />
+    <title>SiIvaGunner Mix Name Statistics</title>
+    <style>
+
+    @font-face {
+      font-family: 'DF';
+      src: url('assets/LessPerfectDOSVGA.woff') format('woff'), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+       url('assets/LessPerfectDOSVGA.ttf') format('truetype'); /* Chrome 4+, Firefox 3.5, Opera 10+, Safari 3—5 */
+    }
+
+    @media (prefers-color-scheme: no-preference), (prefers-color-scheme: dark) {
+      body {
+        background: black;
+        color: white;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      body {
+        background: white;
+        color: black;
+      }
+    }
+
+    @media (orientation: landscape) {
+        div.playercontainer {
+          grid-area: 1 / 2 / span 2 / span 1;
+        }
+        div.menu {
+          grid-area: 1 / 1 / span 2 / span 1;
+        }
+      }
+
+    @media (orientation: portrait) {
+      div.playercontainer {
+        grid-area: 2 / 1 / span 1 / span 2;
+      }
+      div.menu {
+        grid-area: 1 / 1 / span 1 / span 2;
+      }
+    }
+
+    @media (pointer: none), (pointer: coarse) {
+      /* remove autowiki popup on mobile*/
+      li#autowiki {
+        display: none;
+      }
+    }
+
+    html {
+      display: flex;
+      min-height: 100%;
+      position: relative;
+    }
+
+    body {
+      font-size: 1.25em;
+      font-family: Courier, monospace;
+      margin: auto;
+      /*padding: 2em 3em 2em 3em;*/
+    }
+
+    div.container {
+      display: grid;
+      justify-content: center;
+      align-content: center;
+      grid-column-gap: 68px;
+      grid-row-gap: 10px;
+      grid-template-columns: min-content auto;
+      grid-template-rows: min-content auto;
+      height: 100%;
+      margin: 1em;
+    }
+    div.mixnamescontainer {
+      width: min(100vw - 2em, 640px);
+      height: 390px;
+    }
+    div {
+    	font-weight: normal;
+    }
+    ol, li {
+      list-style-type: none;
+      padding-left: 8px;
+      white-space: nowrap;
+    }
+    li {
+      line-height: 1.25em;
+      -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+         -khtml-user-select: none; /* Konqueror HTML */
+           -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+    }
+    div.menu {
+      margin: 0;
+      justify-self: center;
+    }
+    h1 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: 1.5em;
+    }
+    h2 {
+      margin: 0;
+      font-weight: normal;
+      style: none;
+      font-size: 1em;
+      font-family: "DF", monospace;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    h3 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: .85em;
+      font-family: "DF", monospace;
+    }
+    h3 > a {
+      text-decoration: underline;
+    }
+    h3 > a:hover {
+      font-style: oblique;
+    }
+    h3#tooltip {
+      position: absolute;
+      top: .25em;
+      left: .25em;
+    }
+    h3#twitter {
+      position: absolute;
+      bottom: .25em;
+      left: .25em;
+      background: inherit;
+      white-space: normal;
+    }
+    h4 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: .75em;
+      font-family: "DF", monospace;
+    }
+    h4 > a {
+      text-decoration: underline;
+    }
+    h4 > a:hover {
+      font-style: oblique;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    a:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    hr {
+      border-style: solid;
+      margin-top: .3em;
+      margin-bottom: .3em;
+    }
+    textarea {
+      color: inherit;
+      background-color: inherit;
+      width: 100%;
+      height: 100%;
+    }
+    </style>
+    </head>
+    <body>
+      <h3 id="tooltip">&nbsp</h3>
+      <div class="container">
+        <div class="menu">
+          <h4><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h4>
+          <h1>RIP MIX NAME STATS</h1>
+          <ol id="links">
+            <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
+            <hr>
+            <li id="channels"><a onmouseover="tooltip('select specific ripping channels to include titles from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a> <a class="percentcomplete" onmouseover="channelProgressTooltip()" onmouseout="tooltip()"></a></li>
+            <li id="siiva"><a onmouseover="tooltip('include rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('siiva')" onmouseout="tooltip()"></a></li>
+            <li id="ttgd"><a onmouseover="tooltip('include rips from TimmyTurnersGrandDad')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">TTGD</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('ttgd')" onmouseout="tooltip()"></a></li>
+            <li id="vavr"><a onmouseover="tooltip('include rips from VvvvvaVvvvvvr')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">VAVR</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('vavr')" onmouseout="tooltip()"></a></li>
+            <li id="bootleg"><a onmouseover="tooltip('include vid titles from all other fan channels (inclusion based on the siiva wiki list of fan channels) i do not endorse anything here lol')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">OTHER</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('bootleg')" onmouseout="tooltip()"></a></li>
+          </ol>
+        </div>
+        <div class="mixnamescontainer">
+          <h2>MIX NAMES BY COUNT:</h2>
+          <textarea readonly class="mixnames"> Loading metadata for every public rip on every channel... should be about 5 seconds... </textarea>
+        </div>
+      </div>
+      <h3 id="twitter" style="display:none"><a  target="_blank" rel="noopener noreferrer" href="https://twitter.com/brubsby">follow me on twitter</a> or <a  target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/brubsby">buy me a coffee</a> if you like the page! (<a id="hidetwitter">not today</a> / <a id="permahidetwitter">not ever</a>)</h3>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+      <script src="js/lz-string.min.js"></script>
+      <script>
+
+      var browserHasLocalStorage = typeof(Storage) !== "undefined";
+
+      // Date.now() polyfill
+      if (!Date.now) {
+        Date.now = function now() {
+          return new Date().getTime();
+        };
+      }
+
+      const cyrb53 = function(str, seed = 0) {
+        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+        for (let i = 0, ch; i < str.length; i++) {
+          ch = str.charCodeAt(i);
+          h1 = Math.imul(h1 ^ ch, 2654435761);
+          h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+        return 4294967296 * (2097151 & h2) + (h1>>>0);
+      };
+
+      var LOCALSTORAGE_SHEET_TIMESTAMP = "sheet_timestamp";
+      var LOCALSTORAGE_VID_DB = "vid_db";
+      var LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP = "bootleg_sheet_timestamp";
+      var LOCALSTORAGE_BOOTLEG_VID_DB = "bootleg_vid_db";
+      var LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP = "twitter_ignore_timestamp";
+
+      var TESTING_KEY = 'AIzaSyAUpx3K3IcUsPAIicY8CSPbtUTjFVw7BSA';
+      var PUBLIC_SHEETS_API_KEY = 'AIzaSyAzQyLBAF5kiOZHVLVMLfs_rn1wdCMVnmM';
+      var API_KEY = window.location.href.split(":")[0] == "file" ? TESTING_KEY : PUBLIC_SHEETS_API_KEY;
+      var SHEET_ID = '1B7b9jEaWiqZI8Z8CzvFN1cBvLVYwjb5xzhWtrgs4anI';
+      var BOOTLEG_SHEET_ID = '1Q_L84zZ2rzS57ZcDcCdmxMsguqjpnbLGr5_QVX5LVKA';
+      var RANGES = ['SiIvaGunner!A2:K','TimmyTurnersGrandDad!A2:K','VvvvvaVvvvvvr!A2:K'];
+      var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
+      var BOOTLEG_SHEET_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}?key=${API_KEY}`;
+      var BOOTLEG_SHEETS_BATCH_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}/values:batchGet?key=${API_KEY}`;
+
+      var CHANNEL_BLOCKLIST = [7792455746889010];
+      var RIP_BLOCKLIST = [];
+
+      var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
+
+      var isSiivaCheck = true;
+      var isTTGDCheck = false;
+      var isVAVRCheck = false;
+      var isBootlegCheck = false;
+
+      checkSheets();
+      checkBootlegSheets();
+      recalculateMixNames();
+
+      function makeGetRequest(url){
+        var Httpreq = new XMLHttpRequest(); // a new request
+        Httpreq.open("GET", url, false);
+        Httpreq.send(null);
+        return Httpreq.responseText;
+      }
+
+      function makeJSONRequest(url) {
+        return JSON.parse(makeGetRequest(url));
+      }
+
+      var siiva_vids, ttgd_vids, vavr_vids, bootleg_vids;
+      var vid_db, bootleg_vid_db;
+
+      function checkSheets() {
+        if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP)) > Date.now())) {
+          var sheetsjson = makeJSONRequest(SHEETS_QUERY);
+          vid_db = processSheetsJSON(sheetsjson);
+          if (browserHasLocalStorage) {
+            setTimeout(() => {
+                window.localStorage.setItem(LOCALSTORAGE_VID_DB, LZString.compressToUTF16(JSON.stringify(vid_db)));
+                window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 86400000); // one day
+            }, 0)
+          }
+        } else {
+          try {
+            vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_VID_DB)));
+            if (!vid_db) {
+              throw 'empty db from localstorage';
+            }
+          } catch (e) {
+            window.localStorage.removeItem(LOCALSTORAGE_VID_DB);
+            window.localStorage.removeItem(LOCALSTORAGE_SHEET_TIMESTAMP);
+            checkSheets();
+            return;
+          }
+        }
+        siiva_vids = vid_db[0];
+        ttgd_vids = vid_db[1];
+        vavr_vids = vid_db[2];
+      }
+
+      function checkBootlegSheets() {
+        if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
+          var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
+          var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title) && !CHANNEL_BLOCKLIST.includes(cyrb53(title)));
+          var bootlegSheetsJSON = makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + bootlegSheetNames.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join(''));
+          bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
+          if (browserHasLocalStorage) {
+            setTimeout(() => {
+                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_VID_DB, LZString.compressToUTF16(JSON.stringify(bootleg_vid_db)));
+                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP, Date.now() + 172800000); // two days
+            }, 0)
+          }
+        } else {
+          try {
+            bootleg_vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB)));
+            if (!bootleg_vid_db) {
+              throw 'empty bootleg db from localstorage';
+            }
+          } catch (e) {
+            window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_VID_DB);
+            window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP);
+            checkBootlegSheets();
+            return;
+          }
+        }
+        bootleg_vids = bootleg_vid_db;
+      }
+
+      function parseISO8601Duration(iso8601Duration) {
+          var matches = iso8601Duration.match(iso8601DurationRegex);
+
+          return {
+              sign: matches[1] === undefined ? '+' : '-',
+              years: matches[2] === undefined ? 0 : matches[2],
+              months: matches[3] === undefined ? 0 : matches[3],
+              weeks: matches[4] === undefined ? 0 : matches[4],
+              days: matches[5] === undefined ? 0 : matches[5],
+              hours: matches[6] === undefined ? 0 : matches[6],
+              minutes: matches[7] === undefined ? 0 : matches[7],
+              seconds: matches[8] === undefined ? 0 : matches[8]
+          };
+      };
+
+      function parseISO8601DurationToSeconds(iso8601Duration) {
+        var matches = iso8601Duration.match(iso8601DurationRegex);
+
+        return matches ? (matches[1] === undefined ? 1 : -1) *
+        ((matches[2] === undefined ? 0 : parseInt(matches[2])) * 31536000
+        + (matches[3] === undefined ? 0 : parseInt(matches[3])) * 2592000
+        + (matches[4] === undefined ? 0 : parseInt(matches[4])) * 604800
+        + (matches[5] === undefined ? 0 : parseInt(matches[5])) * 86400
+        + (matches[6] === undefined ? 0 : parseInt(matches[6])) * 3600
+        + (matches[7] === undefined ? 0 : parseInt(matches[7])) * 60
+        + (matches[8] === undefined ? 0 : parseInt(matches[8]))) : 0;
+      }
+
+      function processSheetsJSON(sheetsjson) {
+          // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 views, 8 likes, 9 dislikes, 10 comments
+          // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
+          var filter_func = row => row[1] != null;
+          var mapping_func = row => [row[0], row[1], row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
+            Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+            parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+          var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
+          return [0,1,2].map(outer_mapping_func);
+      }
+
+      function processBootlegSheetsJSON(bootlegSheetsJSON) {
+          var filter_func = row => row[1] != null;
+          var mapping_func = row => [row[0], row[1], false,
+            Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+            parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+          var outer_mapping_func = n => bootlegSheetsJSON["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
+          return [].concat.apply([], Array.from(Array(bootlegSheetsJSON["valueRanges"].length).keys()).map(outer_mapping_func));
+      }
+
+      $(document).ready(function() {
+        if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
+          && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
+          document.querySelector("h3#twitter").style.display = "none";
+        } else {
+          document.querySelector("h3#twitter").style.display = "";
+        }
+
+        var dark_link = document.getElementById("dark");
+        var theme_switch = (should_dark_mode_func) => {
+          if (should_dark_mode_func()) {
+            document.body.style.background = "black";
+            document.body.style.color = "white";
+            document.cookie = "theme=dark; SameSite=Strict";
+            document.getElementById("dark").children[0].text = "LIGHT";
+          } else {
+            document.body.style.background = "white";
+            document.body.style.color = "black";
+            document.cookie = "theme=light; SameSite=Strict";
+            document.getElementById("dark").children[0].text = "DARK";
+          }
+        }
+        var is_background_white = () => document.body.style.background.includes("white");
+
+        if (is_background_white()) {
+          document.getElementById("dark").children[0].text = "DARK";
+        } else {
+          document.getElementById("dark").children[0].text = "LIGHT";
+        }
+        document.querySelector("li#dark > a").onclick = theme_switch.bind(null, is_background_white);
+        theme_switch(() => !document.cookie.split(';').filter(
+            (item) => item.includes('theme=light')).length);
+
+        document.querySelector("li#channels > a").onclick = () => toggleChannel("");
+        document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
+        document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
+        document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
+        document.querySelector("li#bootleg > a").onclick = () => toggleChannel("bootleg");
+        document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
+        document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
+
+      });
+
+      function tooltip(msg = "") {
+        document.querySelector("h3#tooltip").textContent = msg;
+      }
+
+      function updateCheckboxes() {
+
+        document.querySelector("li#siiva > a > span.checkbox").textContent = isSiivaCheck ? "☑":"☐";
+        document.querySelector("li#ttgd > a > span.checkbox").textContent = isTTGDCheck ? "☑":"☐";
+        document.querySelector("li#vavr > a > span.checkbox").textContent = isVAVRCheck ? "☑":"☐";
+        document.querySelector("li#bootleg > a > span.checkbox").textContent = isBootlegCheck ? "☑":"☐";
+      }
+
+      function hideTwitter(perma) {
+        document.querySelector("h3#twitter").style.display = "none";
+        if (browserHasLocalStorage) {
+          window.localStorage.setItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP, perma ? Number.MAX_SAFE_INTEGER : Date.now() + 80000000)
+        }
+      }
+
+      function toggleChannel(channel) {
+        if (channel == "siiva") {
+          isSiivaCheck = !isSiivaCheck;
+          if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck && !isBootlegCheck) {
+            isTTGDCheck = true;
+            isVAVRCheck = true;
+            isBootlegCheck = true;
+          }
+        } else if (channel == "ttgd") {
+          isTTGDCheck = !isTTGDCheck;
+        } else if (channel == "vavr") {
+          isVAVRCheck = !isVAVRCheck;
+        } else if (channel == "bootleg") {
+          isBootlegCheck = !isBootlegCheck;
+        } else if (channel == "") {
+          if (isSiivaCheck && isTTGDCheck && isVAVRCheck && isBootlegCheck) {
+            isSiivaCheck = true;
+            isTTGDCheck = false;
+            isVAVRCheck = false;
+            isBootlegCheck = false;
+          } else {
+            isSiivaCheck = true;
+            isTTGDCheck = true;
+            isVAVRCheck = true;
+            isBootlegCheck = true;
+          }
+        }
+        if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck && !isBootlegCheck) {
+          isSiivaCheck = true;
+        }
+        updateCheckboxes();
+        recalculateMixNames();
+      }
+
+      function recalculateMixNames() {
+        filteredSortedVids = [];
+        if (isSiivaCheck) {
+          filteredSortedVids = filteredSortedVids.concat(siiva_vids);
+        }
+        if (isTTGDCheck) {
+          filteredSortedVids = filteredSortedVids.concat(ttgd_vids);
+        }
+        if (isVAVRCheck) {
+          filteredSortedVids = filteredSortedVids.concat(vavr_vids);
+        }
+        if (isBootlegCheck) {
+          filteredSortedVids = filteredSortedVids.concat(bootleg_vids);
+        }
+        filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
+        var mixNames = filteredSortedVids.map(vid_info => vid_info[1].toLowerCase().match(/\([^\)]+\)/g)).flat();
+        var mixNameMap = mixNames.reduce((acc, e) => acc.set(e, (acc.get(e) || 0) + 1), new Map());
+        var mixStats = Array.from(mixNameMap, ([key, value]) => [value, key]).sort((a,b)=>b[0]-a[0]).filter(entry => entry[1] != null)
+        var lines = mixStats.map(stat => stat[0].toString().padStart(5) + " " + stat[1]);
+        document.querySelector("textarea").textContent = lines.join("\n")
+        return mixNameMap;
+      }
+    </script>
+  </body>
+</html>
