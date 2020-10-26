@@ -498,8 +498,8 @@
         filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
         var mixNames = filteredSortedVids.map(vid_info => vid_info[1].match(/\([^\)]+\)/g)).flat();
         var mixNameMap = mixNames.reduce((acc, e) => acc.set(e, (acc.get(e) || 0) + 1), new Map());
-        var mixStats = Array.from(mixNameMap, ([key, value]) => [value, key]).sort((a,b)=>b[0]-a[0]).filter(entry => entry[1] != null)
-        var lines = mixStats.map(stat => stat[0].toString().padStart(5) + " " + stat[1]);
+        var mixStats = Array.from(mixNameMap, ([key, value]) => [value, key]).sort((a,b)=>b[0]-a[0])
+        var lines = mixStats.map(stat => stat[0].toString().padStart(5) + " " + (stat[1] == null ? "<no mix name>" : stat[1]));
         document.querySelector("textarea").textContent = lines.join("\n")
         return mixNameMap;
       }
