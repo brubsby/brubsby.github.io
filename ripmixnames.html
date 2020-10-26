@@ -368,7 +368,7 @@
       function processSheetsJSON(sheetsjson) {
           // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 views, 8 likes, 9 dislikes, 10 comments
           // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
-          var filter_func = row => row[1] != null;
+          var filter_func = row => !["Private", "Deleted"].includes(row[3]);
           var mapping_func = row => [row[0], row[1], row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
             Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
             parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
@@ -377,7 +377,7 @@
       }
 
       function processBootlegSheetsJSON(bootlegSheetsJSON) {
-          var filter_func = row => row[1] != null;
+          var filter_func = row => !["Private", "Deleted"].includes(row[3]) && row[5] != null && row[1] != null;
           var mapping_func = row => [row[0], row[1], false,
             Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
             parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
