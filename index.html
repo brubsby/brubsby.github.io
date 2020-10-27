@@ -23,11 +23,31 @@
     div.ascii {
       grid-area: 1 / 2 / span 2 / span 1;
     }
+    div.tooltip {
+      grid-area: 2 / 1 / span 1 / span 1;
+    }
+    span.tooltip {
+      bottom: 0;
+      left: 0;
+      padding-bottom: 1em;
+      padding-left: 16px;
+      text-align: left;
+    }
   }
 
   @media (orientation: portrait) {
     div.ascii {
       grid-area: 2 / 1 / span 1 / span 2;
+    }
+    div.tooltip {
+      grid-area: 1 / 2 / span 1 / span 1;
+    }
+    span.tooltip {
+      bottom: 0;
+      right: 0;
+      padding-bottom: 1em;
+      padding-right: 16px;
+      text-align: right;
     }
   }
 
@@ -42,6 +62,10 @@
       background: white;
       color: black;
     }
+  }
+
+  html {
+    overflow: hidden;
   }
 
   body {
@@ -67,7 +91,7 @@
   }
   div.menu {
     margin: 0;
-    grid-column: 1 / 1;
+    grid-area: 1 / 1 / span 1 / span 1;
   }
   h1 {
     margin: 0;
@@ -81,6 +105,12 @@
     line-height: 1;
     font-size: 24px;
     font-family: "DF", monospace;
+  }
+  div.tooltip {
+    position: relative;
+  }
+  span.tooltip {
+    position: absolute;
   }
   a {
     text-decoration: none;
@@ -433,6 +463,7 @@
     }
   };
   var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
+  var roundFloat = a => a.toFixed(2).replace(/(^|(?<=-))0+/,'');
   var get_random_int_with_expected_float_average = (expected) => (Math.random() < expected % 1 ? 1 : 0) + Math.floor(expected)
   var get_coord_offset = (coord, offset) => [coord[0] + offset[0], coord[1] + offset[1]];
   var mark_grid = (grid, coord, value) => {grid[coord[0]][coord[1]] = value}
@@ -649,10 +680,11 @@
   var this_weight = 0;
   var animations = new ObjectSampler()
     // do nothing
-    .put((this_animation) => {return;}, 0)
+    .put((this_animation) => {tooltip("null")}, 0)
     // . to o random
     .put((this_animation) => {
       init_flat_index_list(rows, columns);
+      first_frame_tooltip("rndfill");
       for (var n = 0; n < animation_speed_multiplier; n++) {
         var index = Math.floor(Math.random() * flat_index_list.length);
         setCharAtIndex(canvas, flat_index_list[index], "o");
@@ -661,6 +693,7 @@
           return;
         }
       }
+      frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 0);
     }, 1)
     // random text wipe
@@ -693,25 +726,25 @@
           return text;
         }
         var textgen_funcs = new ObjectSampler()
-          .put((num_chars) => $('html').html().replace(/\s/g, "").substring(0, num_chars))
-          .put((num_chars) => radix_digit_generator(num_chars, 16), 1) // hex
-          .put((num_chars) => radix_digit_generator(num_chars, 2), 1) // binary
-          .put((num_chars) => radix_digit_generator(num_chars, 10), 0.5) // base 10
-          .put((num_chars) => radix_digit_generator(num_chars, 8), 0.5) // octal
-          .put((num_chars) => radix_digit_generator(num_chars, 36), 0.5) // hexatridecimal
-          .put((num_chars) => char_level_generator(num_chars, () => Math.floor(
-            Math.random() * 24 + 10).toString(36)), 1) // letters
-          .put((num_chars) => { // lorem ipsum
+          .put([(num_chars) => $('html').html().replace(/\s/g, "").substring(0, num_chars), "html"])
+          .put([(num_chars) => radix_digit_generator(num_chars, 16), "rnd(hex)"], 1) // hex
+          .put([(num_chars) => radix_digit_generator(num_chars, 2), "rnd(bin)"], 1) // binary
+          .put([(num_chars) => radix_digit_generator(num_chars, 10), "rnd(dec)"], 0.5) // base 10
+          .put([(num_chars) => radix_digit_generator(num_chars, 8), "rnd(oct)"], 0.5) // octal
+          .put([(num_chars) => radix_digit_generator(num_chars, 36), "rnd(hexatridec)"], 0.5) // hexatridecimal
+          .put([(num_chars) => char_level_generator(num_chars, () => Math.floor(
+            Math.random() * 24 + 10).toString(36)), "rnd(letter)"], 1) // letters
+          .put([(num_chars) => { // lorem ipsum
             init_lorem_ipsum();
             return text_formatter(lorem_ipsum, num_chars);
-          }, 1.25)
-          .put((num_chars) => {
+          }, "lorem"], 1.25)
+          .put([(num_chars) => {
             init_browser_info();
             return text_formatter(browser_info, num_chars);
-          }, 1.25);
+          }, "browser"], 1.25);
 
         try {  // pi (some browsers don't have bigint support)
-          textgen_funcs.put((num_chars) => {
+          textgen_funcs.put([(num_chars) => {
             let i = BigInt(1);
             let x = BigInt(3) * (BigInt(10) ** BigInt(num_chars+20)+BigInt(20));
             let pi = x;
@@ -724,10 +757,13 @@
             text = "3." + text.substring(1);
             text = text.substring(0, num_chars);
             return text;
-          }, 1);
+          }, "pi"], 1);
         } catch(e) {}
 
-        text_to_print = textgen_funcs.sample()(columns*rows);
+        var textgen_sample = textgen_funcs.sample();
+        text_to_print = textgen_sample[0](columns*rows);
+        var textgen_description = textgen_sample[1];
+        tooltip("textgen<br>" + textgen_description);
       }
       setCharAtIndex(canvas, flat_index_list[0], text_to_print[0]);
       flat_index_list.shift();
@@ -743,18 +779,20 @@
       var isupdown = constant_random_boolean;
       if (frame_count == 0) {
         var character_generators = new ObjectSampler()
-          .put(() => ['/', '\\'][Math.floor(Math.random()*2)], 2)
-          .put(() => ['/', '\\'][Math.floor(Math.random()+constant_random_values[0])], 2)
-          .put(() => ['\u2502', '\u2500'][Math.floor(Math.random()*2)], 2)
-          .put(() => ['\u2502', '\u2500'][Math.floor(Math.random()+constant_random_values[0])], 2)
-          .put(() => {flip ^= true; return ['/', '\\'][flip];}, 1.5)
-          .put(() => ['/', '\\', ' ', ' '][Math.floor(Math.random()*4)], 0.75)
-          .put(() => ['/', ' ', ' '][Math.floor(Math.random()*3)], 1)
-          .put(() => ['\\', ' ', ' '][Math.floor(Math.random()*3)], 1)
-          .put(() => ['\u2588', ' '][Math.floor(Math.random()*2)], 0.25)
-          .put(() => '\\', 0.5)
-          .put(() => '/', 0.5);
-        character_generator = character_generators.sample();
+          .put([() => ['/', '\\'][Math.floor(Math.random()*2)], ".5\\/"], 2)
+          .put([() => ['/', '\\'][Math.floor(Math.random()+constant_random_values[0])], roundFloat(constant_random_values[0])+"\\/"], 2)
+          .put([() => ['\u2502', '\u2500'][Math.floor(Math.random()*2)], ".5\u2500\u2502"], 2)
+          .put([() => ['\u2502', '\u2500'][Math.floor(Math.random()+constant_random_values[0])], roundFloat(constant_random_values[0])+"\u2500\u2502"], 2)
+          .put([() => {flip ^= true; return ['/', '\\'][flip];}, "/\\/\\"], 1.5)
+          .put([() => ['/', '\\', ' ', ' '][Math.floor(Math.random()*4)], "/\\__"], 0.75)
+          .put([() => ['/', ' ', ' '][Math.floor(Math.random()*3)], "/__"], 1)
+          .put([() => ['\\', ' ', ' '][Math.floor(Math.random()*3)], "\\__"], 1)
+          .put([() => ['\u2588', ' '][Math.floor(Math.random()*2)], ".5\u2588_"], 0.25)
+          .put([() => '\\', "\\"], 0.5)
+          .put([() => '/', "/"], 0.5);
+        var character_generator_sample = character_generators.sample()
+        character_generator = character_generator_sample[0];
+        tooltip(`${character_generator_sample[1]}<br>${isupdown ? "up" : "down"}`);
       }
       var y = frame_count;
       for (var x = 0; x < columns; x++) {
@@ -770,6 +808,7 @@
     .put((this_animation) => {
       init_flat_index_list(rows, columns);
       var isminmax = constant_random_boolean;
+      first_frame_tooltip("circ<br>" + (isminmax ? "out" : "in"));
       var center_x = columns / 2;
       var center_y = rows / 2;
       for (var n = 0; n < animation_speed_multiplier; n++) {
@@ -789,6 +828,7 @@
           return;
         }
       }
+      frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 0);
     }, 1)
     // entombing triangles
@@ -798,6 +838,7 @@
       var a = Math.cos(theta);
       var b = Math.sin(theta);
       var c = constant_random_values[0] * 100000;
+      first_frame_tooltip(`tris<br>a=${roundFloat(a)} b=${roundFloat(b)}`);
       for (var n = 0; n < animation_speed_multiplier; n++) {
         var min_dist = 9999999;
         var max_dist = -9999999;
@@ -830,12 +871,14 @@
           return;
         }
       }
+      frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 0);
     }, 1)
     // growing heart / entombing heart
     .put((this_animation) => {
       init_flat_index_list(rows, columns);
       var isminmax = constant_random_boolean;
+      first_frame_tooltip(`<3<br>${isminmax ? 'out' : 'in'}`);
       var center_x = columns / 2;
       var center_y = rows / 4 - (frame_count * 0.0001);
       var heart_multiplier = isminmax ? 2 : 45 * (animation_speed_multiplier + 2);
@@ -885,6 +928,7 @@
       var simplex_frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
       var simplex_amplitude = 1;
       var octaves = Math.floor(constant_random_values[0] * Math.min(animation_speed_multiplier - 1, 3)) + 1;
+      first_frame_tooltip(`simplex growth<br>oct=${octaves}`)
       init_simplex_noise();
       init_flat_index_list(rows, columns, (index1, index2) => {
         var coords1 = get_pixel_coords(columns, index1, char_width, char_height);
@@ -900,6 +944,7 @@
         }
       }
       setTimeout(this_animation.bind(null, this_animation), 0);
+      frame_count++;
     }, 1.25)
     // mapgen
     .put((this_animation) => {
@@ -907,6 +952,7 @@
       var frequency = animation_speed_multiplier * -0.0001635 + 0.00237;
       var amplitude = 1;
       var octaves = Math.floor(Math.min(animation_speed_multiplier - 1, 3)) + 1;
+      first_frame_tooltip(`mapgen<br>oct=${octaves} island=${isisland ? "T" : "F"}`)
       var lacunarity = 2;
       var gain = 0.5;
       var pixels_changed = 0;
@@ -961,6 +1007,7 @@
         }
       }
       if (!any_pixels) return;
+      frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 0);
     }, 3)
     // dvd ball
@@ -975,6 +1022,7 @@
         velocity_pixels = [ball_speed * Math.cos(theta), ball_speed * Math.sin(theta)];
         position_pixels = [Math.random() * (width - 2 * ball_radius_pixels) + ball_radius_pixels,
           Math.random() * (height - 2 * ball_radius_pixels) + ball_radius_pixels];
+        tooltip(`dvdball<br>r=${roundFloat(ball_radius_pixels)} v=${roundFloat(ball_speed)}`);
       }
       var ball_coords = [];
       var min_x = Math.max(0, Math.floor(-1 + (position_pixels[0] - ball_radius_pixels) / char_width));
@@ -1026,14 +1074,13 @@
           return;
         }
       }
-
-
       frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 0);
     }, 1)
     //poob
     .put((this_animation) => {
       var isminmax = constant_random_boolean;
+      first_frame_tooltip(`dog<br>${isminmax ? "out" : "in"}`);
       var center_x = columns / 2;
       var center_y = rows / 2;
       init_poob_details();
@@ -1074,6 +1121,7 @@
         }
       }
       setTimeout(this_animation.bind(null, this_animation), 0);
+      frame_count++;
     }, 0.75)
     // bresenham bounce
     .put((this_animation) => {
@@ -1084,6 +1132,7 @@
       var growth_per_frame = Math.floor(constant_random_values[0] * animation_speed_multiplier * 5 + frame_count / 100);
       if (frame_count == 0) {
         var number_points = Math.floor(Math.min(Math.random(), Math.random(), Math.random()) * 5) + 2;
+        tooltip(`bresenham bounce<br>p=${number_points} g=${is_growth ? 'T' : 'F'} c=${is_connected ? 'T' : 'F'} f=${growth_per_frame}`);
         bounces = 0;
         line_points = [];
         position_pixels = [];
@@ -1181,6 +1230,7 @@
       var acceleration_or_velocity = constant_random_boolean;
       var expected_value_new_particles_per_frame = constant_random_values[0] * 2;
       if (frame_count == 0) {
+        tooltip(`flow fields<br>p=${roundFloat(expected_value_new_particles_per_frame)} a=${acceleration_or_velocity ? 'T' : 'F'}`);
         remaining_particles = Math.floor(10000 * expected_value_new_particles_per_frame);
         particles = [];
         random_edge_point_sampler = new ObjectSampler()
@@ -1288,6 +1338,7 @@
           setHalfPixel(canvas, point[0], point[1]);
         }
       }
+      tooltip(`clock<br>${current_time.getHours().toString().padStart(2,'0')}:${current_time.getMinutes().toString().padStart(2,'0')}`);
       setTimeout(this_animation.bind(null, this_animation), 333);
     }, 1)
     // falling sand
@@ -1313,22 +1364,24 @@
         gravity_offset = [1, 0];
         // funcs range will be clamped to -1, 1 and period 2PI
         dropper_movement_funcs = new ObjectSampler()
-          .put((freq, i) => Math.sin(i * freq), 0.5)
-          .put((freq, i) => Math.cos(i * freq), 0.5)
+          .put([(freq, i) => Math.sin(i * freq), "sin"], 0.5)
+          .put([(freq, i) => Math.cos(i * freq), "cos"], 0.5)
           //triangle
-          .put((freq, i) => 2.1 * Math.asin(Math.sin(i * freq)) / Math.PI, 1)
+          .put([(freq, i) => 2.1 * Math.asin(Math.sin(i * freq)) / Math.PI, "triangle"], 1)
           //sawtooth
-          .put((freq, i) => -2.1 * Math.atan(1 / Math.tan(i * freq / 2)) / Math.PI, 1)
+          .put([(freq, i) => -2.1 * Math.atan(1 / Math.tan(i * freq / 2)) / Math.PI, "sawtooth"], 1)
           //square
-          .put((freq, i) => Math.sign(Math.cos(i * freq)), 0.75)
+          .put([(freq, i) => Math.sign(Math.cos(i * freq)), "square"], 0.75)
           //pulse
-          .put((freq, i) => Math.sign(constant_random_values[7] + Math.cos(i * freq)), 0.5)
+          .put([(freq, i) => Math.sign(constant_random_values[7] + Math.cos(i * freq)), `pulse(d=${roundFloat(constant_random_values[7])})`], 0.5)
           //one side
-          .put((freq, i) => 1, 0.25)
-          .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.5), 1)
-          .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.25, 2), 0.5)
-          .put((freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.125, 3), 0.5);
-        dropper_movement_func = dropper_movement_funcs.sample();
+          .put([(freq, i) => 1, "right"], 0.25)
+          .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.5), "simplex(o=1)"], 1)
+          .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.25, 2), "simplex(o=2)"], 0.5)
+          .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.125, 3), "simplex(o=3)"], 0.5);
+        var dropper = dropper_movement_funcs.sample();
+        dropper_movement_func = dropper[0];
+        tooltip(`sand m=${dropper[1]} f=${roundFloat(dropper_position_frequency)} s=${dropper_direction} p=${roundFloat(expected_value_new_sand_per_frame)} j=${roundFloat(jitter_chance)} r=${roundFloat(dropper_radius)}`)
       }
 
       //physics
@@ -1417,7 +1470,6 @@
       }
       canvas.text(text);
       if (!any_empty) return;
-
       frame_count++;
       setTimeout(this_animation.bind(null, this_animation), 25);
     }, 2)
@@ -1453,13 +1505,15 @@
           "formula" : (z, c) => math.add(math.pow(z, 2), c),
           "theta_func" : () => Math.random() * 2 * Math.PI,
           "center_finder_iteration_multiplier" : 0.5,
-          "start_func" : () => math.complex(0, 0)
+          "start_func" : () => math.complex(0, 0),
+          "description" : "mandelbrot"
         };
         var julia = {
           "formula" : (z, c) => math.add(math.pow(z, 2), c),
           "theta_func" : () => Math.random() * 2 * Math.PI,
           "center_finder_iteration_multiplier" : 0.75,
-          "start_func" : () => find_center(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot)
+          "start_func" : () => find_center(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot),
+          "description" : "julia"
         };
         fractals = new ObjectSampler()
           .put(mandelbrot, 2)
@@ -1467,18 +1521,21 @@
           .put({"formula" : (z, c) => math.add(math.pow(math.conj(z), 2), c),
           "theta_func" : () => (Math.random() * 2 - 1) * 0.13 + Math.PI + (Math.floor(Math.random() * 3) * 2 * Math.PI / 3),
           "center_finder_iteration_multiplier" : 0.99,
-          "start_func" : () => math.complex(0, 0)}, 2)
+          "start_func" : () => math.complex(0, 0),
+          "description" : "tricorn"}, 2)
           //burning ship
           .put({"formula" : (z, c) => math.add(math.pow(math.complex(math.abs(z.re), math.abs(z.im)), 2), c),
           "theta_func" : () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
           "center_finder_iteration_multiplier" : 0.95,
-          "start_func" : () => math.complex(0, 0)}, 2)
+          "start_func" : () => math.complex(0, 0),
+          "description" : "burning ship"}, 2)
           .put(julia, 4);
         fractal = fractals.sample();
         fractal["start"] = fractal["start_func"]();
         var center_finder_num_recurses = Math.floor(iterations * fractal["center_finder_iteration_multiplier"]);
         var theta = fractal["theta_func"]();
-        center = find_center(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal)
+        center = find_center(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal);
+        tooltip(`${fractal["description"]}<br>${roundFloat(center["re"])}${center['im']<0?'':'+'}${roundFloat(center["im"])}i`)
         target_framerate = 30;
         framerate = target_framerate;
         average_framerate = target_framerate;
@@ -1566,6 +1623,7 @@
         }
         universe = universe_generators.sample()(columns);
         rules = rulesets.sample();
+        tooltip(`automata<br>rule ${rules["dec"]}`);
         console.log("Rule " + rules["dec"]);
         tile_rules = [".", "o"];
         var RuleLookup = class {
@@ -1682,6 +1740,20 @@
       }
   }
 
+  var first_frame_tooltip = function(txt) {
+    if (frame_count == 0) {
+      tooltip(txt);
+    }
+  }
+
+  var tooltip = function(txt) {
+      var tooltip = $("span.tooltip");
+      tooltip.empty();
+      if (txt) {
+        tooltip.append(txt);
+      }
+  }
+
 
   </script>
   </head>
@@ -1700,6 +1772,7 @@
           <li id="dark"><a></a></li>
         </ol>
       </div>
+      <div class="tooltip"><span class="tooltip"></span></div>
       <div class="ascii"></div>
     </div>
   </body>
