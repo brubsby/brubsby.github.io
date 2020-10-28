@@ -775,6 +775,7 @@
         isPreviousVidKFAD = isCurrentVidKFAD;
         isInfoReady = false;
         player.loadVideoById(currentVidId);
+        player.playVideo();
       }
 
       function markVidWatched(vidId) {
@@ -812,6 +813,7 @@
         previousVidId = swap;
         isInfoReady = false;
         player.loadVideoById(currentVidId);
+        player.playVideo();
       }
 
       function toggleAutoplay() {
