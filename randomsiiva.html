@@ -687,7 +687,8 @@
         } else {
           return "";
         }
-        return 'https://' + wikia + '.fandom.com/wiki/' + title.replaceAll(' ', '_').replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')');
+        return 'https://' + wikia + '.fandom.com/wiki/' + title.replaceAll(' ', '_')
+          .replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')').replaceAll('?', '%3F');
       }
 
       var tag = document.createElement('script');
