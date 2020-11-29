@@ -273,9 +273,9 @@
       var isVAVRCheck = false;
       var isBootlegCheck = false;
       var statOptions = [
-        ["MIX NAMES", /\([^\)]+\)/g], //everything between parentheses, multiple parentheticals are counted separately
-        ["GAME NAMES", /(?<=[-|]\s).*$/g], //only things following - or | and a space, otherwise nothing
-        ["SONG NAMES", /^.*?((?=\s[-(|])|$)/g] //the least amount of letters preceding " ("," |"," -" or the end of the string
+        ["MIX NAMES", /\([^\)]*\)\)?/g], //everything between parentheses, multiple parentheticals are counted separately
+        ["GAME NAMES", /(?<=\s[-|]\s).*$/g], //only things following - or | and a space, otherwise nothing
+        ["SONG NAMES", /^.*?((?=\s[-(|]\s)|$)/g] //the least amount of letters preceding " ("," |"," -" or the end of the string
       ]
       var statIndex = 0;
       var statOption = statOptions[statIndex];
@@ -386,7 +386,7 @@
           // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 views, 8 likes, 9 dislikes, 10 comments
           // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
           var filter_func = row => !["Private", "Deleted"].includes(row[3]);
-          var mapping_func = row => [row[0], row[1], row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
+          var mapping_func = row => [row[0], row[1].replaceAll(/\s{2,}/g,' '), row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
             Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
             parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
           var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
@@ -400,6 +400,11 @@
             parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
           var outer_mapping_func = n => bootlegSheetsJSON["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
           return [].concat.apply([], Array.from(Array(bootlegSheetsJSON["valueRanges"].length).keys()).map(outer_mapping_func));
+      }
+
+      function clearLocalStorage() {
+        window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_VID_DB);
+        window.localStorage.removeItem(LOCALSTORAGE_VID_DB);
       }
 
       $(document).ready(function() {
