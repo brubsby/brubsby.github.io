@@ -2,9 +2,9 @@
 <html>
   <head>
     <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
-    <meta name="title" content="SiIvaGunner Mix Name Statistics">
-    <meta name="description" content="Page that shows up to date mix name statistics for SiIvaGunner (and most fan channel) rips.">
-    <meta name="keywords" content="siivagunner mix names, high quality rip mix names, mix name statistics, siivagunner mix name statistics, mix name statistics">
+    <meta name="title" content="SiIvaGunner Rip Statistics">
+    <meta name="description" content="Page that shows up to date rip statistics for SiIvaGunner (and most fan channel) rips.">
+    <meta name="keywords" content="siivagunner rip statistics, rip statistics, siivagunner mix names, high quality rip mix names, mix name statistics, siivagunner mix name statistics, mix name statistics">
     <meta name="robots" content="index, follow">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="language" content="English">
@@ -13,9 +13,9 @@
     <meta name="twitter:site" content="@brubsby" />
     <meta name="twitter:creator" content="@brubsby" />
     <meta property="og:url" content="https://brubsby.com/ripmixnames" />
-    <meta property="og:title" content="SiIvaGunner Mix Name Statistics" />
-    <meta property="og:description" content="Page that shows up to date mix name statistics for SiIvaGunner (and most fan channel) rips." />
-    <title>SiIvaGunner Mix Name Statistics</title>
+    <meta property="og:title" content="SiIvaGunner Rip Statistics" />
+    <meta property="og:description" content="Page that shows up to date rip statistics for SiIvaGunner (and most fan channel) rips." />
+    <title>SiIvaGunner Rip Statistics</title>
     <style>
 
     @font-face {
@@ -195,9 +195,10 @@
       <div class="container">
         <div class="menu">
           <h4><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h4>
-          <h1>RIP MIX NAME STATS</h1>
+          <h1>RIP STATISTICS</h1>
           <ol id="links">
             <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
+            <li id="stat"><a onmouseover="tooltip('click to toggle which statistic to display')" onmouseout="tooltip()">STAT: <span class="stat">MIX NAMES</span></a></li>
             <hr>
             <li id="channels"><a onmouseover="tooltip('select specific ripping channels to include titles from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a> <a class="percentcomplete" onmouseover="channelProgressTooltip()" onmouseout="tooltip()"></a></li>
             <li id="siiva"><a onmouseover="tooltip('include rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('siiva')" onmouseout="tooltip()"></a></li>
@@ -207,8 +208,8 @@
           </ol>
         </div>
         <div class="mixnamescontainer">
-          <h2>MIX NAMES BY COUNT:</h2>
-          <textarea readonly class="mixnames"> Loading metadata for every public rip on every channel... should be about 5 seconds... </textarea>
+          <h2><span class="stat">MIX NAMES</span> BY COUNT:</h2>
+          <textarea readonly class="mixnames"> Loading metadata for every known rip on every channel... should be about 5 seconds... </textarea>
         </div>
       </div>
       <h3 id="twitter" style="display:none"><a  target="_blank" rel="noopener noreferrer" href="https://twitter.com/brubsby">follow me on twitter</a> or <a  target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/brubsby">buy me a coffee</a> if you like the page! (<a id="hidetwitter">not today</a> / <a id="permahidetwitter">not ever</a>)</h3>
@@ -271,10 +272,17 @@
       var isTTGDCheck = false;
       var isVAVRCheck = false;
       var isBootlegCheck = false;
+      var statOptions = [
+        ["MIX NAMES", /\([^\)]+\)/g],
+        ["GAME NAMES", /(?<=-\s).*$/g],
+        ["SONG NAMES", /^.*?((?=\s-)|(?=\s\()|$)/g]
+      ]
+      var statIndex = 0;
+      var statOption = statOptions[statIndex];
 
       checkSheets();
       checkBootlegSheets();
-      recalculateMixNames();
+      recalculateStats();
 
       function makeGetRequest(url){
         var Httpreq = new XMLHttpRequest(); // a new request
@@ -432,6 +440,7 @@
         document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
         document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
         document.querySelector("li#bootleg > a").onclick = () => toggleChannel("bootleg");
+        document.querySelector("li#stat > a").onclick = () => statClicked();
         document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
         document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
 
@@ -487,10 +496,17 @@
           isSiivaCheck = true;
         }
         updateCheckboxes();
-        recalculateMixNames();
+        recalculateStats();
       }
 
-      function recalculateMixNames() {
+      function statClicked() {
+        statIndex = (statIndex + 1) % statOptions.length;
+        statOption = statOptions[statIndex];
+        document.querySelectorAll("span.stat").forEach(elem => elem.textContent = statOption[0]);
+        recalculateStats();
+      }
+
+      function recalculateStats() {
         filteredSortedVids = [];
         if (isSiivaCheck) {
           filteredSortedVids = filteredSortedVids.concat(siiva_vids);
@@ -505,12 +521,11 @@
           filteredSortedVids = filteredSortedVids.concat(bootleg_vids);
         }
         filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
-        var mixNames = filteredSortedVids.map(vid_info => vid_info[1].match(/\([^\)]+\)/g)).flat();
-        var mixNameMap = mixNames.reduce((acc, e) => acc.set(e, (acc.get(e) || 0) + 1), new Map());
-        var mixStats = Array.from(mixNameMap, ([key, value]) => [value, key]).sort((a,b)=>b[0]-a[0])
-        var lines = mixStats.map(stat => stat[0].toString().padStart(5) + " " + (stat[1] == null ? "<no mix name>" : stat[1]));
+        var statMatches = filteredSortedVids.map(vid_info => vid_info[1].match(statOption[1])).flat();
+        var statMap = statMatches.reduce((acc, e) => acc.set(e, (acc.get(e) || 0) + 1), new Map());
+        var entries = Array.from(statMap, ([key, value]) => [value, key]).sort((a,b)=>b[0]-a[0]);
+        var lines = entries.map(stat => stat[0].toString().padStart(5) + " " + (stat[1] == null ? `<no ${statOption[0].toLowerCase().slice(0, -1)}>` : stat[1]));
         document.querySelector("textarea").textContent = lines.join("\n")
-        return mixNameMap;
       }
     </script>
   </body>
