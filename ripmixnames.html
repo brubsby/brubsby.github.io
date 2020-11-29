@@ -273,9 +273,9 @@
       var isVAVRCheck = false;
       var isBootlegCheck = false;
       var statOptions = [
-        ["MIX NAMES", /\([^\)]+\)/g],
-        ["GAME NAMES", /(?<=-\s).*$/g],
-        ["SONG NAMES", /^.*?((?=\s-)|(?=\s\()|$)/g]
+        ["MIX NAMES", /\([^\)]+\)/g], //everything between parentheses, multiple parentheticals are counted separately
+        ["GAME NAMES", /(?<=[-|]\s).*$/g], //only things following - or | and a space, otherwise nothing
+        ["SONG NAMES", /^.*?((?=\s[-(|])|$)/g] //the least amount of letters preceding " ("," |"," -" or the end of the string
       ]
       var statIndex = 0;
       var statOption = statOptions[statIndex];
