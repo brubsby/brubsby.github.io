@@ -225,6 +225,7 @@
         <h2>NOW PLAYING:</h2>
         <h2 id="nowplaying">&nbsp</h2>
         <h2 id="author">&nbsp</h2>
+        <div style="display:none" id="timeover"></div>
         <div class="embedcontainer">
           <div id="player">Loading metadata for every known rip on every channel... should be about 5 seconds...</div>
         </div>
@@ -292,7 +293,6 @@
       var isCurrentVidKFAD;
       var previousChannel;
       var currentChannel;
-      var playerState = -1;
       var isPreviousVidKFAD;
       var isInfoReady = false;
       var isAutoplay = true;
@@ -822,14 +822,27 @@
       }
 
       function onPlayerStateChange(event) {
-        playerState = event.data;
         if (event.data == YT.PlayerState.ENDED) {
+          clearTimeOver();
           if (isAutoplay) {
             newVid(true);
           }
         } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
             onTitleReady();
         }
+        if (event.data == YT.PlayerState.PLAYING) {
+          setTimeOver();
+        } else {
+          clearTimeOver();
+        }
+      }
+
+      function clearTimeOver() {
+        document.querySelector("#timeover").textContent = "";
+      }
+
+      function setTimeOver() {
+        document.querySelector("#timeover").textContent = Math.floor(Date.now() / 1000 - player.getCurrentTime() + player.getDuration());
       }
 
       function previousVid() {
