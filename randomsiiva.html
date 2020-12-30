@@ -292,6 +292,7 @@
       var isCurrentVidKFAD;
       var previousChannel;
       var currentChannel;
+      var playerState = -1;
       var isPreviousVidKFAD;
       var isInfoReady = false;
       var isAutoplay = true;
@@ -531,7 +532,13 @@
         document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
         document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
 
+        navigator.mediaSession.setActionHandler('nexttrack', function() {
+          skipVid();
+        });
 
+        navigator.mediaSession.setActionHandler('previoustrack', function() {
+          previousVid();
+        });
 
         document.addEventListener('keyup', event => {
           if (event.code === 'Space') {
@@ -815,6 +822,7 @@
       }
 
       function onPlayerStateChange(event) {
+        playerState = event.data;
         if (event.data == YT.PlayerState.ENDED) {
           if (isAutoplay) {
             newVid(true);
