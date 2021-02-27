@@ -1,0 +1,95 @@
+<html>
+  <head>
+    <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
+    <meta name="title" content="fnf chart helper">
+    <meta name="description" content="tool to create easy and medium fnf charts from hard">
+    <meta name="keywords" content="friday night funkin, fnf, chart converter">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+    <title>fnf chart helper</title>
+    <style>
+      @font-face {
+        font-family: 'DF';
+        src: url('assets/LessPerfectDOSVGA.woff') format('woff'), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+         url('assets/LessPerfectDOSVGA.ttf') format('truetype'); /* Chrome 4+, Firefox 3.5, Opera 10+, Safari 3—5 */
+      }
+
+      table, th, td {
+        border: 1px solid white;
+      }
+
+      body {
+        background: black;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    hello, drag and drop your hard friday night funkin chart json anywhere on this page and i'll make an easy and medium one for you (by pruning off some notes)
+<br><br>
+    <table>
+      <tr>
+        <td>title:</td><td id='song'></td>
+      </tr>
+      <tr>
+        <td>bpm:</td><td id='bpm'></td>
+      </tr>
+      <tr>
+        <td>voices:</td><td id='needsVoices'></td>
+      </tr>
+      <tr>
+        <td>player1:</td><td id='player1'></td>
+      </tr>
+      <tr>
+        <td>player2:</td><td id='player2'></td>
+      </tr>
+      <tr>
+        <td>speed:</td><td id='speed'></td>
+      </tr>
+      </table>
+  </body>
+  <script>
+    var simpleProperties = ['song','bpm','needsVoices','player1','player2','speed']
+    var originalMSNotes, mediumMSNotes, easyMSNotes;
+    var originalBeatNotes, mediumBeatNotes, easyBeatNotes;
+
+    function dropJSON(targetEl, callback) {
+        // disable default drag & drop functionality
+        targetEl.addEventListener('dragenter', function(e){ e.preventDefault(); });
+        targetEl.addEventListener('dragover',  function(e){ e.preventDefault(); });
+
+        targetEl.addEventListener('drop', function(event) {
+
+            var reader = new FileReader();
+            reader.onloadend = function() {
+                var data = JSON.parse(this.result);
+                callback(data);
+            };
+
+            reader.readAsText(event.dataTransfer.files[0]);
+            event.preventDefault();
+        });
+    }
+
+    // convert millisecond based note json to beat based (based on bpm)
+    function convertMSNotesToBeatNotes(msNotes, bpm) {
+      //TODO
+    }
+
+    dropJSON(
+        document.body,
+        function(data) {
+            console.log(data);
+            simpleProperties.forEach((property) => {
+              if (!data['song'][property]) {alert('song json missing property: ' + property); return false;}
+              document.getElementById(property).textContent = data['song'][property]
+              });
+            originalNotes = data['song']['notes'];
+            originalBeatNotes = convertMSNotesToBeatNotes(originalNotes, data['song']['bpm'])
+        }
+    );
+  </script>
+</html>
