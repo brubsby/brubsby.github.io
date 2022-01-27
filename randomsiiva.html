@@ -227,7 +227,7 @@
         <h2 id="author">&nbsp</h2>
         <div style="display:none" id="timeover"></div>
         <div class="embedcontainer">
-          <div id="player">Loading metadata for every known rip on every channel... should be about 5 seconds...</div>
+          <div id="player">Loading...</div>
         </div>
       </div>
     </div>
@@ -244,693 +244,756 @@
       gtag('config', 'UA-152720878-1');
     </script>
     <script>
+    var browserHasLocalStorage = typeof(Storage) !== "undefined";
 
-      var browserHasLocalStorage = typeof(Storage) !== "undefined";
-
-      // Date.now() polyfill
-      if (!Date.now) {
-        Date.now = function now() {
-          return new Date().getTime();
-        };
-      }
-
-      const cyrb53 = function(str, seed = 0) {
-        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-        for (let i = 0, ch; i < str.length; i++) {
-          ch = str.charCodeAt(i);
-          h1 = Math.imul(h1 ^ ch, 2654435761);
-          h2 = Math.imul(h2 ^ ch, 1597334677);
-        }
-        h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
-        h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
-        return 4294967296 * (2097151 & h2) + (h1>>>0);
+    // Date.now() polyfill
+    if (!Date.now) {
+      Date.now = function now() {
+        return new Date().getTime();
       };
+    }
 
-      var LOCALSTORAGE_SHEET_TIMESTAMP = "sheet_timestamp";
-      var LOCALSTORAGE_VID_DB = "vid_db";
-      var LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP = "bootleg_sheet_timestamp";
-      var LOCALSTORAGE_BOOTLEG_VID_DB = "bootleg_vid_db";
-      var LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP = "twitter_ignore_timestamp";
-      var LOCALSTORAGE_WATCHED_VID_IDS = "watched_vid_ids"
-
-      var TESTING_KEY = 'AIzaSyAUpx3K3IcUsPAIicY8CSPbtUTjFVw7BSA';
-      var PUBLIC_SHEETS_API_KEY = 'AIzaSyAzQyLBAF5kiOZHVLVMLfs_rn1wdCMVnmM';
-      var API_KEY = window.location.href.split(":")[0] == "file" ? TESTING_KEY : PUBLIC_SHEETS_API_KEY;
-      var SHEET_ID = '1B7b9jEaWiqZI8Z8CzvFN1cBvLVYwjb5xzhWtrgs4anI';
-      var BOOTLEG_SHEET_ID = '1Q_L84zZ2rzS57ZcDcCdmxMsguqjpnbLGr5_QVX5LVKA';
-      var RANGES = ['SiIvaGunner!A2:K','TimmyTurnersGrandDad!A2:K','VvvvvaVvvvvvr!A2:K'];
-      var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
-      var BOOTLEG_SHEET_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}?key=${API_KEY}`;
-      var BOOTLEG_SHEETS_BATCH_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}/values:batchGet?key=${API_KEY}`;
-
-      var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day", "host for a day", "king for a gay", "teacher for a day", "queen for another day", "king for a week", "king 4 a day"];
-      var CHANNEL_BLOCKLIST = [7792455746889010];
-      var RIP_BLOCKLIST = [];
-      var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
-
-      var previousVidId;
-      var currentVidTitle;
-      var isCurrentVidKFAD;
-      var previousChannel;
-      var currentChannel;
-      var isPreviousVidKFAD;
-      var isInfoReady = false;
-      var isAutoplay = true;
-      var allowRepeats = false;
-      var allowRepeatLock = false;
-      var isSkipKFAD = false;
-      var isNoWiki = false;
-      var isSiivaCheck = true;
-      var isTTGDCheck = false;
-      var isVAVRCheck = false;
-      var isBootlegCheck = false;
-      var durationOfVidToSkip = Number.MAX_SAFE_INTEGER;
-      var watchedVidIds;
-      var skipDurations = [
-        ["☒", Number.MAX_SAFE_INTEGER],
-        [">5 HR", 18000],
-        [">2 HR", 7200],
-        [">1 HR", 3600],
-        [">30 MIN", 1800],
-        [">15 MIN", 900],
-        [">10 MIN", 600],
-        [">5 MIN", 300],
-        [">2 MIN", 120],
-        [">1 MIN", 60],
-        [">30 SEC", 30]
-      ];
-      var skipDurationIndex = 0;
-      // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
-      var sortOptions = [
-        ["RANDOM", null, null],
-        ["OLDEST", v => v[3], Math.min, v => v[3]],
-        ["NEWEST", v => v[3], Math.max, v => v[3]],
-        ["SHORTEST", v => v[4], Math.min, v => v[4]],
-        ["LONGEST", v => v[4], Math.max, v => v[4]],
-        ["LEAST VIEWS", v => v[5], Math.min, v => v[5]],
-        ["MOST VIEWS", v => v[5], Math.max, v => v[5]],
-        ["BEST L/D", v => v[6] / (v[7] + 1), Math.max, v => v[6] && v[7]],
-        ["WORST L/D", v => v[6] / (v[7] + 1), Math.min, v => v[6] && v[7]],
-        ["MOST CMNTS", v => v[8], Math.max, v => v[5]],
-        ["LEAST CMNTS", v => v[8], Math.min, v => v[5]]
-      ];
-      var sortIndex = 0;
-      var sortOption = "RANDOM";
-
-      var autoWikiWindow;
-
-      checkSheets();
-      checkBootlegSheets();
-      initWatchedVids();
-      var currentVidId = nextVidId();
-
-      function makeGetRequest(url){
-        var Httpreq = new XMLHttpRequest(); // a new request
-        Httpreq.open("GET", url, false);
-        Httpreq.send(null);
-        return Httpreq.responseText;
+    const cyrb53 = function(str, seed = 0) {
+      let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+      for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
       }
+      h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+      return 4294967296 * (2097151 & h2) + (h1>>>0);
+    };
 
-      function makeJSONRequest(url) {
-        return JSON.parse(makeGetRequest(url));
-      }
+    var LOCALSTORAGE_SHEET_TIMESTAMP = "sheet_timestamp";
+    var LOCALSTORAGE_VID_DB = "vid_db";
+    var LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP = "bootleg_sheet_timestamp";
+    var LOCALSTORAGE_BOOTLEG_VID_DB = "bootleg_vid_db";
+    var LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP = "twitter_ignore_timestamp";
+    var LOCALSTORAGE_WATCHED_VID_IDS = "watched_vid_ids"
+    var LOCALSTORAGE_RANDOM_VID = "random_vid"
 
-      var siiva_vids, ttgd_vids, vavr_vids, bootleg_vids;
-      var unwatched_siiva_vids, unwatched_ttgd_vids, unwatched_vavr_vids, unwatched_bootleg_vids;
-      var vid_db, bootleg_vid_db;
+    var TESTING_KEY = 'AIzaSyAUpx3K3IcUsPAIicY8CSPbtUTjFVw7BSA';
+    var PUBLIC_SHEETS_API_KEY = 'AIzaSyAzQyLBAF5kiOZHVLVMLfs_rn1wdCMVnmM';
+    var API_KEY = window.location.href.split(":")[0] == "file" ? TESTING_KEY : PUBLIC_SHEETS_API_KEY;
+    var SHEET_ID = '1B7b9jEaWiqZI8Z8CzvFN1cBvLVYwjb5xzhWtrgs4anI';
+    var BOOTLEG_SHEET_ID = '1Q_L84zZ2rzS57ZcDcCdmxMsguqjpnbLGr5_QVX5LVKA';
+    var RANGES = ['SiIvaGunner!A2:K','TimmyTurnersGrandDad!A2:K','VvvvvaVvvvvvr!A2:K'];
+    var SHEETS_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchGet?key=${API_KEY}&ranges=${RANGES.join('&ranges=')}`;
+    var BOOTLEG_SHEET_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}?key=${API_KEY}`;
+    var BOOTLEG_SHEETS_BATCH_QUERY = `https://sheets.googleapis.com/v4/spreadsheets/${BOOTLEG_SHEET_ID}/values:batchGet?key=${API_KEY}`;
 
-      function checkSheets() {
-        if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP)) > Date.now())) {
-          var sheetsjson = makeJSONRequest(SHEETS_QUERY);
-          vid_db = processSheetsJSON(sheetsjson);
-          if (browserHasLocalStorage) {
-            setTimeout(() => {
-                window.localStorage.setItem(LOCALSTORAGE_VID_DB, LZString.compressToUTF16(JSON.stringify(vid_db)));
-                window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 86400000); // one day
-            }, 0)
-          }
-        } else {
-          try {
-            vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_VID_DB)));
-            if (!vid_db) {
-              throw 'empty db from localstorage';
+    var KFAD_FILTERS = ["king for a day", "king for another day", "king for yet another day", "host for a day", "king for a gay", "teacher for a day", "queen for another day", "king for a week", "king 4 a day"];
+    var CHANNEL_BLOCKLIST = [7792455746889010];
+    var RIP_BLOCKLIST = [];
+    var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
+
+    var currentVidId;
+    var previousVidId;
+    var currentVidTitle;
+    var isCurrentVidKFAD;
+    var previousChannel;
+    var currentChannel;
+    var isPreviousVidKFAD;
+    var isInfoReady = false;
+    var isAutoplay = true;
+    var allowRepeats = false;
+    var allowRepeatLock = false;
+    var isSkipKFAD = false;
+    var isNoWiki = false;
+    var isSiivaCheck = true;
+    var isTTGDCheck = false;
+    var isVAVRCheck = false;
+    var isBootlegCheck = false;
+    var durationOfVidToSkip = Number.MAX_SAFE_INTEGER;
+    var watchedVidIds;
+    var skipDurations = [
+      ["☒", Number.MAX_SAFE_INTEGER],
+      [">5 HR", 18000],
+      [">2 HR", 7200],
+      [">1 HR", 3600],
+      [">30 MIN", 1800],
+      [">15 MIN", 900],
+      [">10 MIN", 600],
+      [">5 MIN", 300],
+      [">2 MIN", 120],
+      [">1 MIN", 60],
+      [">30 SEC", 30]
+    ];
+    var skipDurationIndex = 0;
+    // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
+    var sortOptions = [
+      ["RANDOM", null, null],
+      ["OLDEST", v => v[3], Math.min, v => v[3]],
+      ["NEWEST", v => v[3], Math.max, v => v[3]],
+      ["SHORTEST", v => v[4], Math.min, v => v[4]],
+      ["LONGEST", v => v[4], Math.max, v => v[4]],
+      ["LEAST VIEWS", v => v[5], Math.min, v => v[5]],
+      ["MOST VIEWS", v => v[5], Math.max, v => v[5]],
+      ["BEST L/D", v => v[6] / (v[7] + 1), Math.max, v => v[6] && v[7]],
+      ["WORST L/D", v => v[6] / (v[7] + 1), Math.min, v => v[6] && v[7]],
+      ["MOST CMNTS", v => v[8], Math.max, v => v[5]],
+      ["LEAST CMNTS", v => v[8], Math.min, v => v[5]]
+    ];
+    var sortIndex = 0;
+    var sortOption = "RANDOM";
+
+    var autoWikiWindow;
+    var siiva_vids, ttgd_vids, vavr_vids, bootleg_vids;
+    var unwatched_siiva_vids, unwatched_ttgd_vids, unwatched_vavr_vids, unwatched_bootleg_vids;
+    var vid_db, bootleg_vid_db;
+    var first_vid_promise;
+    var sheets_checked;
+
+    // optimization for first video loading, ugly but fast
+    first_vid_promise = window.localStorage.getItem(LOCALSTORAGE_RANDOM_VID);
+    if (!first_vid_promise) { //returning user who doesn't have current vid stored
+      let vid_db_compressed_string = window.localStorage.getItem(LOCALSTORAGE_VID_DB);
+      if (vid_db_compressed_string) {
+        first_vid_promise = new Promise((resolve, reject) => {
+          let decompressionWorker = new Worker("js/decompressionworker.js");
+          decompressionWorker.onmessage = (e) => {
+            vid_db = e.data;
+            if (vid_db) {
+              siiva_vids = vid_db[0];
+              if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS)) {
+                  try {
+                    watchedVidIds = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS));
+                  } catch (error) {
+                    watchedVidIds = [];
+                  }
+              } else {
+                watchedVidIds = [];
+              }
+              var differenceWatched = x => !watchedVidIds.includes(x[0]);
+              unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
+              //store a random unwatched vid for quick loading next time
+              window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID,
+                unwatched_siiva_vids[Math.floor(unwatched_siiva_vids.length * Math.random())][0]);
+              resolve(unwatched_siiva_vids[Math.floor(unwatched_siiva_vids.length * Math.random())][0]);
+            } else {
+              resolve("rEcOzjg7vBU");
             }
-          } catch (e) {
-            window.localStorage.removeItem(LOCALSTORAGE_VID_DB);
-            window.localStorage.removeItem(LOCALSTORAGE_SHEET_TIMESTAMP);
-            checkSheets();
-            return;
-          }
-        }
-        siiva_vids = vid_db[0];
-        ttgd_vids = vid_db[1];
-        vavr_vids = vid_db[2];
-      }
-
-      function checkBootlegSheets() {
-        if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
-          var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
-          var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title) && !CHANNEL_BLOCKLIST.includes(cyrb53(title)));
-          var bootlegSheetsJSON = makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + bootlegSheetNames.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join(''));
-          bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
-          if (browserHasLocalStorage) {
-            setTimeout(() => {
-                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_VID_DB, LZString.compressToUTF16(JSON.stringify(bootleg_vid_db)));
-                window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP, Date.now() + 172800000); // two days
-            }, 0)
-          }
-        } else {
-          try {
-            bootleg_vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB)));
-            if (!bootleg_vid_db) {
-              throw 'empty bootleg db from localstorage';
-            }
-          } catch (e) {
-            window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_VID_DB);
-            window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP);
-            checkBootlegSheets();
-            return;
-          }
-        }
-        bootleg_vids = bootleg_vid_db;
-      }
-
-      function parseISO8601Duration(iso8601Duration) {
-          var matches = iso8601Duration.match(iso8601DurationRegex);
-
-          return {
-              sign: matches[1] === undefined ? '+' : '-',
-              years: matches[2] === undefined ? 0 : matches[2],
-              months: matches[3] === undefined ? 0 : matches[3],
-              weeks: matches[4] === undefined ? 0 : matches[4],
-              days: matches[5] === undefined ? 0 : matches[5],
-              hours: matches[6] === undefined ? 0 : matches[6],
-              minutes: matches[7] === undefined ? 0 : matches[7],
-              seconds: matches[8] === undefined ? 0 : matches[8]
           };
-      };
+          decompressionWorker.onerror = (e) => {
+            console.error("Failed to decompress cached rip database")
+            resolve("rEcOzjg7vBU");
+          };
+          decompressionWorker.postMessage(vid_db_compressed_string);
+        });
+      } else { //first time user
+        first_vid_promise = new Promise((resolve, reject) => {
+          var Httpreq = new XMLHttpRequest();
+          Httpreq.open("GET", SHEETS_QUERY, false);
+          Httpreq.onload = (e) => {
+            sheetsjson = JSON.parse(Httpreq.responseText);
+            vid_db = processSheetsJSON(sheetsjson);
+            //store a random siiva vid for quick loading next time
+            window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID,
+              vid_db[0][Math.floor(vid_db[0].length * Math.random())][0]);
+            resolve(vid_db[0][Math.floor(vid_db[0].length * Math.random())][0]);
+          };
+          Httpreq.onerror = (e) => {
+            console.error("Error fetching siiva rip database");
+            console.error(Httpreq.statusText);
+            resolve("rEcOzjg7vBU");
+          };
+          Httpreq.send(null);
+        });
+      }
+    }
 
-      function parseISO8601DurationToSeconds(iso8601Duration) {
+    function makeGetRequest(url){
+      var Httpreq = new XMLHttpRequest(); // a new request
+      Httpreq.open("GET", url, false);
+      Httpreq.send(null);
+      return Httpreq.responseText;
+    }
+
+    function makeJSONRequest(url) {
+      return JSON.parse(makeGetRequest(url));
+    }
+
+    async function checkSheets() {
+      if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP)) > Date.now())) {
+        if (!sheetsjson) {
+          sheetsjson = makeJSONRequest(SHEETS_QUERY);
+          vid_db = processSheetsJSON(sheetsjson);
+        }
+        if (browserHasLocalStorage) {
+          window.localStorage.setItem(LOCALSTORAGE_VID_DB, LZString.compressToUTF16(JSON.stringify(vid_db)));
+          window.localStorage.setItem(LOCALSTORAGE_SHEET_TIMESTAMP, Date.now() + 86400000); // one day
+        }
+      } else {
+        try {
+          vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_VID_DB)));
+          if (!vid_db) {
+            throw 'empty db from localstorage';
+          }
+        } catch (e) {
+          window.localStorage.removeItem(LOCALSTORAGE_VID_DB);
+          window.localStorage.removeItem(LOCALSTORAGE_SHEET_TIMESTAMP);
+          checkSheets();
+          return;
+        }
+      }
+      siiva_vids = vid_db[0];
+      ttgd_vids = vid_db[1];
+      vavr_vids = vid_db[2];
+    }
+
+    function checkBootlegSheets() {
+      if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
+        var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
+        var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title) && !CHANNEL_BLOCKLIST.includes(cyrb53(title)));
+        var bootlegSheetsJSON = makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + bootlegSheetNames.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join(''));
+        bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
+        if (browserHasLocalStorage) {
+          window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_VID_DB, LZString.compressToUTF16(JSON.stringify(bootleg_vid_db)));
+          window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP, Date.now() + 172800000); // two days
+        }
+      } else {
+        try {
+          bootleg_vid_db = JSON.parse(LZString.decompressFromUTF16(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB)));
+          if (!bootleg_vid_db) {
+            throw 'empty bootleg db from localstorage';
+          }
+        } catch (e) {
+          window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_VID_DB);
+          window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP);
+          checkBootlegSheets();
+          return;
+        }
+      }
+      bootleg_vids = bootleg_vid_db;
+    }
+
+    function parseISO8601Duration(iso8601Duration) {
         var matches = iso8601Duration.match(iso8601DurationRegex);
 
-        return matches ? (matches[1] === undefined ? 1 : -1) *
-        ((matches[2] === undefined ? 0 : parseInt(matches[2])) * 31536000
-        + (matches[3] === undefined ? 0 : parseInt(matches[3])) * 2592000
-        + (matches[4] === undefined ? 0 : parseInt(matches[4])) * 604800
-        + (matches[5] === undefined ? 0 : parseInt(matches[5])) * 86400
-        + (matches[6] === undefined ? 0 : parseInt(matches[6])) * 3600
-        + (matches[7] === undefined ? 0 : parseInt(matches[7])) * 60
-        + (matches[8] === undefined ? 0 : parseInt(matches[8]))) : 0;
-      }
+        return {
+            sign: matches[1] === undefined ? '+' : '-',
+            years: matches[2] === undefined ? 0 : matches[2],
+            months: matches[3] === undefined ? 0 : matches[3],
+            weeks: matches[4] === undefined ? 0 : matches[4],
+            days: matches[5] === undefined ? 0 : matches[5],
+            hours: matches[6] === undefined ? 0 : matches[6],
+            minutes: matches[7] === undefined ? 0 : matches[7],
+            seconds: matches[8] === undefined ? 0 : matches[8]
+        };
+    };
 
-      function processSheetsJSON(sheetsjson) {
-          // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 views, 8 likes, 9 dislikes, 10 comments
-          // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
-          var filter_func = row => !["Private", "Deleted"].includes(row[3]);
-          var mapping_func = row => [row[0], row[1].replaceAll(/\s{2,}/g,' '), row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
-            Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
-            parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
-          var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
-          return [0,1,2].map(outer_mapping_func);
-      }
+    function parseISO8601DurationToSeconds(iso8601Duration) {
+      var matches = iso8601Duration.match(iso8601DurationRegex);
 
-      function processBootlegSheetsJSON(bootlegSheetsJSON) {
-          var filter_func = row => !["Private", "Deleted"].includes(row[3]) && row[5] != null && row[1] != null;
-          var mapping_func = row => [row[0], row[1].replaceAll(/\s{2,}/g,' '), false,
-            Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
-            parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
-          var outer_mapping_func = n => bootlegSheetsJSON["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
-          return [].concat.apply([], Array.from(Array(bootlegSheetsJSON["valueRanges"].length).keys()).map(outer_mapping_func));
-      }
+      return matches ? (matches[1] === undefined ? 1 : -1) *
+      ((matches[2] === undefined ? 0 : parseInt(matches[2])) * 31536000
+      + (matches[3] === undefined ? 0 : parseInt(matches[3])) * 2592000
+      + (matches[4] === undefined ? 0 : parseInt(matches[4])) * 604800
+      + (matches[5] === undefined ? 0 : parseInt(matches[5])) * 86400
+      + (matches[6] === undefined ? 0 : parseInt(matches[6])) * 3600
+      + (matches[7] === undefined ? 0 : parseInt(matches[7])) * 60
+      + (matches[8] === undefined ? 0 : parseInt(matches[8]))) : 0;
+    }
 
-      function initWatchedVids() {
-        if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS)) {
-            try {
-              watchedVidIds = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS));
-            } catch (error) {
-              watchedVidIds = [];
-            }
-        } else {
-          watchedVidIds = [];
-        }
-        var differenceWatched = x => !watchedVidIds.includes(x[0]);
-        unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
-        unwatched_ttgd_vids = ttgd_vids.filter(differenceWatched);
-        unwatched_vavr_vids = vavr_vids.filter(differenceWatched);
-        unwatched_bootleg_vids = bootleg_vids.filter(differenceWatched);
-        updateWatchPercentages();
-      }
+    function processSheetsJSON(sheetsjson) {
+        // column map: 0 id, 1 title, 2 wiki status, 3 video status, 4 upload date utc, 5 length, 6 description, 7 views, 8 likes, 9 dislikes, 10 comments
+        // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
+        var filter_func = row => !["Private", "Deleted"].includes(row[3]);
+        var mapping_func = row => [row[0], row[1].replaceAll(/\s{2,}/g,' '), row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
+          Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+          parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+        var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
+        return [0,1,2].map(outer_mapping_func);
+    }
 
-      $(document).ready(function() {
-        if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
-          && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
-          document.querySelector("h3#twitter").style.display = "none";
-        } else {
-          document.querySelector("h3#twitter").style.display = "";
-        }
+    function processBootlegSheetsJSON(bootlegSheetsJSON) {
+        var filter_func = row => !["Private", "Deleted"].includes(row[3]) && row[5] != null && row[1] != null;
+        var mapping_func = row => [row[0], row[1].replaceAll(/\s{2,}/g,' '), false,
+          Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+          parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
+        var outer_mapping_func = n => bootlegSheetsJSON["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
+        return [].concat.apply([], Array.from(Array(bootlegSheetsJSON["valueRanges"].length).keys()).map(outer_mapping_func));
+    }
 
-        var dark_link = document.getElementById("dark");
-        var theme_switch = (should_dark_mode_func) => {
-          if (should_dark_mode_func()) {
-            document.body.style.background = "black";
-            document.body.style.color = "white";
-            document.cookie = "theme=dark; SameSite=Strict";
-            document.getElementById("dark").children[0].text = "LIGHT";
-          } else {
-            document.body.style.background = "white";
-            document.body.style.color = "black";
-            document.cookie = "theme=light; SameSite=Strict";
-            document.getElementById("dark").children[0].text = "DARK";
+    function initWatchedVids() {
+      if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS)) {
+          try {
+            watchedVidIds = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_WATCHED_VID_IDS));
+          } catch (error) {
+            watchedVidIds = [];
           }
-        }
-        var is_background_white = () => document.body.style.background.includes("white");
+      } else {
+        watchedVidIds = [];
+      }
+      var differenceWatched = x => !watchedVidIds.includes(x[0]);
+      unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
+      unwatched_ttgd_vids = ttgd_vids.filter(differenceWatched);
+      unwatched_vavr_vids = vavr_vids.filter(differenceWatched);
+      unwatched_bootleg_vids = bootleg_vids.filter(differenceWatched);
+      updateWatchPercentages();
+    }
 
-        if (is_background_white()) {
-          document.getElementById("dark").children[0].text = "DARK";
-        } else {
+    $(document).ready(function() {
+      if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
+        && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
+        document.querySelector("h3#twitter").style.display = "none";
+      } else {
+        document.querySelector("h3#twitter").style.display = "";
+      }
+
+      var dark_link = document.getElementById("dark");
+      var theme_switch = (should_dark_mode_func) => {
+        if (should_dark_mode_func()) {
+          document.body.style.background = "black";
+          document.body.style.color = "white";
+          document.cookie = "theme=dark; SameSite=Strict";
           document.getElementById("dark").children[0].text = "LIGHT";
+        } else {
+          document.body.style.background = "white";
+          document.body.style.color = "black";
+          document.cookie = "theme=light; SameSite=Strict";
+          document.getElementById("dark").children[0].text = "DARK";
         }
-        document.querySelector("li#dark > a").onclick = theme_switch.bind(null, is_background_white);
-        theme_switch(() => !document.cookie.split(';').filter(
-            (item) => item.includes('theme=light')).length);
+      }
+      var is_background_white = () => document.body.style.background.includes("white");
 
-        document.querySelector("li#copy > a").onclick = copyRipLink;
-        document.querySelector("li#previous > a").onclick = previousVid;
-        document.querySelector("li#skip > a").onclick = skipVid;
-        document.querySelector("li#autoplay > a").onclick = toggleAutoplay;
-        document.querySelector("li#allowrepeats > a").onclick = toggleAllowRepeats;
-        document.querySelector("li#autowiki > a").onclick = autoWikiPopup;
-        document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
-        document.querySelector("li#sort > a").onclick = sortClicked;
-        document.querySelector("li#skipkfad > a").onclick = skipKFADClicked;
-        document.querySelector("li#nowiki > a").onclick = noWikiClicked;
-        document.querySelector("li#channels > a").onclick = () => toggleChannel("");
-        document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
-        document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
-        document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
-        document.querySelector("li#bootleg > a").onclick = () => toggleChannel("bootleg");
-        document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
-        document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
+      if (is_background_white()) {
+        document.getElementById("dark").children[0].text = "DARK";
+      } else {
+        document.getElementById("dark").children[0].text = "LIGHT";
+      }
+      document.querySelector("li#dark > a").onclick = theme_switch.bind(null, is_background_white);
+      theme_switch(() => !document.cookie.split(';').filter(
+          (item) => item.includes('theme=light')).length);
 
-        navigator.mediaSession.setActionHandler('nexttrack', function() {
-          skipVid();
-        });
+      document.querySelector("li#copy > a").onclick = copyRipLink;
+      document.querySelector("li#previous > a").onclick = previousVid;
+      document.querySelector("li#skip > a").onclick = skipVid;
+      document.querySelector("li#autoplay > a").onclick = toggleAutoplay;
+      document.querySelector("li#allowrepeats > a").onclick = toggleAllowRepeats;
+      document.querySelector("li#autowiki > a").onclick = autoWikiPopup;
+      document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
+      document.querySelector("li#sort > a").onclick = sortClicked;
+      document.querySelector("li#skipkfad > a").onclick = skipKFADClicked;
+      document.querySelector("li#nowiki > a").onclick = noWikiClicked;
+      document.querySelector("li#channels > a").onclick = () => toggleChannel("");
+      document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
+      document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
+      document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
+      document.querySelector("li#bootleg > a").onclick = () => toggleChannel("bootleg");
+      document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
+      document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
 
-        navigator.mediaSession.setActionHandler('previoustrack', function() {
-          previousVid();
-        });
-
-        document.addEventListener('keyup', event => {
-          if (event.code === 'Space') {
-            onSpaceBarPressed();
-          }
-        });
-
+      navigator.mediaSession.setActionHandler('nexttrack', function() {
+        skipVid();
       });
 
-      window.addEventListener('beforeunload', function() {
-        if (!!autoWikiWindow && !autoWikiWindow.closed) {
-          autoWikiWindow.close();
+      navigator.mediaSession.setActionHandler('previoustrack', function() {
+        previousVid();
+      });
+
+      document.addEventListener('keyup', event => {
+        if (event.code === 'Space') {
+          onSpaceBarPressed();
         }
       });
 
-      function tooltip(msg = "") {
-        document.querySelector("h3#tooltip").textContent = msg;
-      }
+    });
 
-      function channelProgressTooltip(channel="") {
-        var num_total_vids, num_unwatched_vids, channelText;
-        if (channel == "") {
-          num_total_vids = siiva_vids.length + ttgd_vids.length + vavr_vids.length + bootleg_vids.length;
-          num_unwatched_vids = unwatched_siiva_vids.length + unwatched_ttgd_vids.length + unwatched_vavr_vids.length + unwatched_bootleg_vids.length;
-          channelText = 'siiva and all fan channels';
-        } else if (channel == "siiva") {
-          num_total_vids = siiva_vids.length;
-          num_unwatched_vids = unwatched_siiva_vids.length;
-          channelText = 'SiIvaGunner\'s channel';
-        } else if (channel == "ttgd") {
-          num_total_vids = ttgd_vids.length;
-          num_unwatched_vids = unwatched_ttgd_vids.length;
-          channelText = 'TimmyTurnersGrandDad\'s channel';
-        } else if (channel == "vavr") {
-          num_total_vids = vavr_vids.length;
-          num_unwatched_vids = unwatched_vavr_vids.length;
-          channelText = 'VvvvvaVvvvvvr\'s channel';
-        } else if (channel == "bootleg"){
-          num_total_vids = bootleg_vids.length;
-          num_unwatched_vids = unwatched_bootleg_vids.length;
-          channelText = 'all remaining fan channels';
-        }
-        document.querySelector("h3#tooltip").textContent = `you've watched ${(num_total_vids - num_unwatched_vids).toLocaleString()} out of ${num_total_vids.toLocaleString()} total rips on ${channelText}, only ${num_unwatched_vids.toLocaleString()} more to go!`;
+    window.addEventListener('beforeunload', function() {
+      if (!!autoWikiWindow && !autoWikiWindow.closed) {
+        autoWikiWindow.close();
       }
+    });
 
-      function updateCheckboxes() {
-        document.querySelector("li#autoplay > a > span.checkbox").textContent = isAutoplay ? "☑":"☐";
-        document.querySelector("li#allowrepeats > a > span.checkbox").textContent = allowRepeats ? "☑":"☐";
-        document.querySelector("li#skipkfad > a > span.checkbox").textContent = isSkipKFAD ? "☑":"☐";
-        document.querySelector("li#nowiki > a > span.checkbox").textContent = isNoWiki ? "☑":"☐";
-        document.querySelector("li#siiva > a > span.checkbox").textContent = isSiivaCheck ? "☑":"☐";
-        document.querySelector("li#ttgd > a > span.checkbox").textContent = isTTGDCheck ? "☑":"☐";
-        document.querySelector("li#vavr > a > span.checkbox").textContent = isVAVRCheck ? "☑":"☐";
-        document.querySelector("li#bootleg > a > span.checkbox").textContent = isBootlegCheck ? "☑":"☐";
+    window.tooltip = (msg = "") =>  {
+      document.querySelector("h3#tooltip").textContent = msg;
+    }
+
+    window.channelProgressTooltip = (channel="") => {
+      var num_total_vids, num_unwatched_vids, channelText;
+      if (channel == "") {
+        num_total_vids = siiva_vids.length + ttgd_vids.length + vavr_vids.length + bootleg_vids.length;
+        num_unwatched_vids = unwatched_siiva_vids.length + unwatched_ttgd_vids.length + unwatched_vavr_vids.length + unwatched_bootleg_vids.length;
+        channelText = 'siiva and all fan channels';
+      } else if (channel == "siiva") {
+        num_total_vids = siiva_vids.length;
+        num_unwatched_vids = unwatched_siiva_vids.length;
+        channelText = 'SiIvaGunner\'s channel';
+      } else if (channel == "ttgd") {
+        num_total_vids = ttgd_vids.length;
+        num_unwatched_vids = unwatched_ttgd_vids.length;
+        channelText = 'TimmyTurnersGrandDad\'s channel';
+      } else if (channel == "vavr") {
+        num_total_vids = vavr_vids.length;
+        num_unwatched_vids = unwatched_vavr_vids.length;
+        channelText = 'VvvvvaVvvvvvr\'s channel';
+      } else if (channel == "bootleg"){
+        num_total_vids = bootleg_vids.length;
+        num_unwatched_vids = unwatched_bootleg_vids.length;
+        channelText = 'all remaining fan channels';
       }
+      document.querySelector("h3#tooltip").textContent = `you've watched ${(num_total_vids - num_unwatched_vids).toLocaleString()} out of ${num_total_vids.toLocaleString()} total rips on ${channelText}, only ${num_unwatched_vids.toLocaleString()} more to go!`;
+    }
 
-      function updateWatchPercentages() {
-        document.querySelector("li#channels > a.percentcomplete").text = `(${(100 * (1 - (unwatched_siiva_vids.length + unwatched_ttgd_vids.length + unwatched_vavr_vids.length) / (siiva_vids.length + ttgd_vids.length + vavr_vids.length))).toFixed(2)}% watched)`;
-        document.querySelector("li#siiva > a.percentcomplete").text = `(${(100 * (1 - unwatched_siiva_vids.length / siiva_vids.length)).toFixed(2)}% watched)`;
-        document.querySelector("li#ttgd > a.percentcomplete").text = `(${(100 * (1 - unwatched_ttgd_vids.length / ttgd_vids.length)).toFixed(2)}% watched)`;
-        document.querySelector("li#vavr > a.percentcomplete").text = `(${(100 * (1 - unwatched_vavr_vids.length / vavr_vids.length)).toFixed(2)}% watched)`;
-        document.querySelector("li#bootleg > a.percentcomplete").text = `(${(100 * (1 - unwatched_bootleg_vids.length / bootleg_vids.length)).toFixed(2)}% watched)`;
-      }
+    function updateCheckboxes() {
+      document.querySelector("li#autoplay > a > span.checkbox").textContent = isAutoplay ? "☑":"☐";
+      document.querySelector("li#allowrepeats > a > span.checkbox").textContent = allowRepeats ? "☑":"☐";
+      document.querySelector("li#skipkfad > a > span.checkbox").textContent = isSkipKFAD ? "☑":"☐";
+      document.querySelector("li#nowiki > a > span.checkbox").textContent = isNoWiki ? "☑":"☐";
+      document.querySelector("li#siiva > a > span.checkbox").textContent = isSiivaCheck ? "☑":"☐";
+      document.querySelector("li#ttgd > a > span.checkbox").textContent = isTTGDCheck ? "☑":"☐";
+      document.querySelector("li#vavr > a > span.checkbox").textContent = isVAVRCheck ? "☑":"☐";
+      document.querySelector("li#bootleg > a > span.checkbox").textContent = isBootlegCheck ? "☑":"☐";
+    }
 
-      function skipDurationClicked() {
-        skipDurationIndex = (skipDurationIndex + 1) % skipDurations.length;
-        document.querySelector("li#skipduration > a > span.checkbox").textContent = skipDurations[skipDurationIndex][0];
-        durationOfVidToSkip = skipDurations[skipDurationIndex][1];
-      }
+    function updateWatchPercentages() {
+      document.querySelector("li#channels > a.percentcomplete").text = `(${(100 * (1 - (unwatched_siiva_vids.length + unwatched_ttgd_vids.length + unwatched_vavr_vids.length) / (siiva_vids.length + ttgd_vids.length + vavr_vids.length))).toFixed(2)}% watched)`;
+      document.querySelector("li#siiva > a.percentcomplete").text = `(${(100 * (1 - unwatched_siiva_vids.length / siiva_vids.length)).toFixed(2)}% watched)`;
+      document.querySelector("li#ttgd > a.percentcomplete").text = `(${(100 * (1 - unwatched_ttgd_vids.length / ttgd_vids.length)).toFixed(2)}% watched)`;
+      document.querySelector("li#vavr > a.percentcomplete").text = `(${(100 * (1 - unwatched_vavr_vids.length / vavr_vids.length)).toFixed(2)}% watched)`;
+      document.querySelector("li#bootleg > a.percentcomplete").text = `(${(100 * (1 - unwatched_bootleg_vids.length / bootleg_vids.length)).toFixed(2)}% watched)`;
+    }
 
-      function sortClicked() {
-        sortIndex = (sortIndex + 1) % sortOptions.length;
-        if (sortIndex == 0) {
-          allowRepeatLock = false;
-        } else {
-          allowRepeatLock = true;
-          allowRepeats = false;
-          updateCheckboxes();
-        }
-        sortOption = sortOptions[sortIndex][0];
-        document.querySelector("li#sort > a > span.sortoption").textContent = sortOption;
-      }
+    function skipDurationClicked() {
+      skipDurationIndex = (skipDurationIndex + 1) % skipDurations.length;
+      document.querySelector("li#skipduration > a > span.checkbox").textContent = skipDurations[skipDurationIndex][0];
+      durationOfVidToSkip = skipDurations[skipDurationIndex][1];
+    }
 
-      function skipKFADClicked() {
-        isSkipKFAD = !isSkipKFAD;
-        updateCheckboxes();
-        if(isCurrentVidKFAD && isSkipKFAD) {
-          newVid(true);
-        }
-      }
-
-      function noWikiClicked() {
-        isNoWiki = !isNoWiki;
+    function sortClicked() {
+      sortIndex = (sortIndex + 1) % sortOptions.length;
+      if (sortIndex == 0) {
+        allowRepeatLock = false;
+      } else {
+        allowRepeatLock = true;
+        allowRepeats = false;
         updateCheckboxes();
       }
+      sortOption = sortOptions[sortIndex][0];
+      document.querySelector("li#sort > a > span.sortoption").textContent = sortOption;
+    }
 
-      function pickUniformRandomFromArray(toSample) {
-        return toSample[Math.floor(Math.random()*toSample.length)];
-      }
-
-      function arraysEqual(a, b) {
-        if (a === b) return true;
-        if (a == null || b == null) return false;
-        if (a.length !== b.length) return false;
-
-        for (var i = 0; i < a.length; ++i) {
-          if (a[i] !== b[i]) return false;
-        }
-        return true;
-      }
-
-      function nextVidId() {
-        filteredSortedVids = [];
-        if (isSiivaCheck) {
-          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? siiva_vids : unwatched_siiva_vids);
-        }
-        if (isTTGDCheck) {
-          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? ttgd_vids : unwatched_ttgd_vids);
-        }
-        if (isVAVRCheck) {
-          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? vavr_vids : unwatched_vavr_vids);
-        }
-        if (isBootlegCheck) {
-          filteredSortedVids = filteredSortedVids.concat(allowRepeats ? bootleg_vids : unwatched_bootleg_vids);
-        }
-        if (isSkipKFAD) {
-          filteredSortedVids = filteredSortedVids.filter((vid_info) => !KFAD_FILTERS.some((filter) => vid_info[1].toLowerCase().includes(filter)));
-        }
-        if (skipDurationIndex != 0) {
-          filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[4] < durationOfVidToSkip);
-        }
-        if (isNoWiki) {
-          filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[2] === false);
-        }
-        filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
-        if (sortOption == "RANDOM") {
-          return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
-        } else {
-          var mapped_vids = filteredSortedVids.filter(sortOptions[sortIndex][3]).map(sortOptions[sortIndex][1])
-          var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
-          //if (vid_index == -1) {} // no more vids for these filters
-          return filteredSortedVids[vid_index][0];
-        }
-      }
-
-      function copyRythmPlaylistToClipboard(vids=500, charlimit=2000) {
-        var url = "!play https://www.youtube.com/watch_videos?video_ids=" + Array.apply(null, Array(vids)).map(nextVidId).join(',');
-        url = url.substring(0, Math.min(url.length, charlimit));
-        url = url.substring(0, url.lastIndexOf(","));
-        copyToClipboard(url);
-      }
-
-      function wikiLinkFromTitle(title, wikia) {
-        if (wikia == 'SiIvaGunner') {
-          wikia == "siivagunner"
-        } else if (wikia == "TimmyTurnersGrandDad") {
-          wikia = "ttgd";
-        } else if (wikia == "VvvvvaVvvvvvr") {
-          wikia = "vvvvvavvvvvr";
-        } else {
-          return "";
-        }
-        return 'https://' + wikia + '.fandom.com/wiki/' + title.replaceAll(' ', '_')
-          .replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')').replaceAll('?', '%3F');
-      }
-
-      var tag = document.createElement('script');
-
-      tag.src = "https://www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-      var player;
-      function onYouTubeIframeAPIReady() {
-        var embedcontainerElement = document.querySelector('div.embedcontainer');
-        player = new YT.Player('player', {
-          height: parseInt(embedcontainerElement.offsetHeight),
-          width: parseInt(embedcontainerElement.offsetWidth),
-          videoId: currentVidId,
-          autoplay: '1',
-          enablejsapi: '1',
-          origin: 'https://brubsby.com',
-          events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange,
-            'onError': onError
-          }
-        });
-      }
-
-      function onTitleReady() {
-          currentVidTitle = player.getVideoData().title;
-          isCurrentVidKFAD = KFAD_FILTERS.some((filter) => currentVidTitle.toLowerCase().includes(filter));
-          if(isCurrentVidKFAD && isSkipKFAD) {
-            newVid(false);
-            return;
-          }
-          currentChannel = player.getVideoData().author || "SiIvaGunner";
-          isInfoReady = true;
-          updateWikiLink();
-          updateNowPlaying();
-      }
-
-      function updateNowPlaying() {
-        document.querySelector("h2#nowplaying").textContent = currentVidTitle;
-        document.querySelector("h2#author").textContent = currentChannel;
-      }
-
-      function updateTitleMaxWidth() {
-        document.querySelector("h2#nowplaying").style.maxWidth = document.querySelector("iframe#player").offsetWidth + "px";
-      }
-
-      function onPlayerReady(event) {
-        updateTitleMaxWidth();
-        onTitleReady();
-        player.playVideo();
-      }
-
-      function updateWikiLink() {
-        var wikiLink = wikiLinkFromTitle(currentVidTitle, currentChannel);
-        var wikiLinkElem = document.querySelector("#rip_wiki_link > a");
-        wikiLinkElem.href = wikiLink;
-        if (!wikiLink) {
-          wikiLinkElem.removeAttribute("href");
-        }
-        if (!!autoWikiWindow && !autoWikiWindow.closed && !!wikiLink) {
-          autoWikiWindow.location.href = wikiLink;
-        }
-      }
-
-      function skipVid() {
+    function skipKFADClicked() {
+      isSkipKFAD = !isSkipKFAD;
+      updateCheckboxes();
+      if(isCurrentVidKFAD && isSkipKFAD) {
         newVid(true);
       }
+    }
 
-      function copyToClipboard(text) {
-        var input = document.createElement('textarea');
-        input.innerHTML = text;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        return document.body.removeChild(input);
+    function noWikiClicked() {
+      isNoWiki = !isNoWiki;
+      updateCheckboxes();
+    }
+
+    function pickUniformRandomFromArray(toSample) {
+      return toSample[Math.floor(Math.random()*toSample.length)];
+    }
+
+    function arraysEqual(a, b) {
+      if (a === b) return true;
+      if (a == null || b == null) return false;
+      if (a.length !== b.length) return false;
+
+      for (var i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) return false;
       }
+      return true;
+    }
 
-      function copyRipLink() {
-        var yt_link = "https://www.youtube.com/watch?v=" + currentVidId;
-        copyToClipboard(yt_link);
-        document.querySelector("li#copy > a").text = "COPIED.......";
-        setTimeout(() => document.querySelector("li#copy > a").text = "COPY RIP LINK", 1000);
+    function nextVidId() {
+      filteredSortedVids = [];
+      if (isSiivaCheck) {
+        filteredSortedVids = filteredSortedVids.concat(allowRepeats ? siiva_vids : unwatched_siiva_vids);
       }
+      if (isTTGDCheck) {
+        filteredSortedVids = filteredSortedVids.concat(allowRepeats ? ttgd_vids : unwatched_ttgd_vids);
+      }
+      if (isVAVRCheck) {
+        filteredSortedVids = filteredSortedVids.concat(allowRepeats ? vavr_vids : unwatched_vavr_vids);
+      }
+      if (isBootlegCheck) {
+        filteredSortedVids = filteredSortedVids.concat(allowRepeats ? bootleg_vids : unwatched_bootleg_vids);
+      }
+      if (isSkipKFAD) {
+        filteredSortedVids = filteredSortedVids.filter((vid_info) => !KFAD_FILTERS.some((filter) => vid_info[1].toLowerCase().includes(filter)));
+      }
+      if (skipDurationIndex != 0) {
+        filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[4] < durationOfVidToSkip);
+      }
+      if (isNoWiki) {
+        filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[2] === false);
+      }
+      filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
+      if (sortOption == "RANDOM") {
+        return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
+      } else {
+        var mapped_vids = filteredSortedVids.filter(sortOptions[sortIndex][3]).map(sortOptions[sortIndex][1])
+        var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
+        //if (vid_index == -1) {} // no more vids for these filters
+        return filteredSortedVids[vid_index][0];
+      }
+    }
 
-      function newVid(markWatched) {
-        if (markWatched) {
-          markVidWatched(currentVidId);
+    function copyRythmPlaylistToClipboard(vids=500, charlimit=2000) {
+      var url = "!play https://www.youtube.com/watch_videos?video_ids=" + Array.apply(null, Array(vids)).map(nextVidId).join(',');
+      url = url.substring(0, Math.min(url.length, charlimit));
+      url = url.substring(0, url.lastIndexOf(","));
+      copyToClipboard(url);
+    }
+
+    function wikiLinkFromTitle(title, wikia) {
+      if (wikia == 'SiIvaGunner') {
+        wikia == "siivagunner"
+      } else if (wikia == "TimmyTurnersGrandDad") {
+        wikia = "ttgd";
+      } else if (wikia == "VvvvvaVvvvvvr") {
+        wikia = "vvvvvavvvvvr";
+      } else {
+        return "";
+      }
+      return 'https://' + wikia + '.fandom.com/wiki/' + title.replaceAll(' ', '_')
+        .replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')').replaceAll('?', '%3F');
+    }
+
+    var tag = document.createElement('script');
+
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var player;
+    window.onYouTubeIframeAPIReady = async () => {
+      var embedcontainerElement = document.querySelector('div.embedcontainer');
+      player = new YT.Player('player', {
+        height: parseInt(embedcontainerElement.offsetHeight),
+        width: parseInt(embedcontainerElement.offsetWidth),
+        videoId: await first_vid_promise,
+        autoplay: '1',
+        enablejsapi: '1',
+        origin: 'https://brubsby.com',
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
+          'onError': onError
         }
-        previousVidId = currentVidId;
-        currentVidId = nextVidId();
-        previousChannel = currentChannel;
-        isPreviousVidKFAD = isCurrentVidKFAD;
-        isInfoReady = false;
-        player.loadVideoById(currentVidId);
-        player.playVideo();
-      }
+      });
+      currentVidId = await first_vid_promise;
+    }
 
-      function markVidWatched(vidId) {
-        if (!watchedVidIds.includes(vidId)) {
-          watchedVidIds.push(vidId);
+    function onTitleReady() {
+        currentVidTitle = player.getVideoData().title;
+        isCurrentVidKFAD = KFAD_FILTERS.some((filter) => currentVidTitle.toLowerCase().includes(filter));
+        if(isCurrentVidKFAD && isSkipKFAD) {
+          newVid(false);
+          return;
         }
-        window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
-        notVidFilter = x => x[0] != vidId;
-        unwatched_siiva_vids = unwatched_siiva_vids.filter(notVidFilter);
-        unwatched_ttgd_vids = unwatched_ttgd_vids.filter(notVidFilter);
-        unwatched_vavr_vids = unwatched_vavr_vids.filter(notVidFilter);
-        unwatched_bootleg_vids = unwatched_bootleg_vids.filter(notVidFilter);
-        updateWatchPercentages();
-      }
+        currentChannel = player.getVideoData().author || "SiIvaGunner";
+        isInfoReady = true;
+        updateWikiLink();
+        updateNowPlaying();
+    }
 
-      function onError(event) {
-        if (event.data >= 100) {
+    function updateNowPlaying() {
+      document.querySelector("h2#nowplaying").textContent = currentVidTitle;
+      document.querySelector("h2#author").textContent = currentChannel;
+    }
+
+    function updateTitleMaxWidth() {
+      document.querySelector("h2#nowplaying").style.maxWidth = document.querySelector("iframe#player").offsetWidth + "px";
+    }
+
+    async function onPlayerReady(event) {
+      updateTitleMaxWidth();
+      onTitleReady();
+      //player.playVideo();
+      if (!sheets_checked) {
+        checkSheets();
+        checkBootlegSheets();
+        initWatchedVids();
+        window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, nextVidId());
+        sheets_checked = true;
+      }
+    }
+
+    function updateWikiLink() {
+      var wikiLink = wikiLinkFromTitle(currentVidTitle, currentChannel);
+      var wikiLinkElem = document.querySelector("#rip_wiki_link > a");
+      wikiLinkElem.href = wikiLink;
+      if (!wikiLink) {
+        wikiLinkElem.removeAttribute("href");
+      }
+      if (!!autoWikiWindow && !autoWikiWindow.closed && !!wikiLink) {
+        autoWikiWindow.location.href = wikiLink;
+      }
+    }
+
+    function skipVid() {
+      newVid(true);
+    }
+
+    function copyToClipboard(text) {
+      var input = document.createElement('textarea');
+      input.innerHTML = text;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      return document.body.removeChild(input);
+    }
+
+    function copyRipLink() {
+      var yt_link = "https://www.youtube.com/watch?v=" + currentVidId;
+      copyToClipboard(yt_link);
+      document.querySelector("li#copy > a").text = "COPIED.......";
+      setTimeout(() => document.querySelector("li#copy > a").text = "COPY RIP LINK", 1000);
+    }
+
+    function newVid(markWatched) {
+      if (markWatched) {
+        markVidWatched(currentVidId);
+      }
+      previousVidId = currentVidId;
+      currentVidId = nextVidId();
+      //store a random vid id in localstorage so we can load fast on refresh
+      window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, nextVidId());
+      previousChannel = currentChannel;
+      isPreviousVidKFAD = isCurrentVidKFAD;
+      isInfoReady = false;
+      player.loadVideoById(currentVidId);
+      player.playVideo();
+    }
+
+    function markVidWatched(vidId) {
+      if (!watchedVidIds.includes(vidId)) {
+        watchedVidIds.push(vidId);
+      }
+      window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
+      notVidFilter = x => x[0] != vidId;
+      unwatched_siiva_vids = unwatched_siiva_vids.filter(notVidFilter);
+      unwatched_ttgd_vids = unwatched_ttgd_vids.filter(notVidFilter);
+      unwatched_vavr_vids = unwatched_vavr_vids.filter(notVidFilter);
+      unwatched_bootleg_vids = unwatched_bootleg_vids.filter(notVidFilter);
+      updateWatchPercentages();
+    }
+
+    function onError(event) {
+      if (event.data >= 100) {
+        newVid(true);
+      }
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data == YT.PlayerState.ENDED) {
+        clearTimeOver();
+        if (isAutoplay) {
           newVid(true);
         }
+      } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
+          onTitleReady();
       }
-
-      function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.ENDED) {
-          clearTimeOver();
-          if (isAutoplay) {
-            newVid(true);
-          }
-        } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
-            onTitleReady();
-        }
-        if (event.data == YT.PlayerState.PLAYING) {
-          setTimeOver();
-        } else {
-          clearTimeOver();
-        }
+      if (event.data == YT.PlayerState.PLAYING) {
+        setTimeOver();
+      } else {
+        clearTimeOver();
       }
+    }
 
-      function clearTimeOver() {
-        document.querySelector("#timeover").textContent = "";
+    function clearTimeOver() {
+      document.querySelector("#timeover").textContent = "";
+    }
+
+    function setTimeOver() {
+      document.querySelector("#timeover").textContent = Math.floor(Date.now() / 1000 - player.getCurrentTime() + player.getDuration());
+    }
+
+    function previousVid() {
+      var swap = currentVidId;
+      currentVidId = previousVidId;
+      previousVidId = swap;
+      isInfoReady = false;
+      player.loadVideoById(currentVidId);
+      player.playVideo();
+    }
+
+    function toggleAutoplay() {
+      isAutoplay = !isAutoplay;
+      if (isAutoplay && player.getPlayerState() == YT.PlayerState.ENDED) {
+        newVid(true);
       }
+      updateCheckboxes();
+    }
 
-      function setTimeOver() {
-        document.querySelector("#timeover").textContent = Math.floor(Date.now() / 1000 - player.getCurrentTime() + player.getDuration());
-      }
-
-      function previousVid() {
-        var swap = currentVidId;
-        currentVidId = previousVidId;
-        previousVidId = swap;
-        isInfoReady = false;
-        player.loadVideoById(currentVidId);
-        player.playVideo();
-      }
-
-      function toggleAutoplay() {
-        isAutoplay = !isAutoplay;
-        if (isAutoplay && player.getPlayerState() == YT.PlayerState.ENDED) {
-          newVid(true);
-        }
+    function toggleAllowRepeats() {
+      if (!allowRepeatLock) {
+        allowRepeats = !allowRepeats;
         updateCheckboxes();
       }
+    }
 
-      function toggleAllowRepeats() {
-        if (!allowRepeatLock) {
-          allowRepeats = !allowRepeats;
-          updateCheckboxes();
-        }
-      }
-
-      function toggleChannel(channel) {
-        if (channel == "siiva") {
-          isSiivaCheck = !isSiivaCheck;
-          if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck && !isBootlegCheck) {
-            isTTGDCheck = true;
-            isVAVRCheck = true;
-            isBootlegCheck = true;
-          }
-        } else if (channel == "ttgd") {
-          isTTGDCheck = !isTTGDCheck;
-        } else if (channel == "vavr") {
-          isVAVRCheck = !isVAVRCheck;
-        } else if (channel == "bootleg") {
-          isBootlegCheck = !isBootlegCheck;
-        } else if (channel == "") {
-          if (isSiivaCheck && isTTGDCheck && isVAVRCheck && isBootlegCheck) {
-            isSiivaCheck = true;
-            isTTGDCheck = false;
-            isVAVRCheck = false;
-            isBootlegCheck = false;
-          } else {
-            isSiivaCheck = true;
-            isTTGDCheck = true;
-            isVAVRCheck = true;
-            isBootlegCheck = true;
-          }
-        }
+    function toggleChannel(channel) {
+      if (channel == "siiva") {
+        isSiivaCheck = !isSiivaCheck;
         if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck && !isBootlegCheck) {
+          isTTGDCheck = true;
+          isVAVRCheck = true;
+          isBootlegCheck = true;
+        }
+      } else if (channel == "ttgd") {
+        isTTGDCheck = !isTTGDCheck;
+      } else if (channel == "vavr") {
+        isVAVRCheck = !isVAVRCheck;
+      } else if (channel == "bootleg") {
+        isBootlegCheck = !isBootlegCheck;
+      } else if (channel == "") {
+        if (isSiivaCheck && isTTGDCheck && isVAVRCheck && isBootlegCheck) {
           isSiivaCheck = true;
+          isTTGDCheck = false;
+          isVAVRCheck = false;
+          isBootlegCheck = false;
+        } else {
+          isSiivaCheck = true;
+          isTTGDCheck = true;
+          isVAVRCheck = true;
+          isBootlegCheck = true;
         }
-        updateCheckboxes();
       }
+      if (!isSiivaCheck && !isTTGDCheck && !isVAVRCheck && !isBootlegCheck) {
+        isSiivaCheck = true;
+      }
+      updateCheckboxes();
+    }
 
-      function autoWikiPopup() {
-        var wikiLink = wikiLinkFromTitle(currentVidTitle, currentChannel);
-        if (!wikiLink) {
-          wikiLink = "https://siivagunner.fandom.com/wiki/SiIvaGunner_Wikia";
-        }
-        autoWikiWindow = window.open(wikiLink,
-        "Auto Updating Wiki Popup", ["resizable", "scrollbars", "status"]);
+    function autoWikiPopup() {
+      var wikiLink = wikiLinkFromTitle(currentVidTitle, currentChannel);
+      if (!wikiLink) {
+        wikiLink = "https://siivagunner.fandom.com/wiki/SiIvaGunner_Wikia";
       }
+      autoWikiWindow = window.open(wikiLink,
+      "Auto Updating Wiki Popup", ["resizable", "scrollbars", "status"]);
+    }
 
-      function hideTwitter(perma) {
-        document.querySelector("h3#twitter").style.display = "none";
-        if (browserHasLocalStorage) {
-          window.localStorage.setItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP, perma ? Number.MAX_SAFE_INTEGER : Date.now() + 80000000)
-        }
+    function hideTwitter(perma) {
+      document.querySelector("h3#twitter").style.display = "none";
+      if (browserHasLocalStorage) {
+        window.localStorage.setItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP, perma ? Number.MAX_SAFE_INTEGER : Date.now() + 80000000)
       }
+    }
 
-      function onSpaceBarPressed() {
-        if (player.getPlayerState() == YT.PlayerState.ENDED && !isAutoplay) {
-          newVid(true);
-        } else if (player.getPlayerState() == YT.PlayerState.PLAYING
-            || player.getPlayerState() == YT.PlayerState.BUFFERING) {
-          player.pauseVideo();
-        }
-        else if (player.getPlayerState() == YT.PlayerState.PAUSED
-            || player.getPlayerState() == YT.PlayerState.CUED
-            || player.getPlayerState() == YT.PlayerState.UNSTARTED) {
-          player.playVideo();
-        }
+    function onSpaceBarPressed() {
+      if (player.getPlayerState() == YT.PlayerState.ENDED && !isAutoplay) {
+        newVid(true);
+      } else if (player.getPlayerState() == YT.PlayerState.PLAYING
+          || player.getPlayerState() == YT.PlayerState.BUFFERING) {
+        player.pauseVideo();
       }
+      else if (player.getPlayerState() == YT.PlayerState.PAUSED
+          || player.getPlayerState() == YT.PlayerState.CUED
+          || player.getPlayerState() == YT.PlayerState.UNSTARTED) {
+        player.playVideo();
+      }
+    }
     </script>
   </body>
 </html>
