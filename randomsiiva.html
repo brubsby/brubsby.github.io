@@ -351,8 +351,7 @@
       let vid_db_compressed_string = window.localStorage.getItem(LOCALSTORAGE_VID_DB);
       if (vid_db_compressed_string) {
         first_vid_promise = new Promise((resolve, reject) => {
-          let decompressionWorker = new Worker("js/decompressionworker.js");
-          decompressionWorker.onmessage = (e) => {
+          let fastRandomVidFromLocalStorage = (e) => {
             vid_db = e.data;
             if (vid_db) {
               siiva_vids = vid_db[0];
@@ -375,11 +374,19 @@
               resolve("rEcOzjg7vBU");
             }
           };
-          decompressionWorker.onerror = (e) => {
-            console.error("Failed to decompress cached rip database")
-            resolve("rEcOzjg7vBU");
-          };
-          decompressionWorker.postMessage(vid_db_compressed_string);
+          if (window.Worker) {
+            let decompressionWorker = new Worker("js/decompressionworker.js");
+            decompressionWorker.onmessage = fastRandomVidFromLocalStorage;
+            decompressionWorker.onerror = (e) => {
+              console.error("Failed to decompress cached rip database")
+              resolve("rEcOzjg7vBU");
+            };
+            decompressionWorker.postMessage(vid_db_compressed_string);
+          } else {
+            fastRandomVidFromLocalStorage(
+              {"data":JSON.parse(LZString.decompressFromUTF16(
+                window.localStorage.getItem(LOCALSTORAGE_VID_DB)))});
+          }
         });
       } else { //first time user
         first_vid_promise = new Promise((resolve, reject) => {
