@@ -209,7 +209,7 @@
           <li id="copy"><a onmouseover="tooltip('copies this rip\'s youtube url to your clipboard!')" onmouseout="tooltip()">COPY RIP LINK</a></li>
           <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
           <hr>
-          <li id="sort"><a onmouseover="tooltip('sort rips instead of random (click to cycle through sort options)')" onmouseout="tooltip()">SORT BY: <span class="sortoption">RANDOM</span></a></li>
+          <li id="sort"><a onmouseover="tooltip('order rips in various ways (click to cycle through order options)')" onmouseout="tooltip()">ORDER: <span class="sortoption">RANDOM</span></a></li>
           <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
           <li id="skipkfad"><a onmouseover="tooltip('skip rips that have variants of \'king for a day\' in the title')" onmouseout="tooltip()"><span class="checkbox">☐</span> SKIP KFAD</a></li>
           <li id="nowiki"><a onmouseover="tooltip('only plays rips in need of a wiki article')" onmouseout="tooltip()"><span class="checkbox">☐</span> NO WIKI ONLY</a></li>
@@ -288,6 +288,8 @@
     var RIP_BLOCKLIST = [];
     var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
 
+    var skewed_distribution = (x, c) => (1 + c) * x / (1 + c * x);
+
     var currentVidId;
     var previousVidId;
     var currentVidTitle;
@@ -323,7 +325,9 @@
     var skipDurationIndex = 0;
     // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
     var sortOptions = [
-      ["RANDOM", null, null],
+      ["RANDOM", v => v[3], Math.random, v => v[3]],
+      ["RANDOM NEWER", v => v[3], () => 1 - skewed_distribution(Math.random(), 100), v => v[3]],
+      ["RANDOM OLDER", v => v[3], () => skewed_distribution(Math.random(), 100), v => v[3]],
       ["OLDEST", v => v[3], Math.min, v => v[3]],
       ["NEWEST", v => v[3], Math.max, v => v[3]],
       ["SHORTEST", v => v[4], Math.min, v => v[4]],
@@ -735,8 +739,11 @@
         filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[2] === false);
       }
       filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
-      if (sortOption == "RANDOM") {
-        return filteredSortedVids[Math.floor(filteredSortedVids.length * Math.random())][0];
+      if (sortOption.startsWith("RANDOM")) {
+        if (sortOption != "RANDOM") { // time based random needs sorted
+          filteredSortedVids.sort((a, b) => sortOptions[sortIndex][1](b) - sortOptions[sortIndex][1](a));
+        }
+        return filteredSortedVids[Math.floor(filteredSortedVids.length * sortOptions[sortIndex][2]())][0];
       } else {
         var mapped_vids = filteredSortedVids.filter(sortOptions[sortIndex][3]).map(sortOptions[sortIndex][1])
         var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
