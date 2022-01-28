@@ -928,12 +928,14 @@
     }
 
     function previousVid() {
-      var swap = currentVidId;
-      currentVidId = previousVidId;
-      previousVidId = swap;
-      isInfoReady = false;
-      player.loadVideoById(currentVidId);
-      player.playVideo();
+      if (previousVidId) {
+        var swap = currentVidId;
+        currentVidId = previousVidId;
+        previousVidId = swap;
+        isInfoReady = false;
+        player.loadVideoById(currentVidId);
+        player.playVideo();
+      }
     }
 
     function toggleAutoplay() {
