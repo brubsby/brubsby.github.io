@@ -752,6 +752,10 @@
       }
     }
 
+    function getRandomUnwatchedSiivaVid() {
+      return pickUniformRandomFromArray(unwatched_siiva_vids)[0];
+    }
+
     function copyRythmPlaylistToClipboard(vids=500, charlimit=2000) {
       var url = "!play https://www.youtube.com/watch_videos?video_ids=" + Array.apply(null, Array(vids)).map(nextVidId).join(',');
       url = url.substring(0, Math.min(url.length, charlimit));
@@ -828,7 +832,7 @@
         checkSheets();
         checkBootlegSheets();
         initWatchedVids();
-        window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, nextVidId());
+        window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, getRandomUnwatchedSiivaVid());
         sheets_checked = true;
       }
     }
@@ -872,7 +876,7 @@
       previousVidId = currentVidId;
       currentVidId = nextVidId();
       //store a random vid id in localstorage so we can load fast on refresh
-      window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, nextVidId());
+      window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, getRandomUnwatchedSiivaVid());
       previousChannel = currentChannel;
       isPreviousVidKFAD = isCurrentVidKFAD;
       isInfoReady = false;
