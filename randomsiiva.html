@@ -207,6 +207,7 @@
           <li id="rip_wiki_link"><a onmouseover="tooltip('opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!)')" onmouseout="tooltip()" target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
           <li id="autowiki"><a onmouseover="tooltip('creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)')" onmouseout="tooltip()">AUTO WIKI POPUP</a></li>
           <li id="copy"><a onmouseover="tooltip('copies this rip\'s youtube url to your clipboard!')" onmouseout="tooltip()">COPY RIP LINK</a></li>
+          <li id="copyplaylist"><a onmouseover="tooltip('copies a max length, discord music bot compatible, youtube playlist url to your clipboard! (rips generated based on your current filters)')" onmouseout="tooltip()">GENERATE PLAYLIST</a></li>
           <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
           <hr>
           <li id="sort"><a onmouseover="tooltip('order rips in various ways (click to cycle through order options)')" onmouseout="tooltip()">ORDER: <span class="sortoption">RANDOM</span></a></li>
@@ -580,6 +581,7 @@
           (item) => item.includes('theme=light')).length);
 
       document.querySelector("li#copy > a").onclick = copyRipLink;
+      document.querySelector("li#copyplaylist > a").onclick = copyDiscordPlaylist;
       document.querySelector("li#previous > a").onclick = previousVid;
       document.querySelector("li#skip > a").onclick = skipVid;
       document.querySelector("li#autoplay > a").onclick = toggleAutoplay;
@@ -715,7 +717,7 @@
       return true;
     }
 
-    function nextVidId() {
+    function getVidIds(numVids) {
       filteredSortedVids = [];
       if (isSiivaCheck) {
         filteredSortedVids = filteredSortedVids.concat(allowRepeats ? siiva_vids : unwatched_siiva_vids);
@@ -743,21 +745,32 @@
         if (sortOption != "RANDOM") { // time based random needs sorted
           filteredSortedVids.sort((a, b) => sortOptions[sortIndex][1](b) - sortOptions[sortIndex][1](a));
         }
-        return filteredSortedVids[Math.floor(filteredSortedVids.length * sortOptions[sortIndex][2]())][0];
+        var sort_sampler = sortOptions[sortIndex][2];
+        return Array(numVids).fill(0).map(() => {
+          if (filteredSortedVids.length == 0) return;
+          return filteredSortedVids.splice(Math.floor(filteredSortedVids.length * sort_sampler()), 1)[0][0];
+        }).filter(Boolean);
       } else {
         var mapped_vids = filteredSortedVids.filter(sortOptions[sortIndex][3]).map(sortOptions[sortIndex][1])
-        var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
-        //if (vid_index == -1) {} // no more vids for these filters
-        return filteredSortedVids[vid_index][0];
+        return Array(numVids).fill(0).map(() => {
+          var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
+          if (vid_index == -1) return;
+          mapped_vids.slice(vid_index, 1);
+          return filteredSortedVids.splice(vid_index, 1)[0][0];
+        }).filter(Boolean);
       }
+    }
+
+    function nextVidId() {
+      return getVidIds(1)[0];
     }
 
     function getRandomUnwatchedSiivaVid() {
       return pickUniformRandomFromArray(unwatched_siiva_vids)[0];
     }
 
-    function copyRythmPlaylistToClipboard(vids=500, charlimit=2000) {
-      var url = "!play https://www.youtube.com/watch_videos?video_ids=" + Array.apply(null, Array(vids)).map(nextVidId).join(',');
+    function copyDiscordPlaylistToClipboard(numvids=500, charlimit=2000) {
+      var url = ";;play https://www.youtube.com/watch_videos?video_ids=" + (getVidIds(numvids).join(','));
       url = url.substring(0, Math.min(url.length, charlimit));
       url = url.substring(0, url.lastIndexOf(","));
       copyToClipboard(url);
@@ -867,6 +880,12 @@
       copyToClipboard(yt_link);
       document.querySelector("li#copy > a").text = "COPIED.......";
       setTimeout(() => document.querySelector("li#copy > a").text = "COPY RIP LINK", 1000);
+    }
+
+    function copyDiscordPlaylist() {
+      copyDiscordPlaylistToClipboard()
+      document.querySelector("li#copyplaylist > a").text = "COPIED.......";
+      setTimeout(() => document.querySelector("li#copyplaylist > a").text = "GENERATE PLAYLIST", 1000);
     }
 
     function newVid(markWatched) {
