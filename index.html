@@ -1698,22 +1698,30 @@
         document.body.style.background = "black";
         document.body.style.color = "white";
         document.cookie = "theme=dark; SameSite=Strict";
-        document.getElementById("dark").children[0].text = "LIGHT";
+        dark_link.children[0].text = "LIGHT";
       } else {
         document.body.style.background = "white";
         document.body.style.color = "black";
         document.cookie = "theme=light; SameSite=Strict";
-        document.getElementById("dark").children[0].text = "DARK";
+        dark_link.children[0].text = "DARK";
       }
     }
     var is_background_white = () => document.body.style.background == "white";
 
     if (is_background_white()) {
-      document.getElementById("dark").children[0].text = "DARK";
+      dark_link.children[0].text = "DARK";
     } else {
-      document.getElementById("dark").children[0].text = "LIGHT";
+      dark_link.children[0].text = "LIGHT";
     }
-    dark_link.onclick = theme_switch.bind(null, is_background_white);
+    let theme_switch_oncall = theme_switch.bind(null, is_background_white)
+    dark_link.onclick = theme_switch_oncall;
+    dark_link.onkeydown = (event) => {
+      switch (event.code) {
+        case 'Space':
+        case 'Enter':
+          theme_switch_oncall();
+      }
+    };
     theme_switch(() => !document.cookie.split(';').filter(
         (item) => item.includes('theme=light')).length);
 
@@ -1769,7 +1777,7 @@
           <li id="art"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative%20OR%20%23pico8)%20(from%3Abrubsby)&src=typed_query">ART</a></li>
           <li id="inquiries"><a href="https://twitter.com/messages/compose?recipient_id=2402350662">INQUIRIES</a></li>
           <li id="randomsiiva"><a href="https://brubsby.com/randomsiiva">RANDOMSIIVA</a></li>
-          <li id="dark"><a></a></li>
+          <li id="dark"><a tabindex="0"></a></li>
         </ol>
       </div>
       <div class="tooltip"><span class="tooltip"></span></div>
