@@ -197,33 +197,66 @@
     <h3 id="tooltip">&nbsp</h3>
     <div class="container">
       <div class="menu">
-        <h4><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h4>
+        <h4 id="homepage"><a
+          href="https://brubsby.com" target="_blank" rel="noopener noreferrer"
+          tabindex="1">BRUBSBY'S</a></h4>
         <h1>RANDOM RIP PLAYER</h1>
         <ol id="links">
-          <li id="skip"><a onmouseover="tooltip('pulls up the next random rip according to your filters and sorting')" onmouseout="tooltip()">NEXT RIP</a></li>
-          <li id="previous"><a onmouseover="tooltip('go back to the previous rip')" onmouseout="tooltip()">PREVIOUS RIP</a></li>
-          <li id="autoplay"><a onmouseover="tooltip('pull up a new random rip (according to filters and sorting) when the current rip ends')" onmouseout="tooltip()"><span class="checkbox">☑</span> AUTOPLAY</a></li>
+          <li id="skip"><a tabindex="0">NEXT RIP</a></li>
+          <li id="previous"><a tabindex="0">PREVIOUS RIP</a></li>
+          <li id="autoplay"><a tabindex="0"><span class="checkbox">☑</span> AUTOPLAY</a></li>
           <hr>
-          <li id="rip_wiki_link"><a onmouseover="tooltip('opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!)')" onmouseout="tooltip()" target="_blank" rel="noopener noreferrer">RIP WIKI PAGE</a></li>
-          <li id="autowiki"><a onmouseover="tooltip('creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)')" onmouseout="tooltip()">AUTO WIKI POPUP</a></li>
-          <li id="copy"><a onmouseover="tooltip('copies this rip\'s youtube url to your clipboard!')" onmouseout="tooltip()">COPY RIP LINK</a></li>
-          <li id="copyplaylist"><a onmouseover="tooltip('copies a max length, discord music bot compatible, youtube playlist url to your clipboard! (rips generated based on your current filters)')" onmouseout="tooltip()">GENERATE PLAYLIST</a></li>
-          <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
+          <li id="rip_wiki_link"><a target="_blank" tabindex="0"
+            rel="noopener noreferrer">RIP WIKI PAGE</a></li>
+          <li id="autowiki"><a tabindex="0">AUTO WIKI POPUP</a></li>
+          <li id="copy"><a tabindex="0">COPY RIP LINK</a></li>
+          <li id="copyplaylist"><a tabindex="0">GENERATE PLAYLIST</a></li>
+          <li id="dark"><a tabindex="0">LIGHT</a></li>
           <hr>
-          <li id="sort"><a onmouseover="tooltip('order rips in various ways (click to cycle through order options)')" onmouseout="tooltip()">ORDER: <span class="sortoption">RANDOM</span></a></li>
-          <li id="skipduration"><a onmouseover="tooltip('skip rips that are over the specified duration (click to cycle through durations)')" onmouseout="tooltip()">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
-          <li id="skipkfad"><a onmouseover="tooltip('skip rips that have variants of \'king for a day\' in the title')" onmouseout="tooltip()"><span class="checkbox">☐</span> SKIP KFAD</a></li>
-          <li id="nowiki"><a onmouseover="tooltip('only plays rips in need of a wiki article')" onmouseout="tooltip()"><span class="checkbox">☐</span> NO WIKI ONLY</a></li>
-          <li id="allowrepeats"><a onmouseover="tooltip('allow rips to be repeated (only available when unsorted) (rip watch history is stored in your localstorage)')" onmouseout="tooltip()"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
-          <li id="channels"><a onmouseover="tooltip('select specific ripping channels to play random rips from (click this to toggle all channels)')" onmouseout="tooltip()">CHANNELS:</a> <a class="percentcomplete" onmouseover="channelProgressTooltip()" onmouseout="tooltip()"></a></li>
-          <li id="siiva"><a onmouseover="tooltip('play rips from SiIvaGunner')" onmouseout="tooltip()"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('siiva')" onmouseout="tooltip()"></a></li>
-          <li id="ttgd"><a onmouseover="tooltip('play rips from TimmyTurnersGrandDad')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">TTGD</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('ttgd')" onmouseout="tooltip()"></a></li>
-          <li id="vavr"><a onmouseover="tooltip('play rips from VvvvvaVvvvvvr')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">VAVR</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('vavr')" onmouseout="tooltip()"></a></li>
-          <li id="bootleg"><a onmouseover="tooltip('play vids from all other fan channels (inclusion based on the siiva wiki list of fan channels) i do not endorse anything here lol')" onmouseout="tooltip()"><span class="checkbox">☐</span> <span class="channel">OTHER</span></a> <a class="percentcomplete" onmouseover="channelProgressTooltip('bootleg')" onmouseout="tooltip()"></a></li>
+          <li id="sort"><a tabindex="0">ORDER: <span class="sortoption">RANDOM</span></a></li>
+          <li id="skipduration"><a tabindex="0">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
+          <li id="skipkfad"><a tabindex="0"><span class="checkbox">☐</span> SKIP KFAD</a></li>
+          <li id="nowiki"><a tabindex="0"><span class="checkbox">☐</span> NO WIKI ONLY</a></li>
+          <li id="allowrepeats"><a tabindex="0"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
+          <li id="channels"><a tabindex="0">CHANNELS:</a> <a class="percentcomplete"
+            onmouseover="channelProgressTooltip()"
+            onmouseout="tooltip()"
+            onfocus="channelProgressTooltip()"
+            onblur="tooltip()"
+            tabindex="0"></a></li>
+          <li id="siiva"><a tabindex="0"><span class="checkbox">☑</span> <span class="channel">SIIVA</span></a> <a class="percentcomplete"
+            onmouseenter="channelProgressTooltip('siiva')"
+            onmouseout="tooltip()"
+            onfocus="channelProgressTooltip('siiva')"
+            onblur="tooltip()"
+            tabindex="0"></a></li>
+          <li id="ttgd"><a tabindex="0"><span class="checkbox">☐</span> <span class="channel">TTGD</span></a> <a class="percentcomplete"
+            onmouseenter="channelProgressTooltip('ttgd')"
+            onmouseout="tooltip()"
+            onfocus="channelProgressTooltip('ttgd')"
+            onblur="tooltip()"
+            tabindex="0"></a></li>
+          <li id="vavr"><a tabindex="0"><span class="checkbox">☐</span> <span class="channel">VAVR</span></a> <a class="percentcomplete"
+            onmouseenter="channelProgressTooltip('vavr')"
+            onmouseout="tooltip()"
+            onfocus="channelProgressTooltip('vavr')"
+            onblur="tooltip()"
+            tabindex="0"></a></li>
+          <li id="bootleg"><a tabindex="0"><span class="checkbox">☐</span> <span class="channel">OTHER</span></a> <a class="percentcomplete"
+            onmouseenter="channelProgressTooltip('bootleg')"
+            onmouseout="tooltip()"
+            onfocus="channelProgressTooltip('bootleg')"
+            onblur="tooltip()"
+            tabindex="0"></a></li>
         </ol>
       </div>
       <div class="playercontainer">
-        <div class="ripmetadata" onmouseover="metadataTooltip()" onmouseout="tooltip()">
+        <div class="ripmetadata"
+          onmouseover="metadataTooltip()"
+          onmouseout="tooltip()"
+          onfocus="metadataTooltip()"
+          onblur="tooltip()"
+          tabindex="0">
           <h2>NOW PLAYING:</h2>
           <h2 id="nowplaying">&nbsp</h2>
           <h2 id="author">&nbsp</h2>
@@ -235,7 +268,6 @@
       </div>
     </div>
     <h3 id="twitter" style="display:none"><a  target="_blank" rel="noopener noreferrer" href="https://twitter.com/brubsby">follow me on twitter</a> or <a  target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/brubsby">buy me a coffee</a> if you like the page! (<a id="hidetwitter">not today</a> / <a id="permahidetwitter">not ever</a>)</h3>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="js/lz-string.min.js"></script>
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152720878-1"></script>
@@ -549,7 +581,7 @@
       updateWatchPercentages();
     }
 
-    $(document).ready(function() {
+    document.addEventListener("DOMContentLoaded", function(event) {
       if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
         && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
         document.querySelector("h3#twitter").style.display = "none";
@@ -578,28 +610,70 @@
       } else {
         document.getElementById("dark").children[0].text = "LIGHT";
       }
-      document.querySelector("li#dark > a").onclick = theme_switch.bind(null, is_background_white);
       theme_switch(() => !document.cookie.split(';').filter(
           (item) => item.includes('theme=light')).length);
 
-      document.querySelector("li#copy > a").onclick = copyRipLink;
-      document.querySelector("li#copyplaylist > a").onclick = copyDiscordPlaylist;
-      document.querySelector("li#previous > a").onclick = previousVid;
-      document.querySelector("li#skip > a").onclick = skipVid;
-      document.querySelector("li#autoplay > a").onclick = toggleAutoplay;
-      document.querySelector("li#allowrepeats > a").onclick = toggleAllowRepeats;
-      document.querySelector("li#autowiki > a").onclick = autoWikiPopup;
-      document.querySelector("li#skipduration > a").onclick = skipDurationClicked;
-      document.querySelector("li#sort > a").onclick = sortClicked;
-      document.querySelector("li#skipkfad > a").onclick = skipKFADClicked;
-      document.querySelector("li#nowiki > a").onclick = noWikiClicked;
-      document.querySelector("li#channels > a").onclick = () => toggleChannel("");
-      document.querySelector("li#siiva > a").onclick = () => toggleChannel("siiva");
-      document.querySelector("li#ttgd > a").onclick = () => toggleChannel("ttgd");
-      document.querySelector("li#vavr > a").onclick = () => toggleChannel("vavr");
-      document.querySelector("li#bootleg > a").onclick = () => toggleChannel("bootleg");
-      document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
-      document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
+      [
+        ["h4#homepage > a",      undefined,
+        "visit my homepage!"],
+        ["li#rip_wiki_link > a", undefined,
+        "opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!) (hotkey: ctrl-shift-f)"],
+        ["li#copy > a",          copyRipLink,
+        "copies this rip\'s youtube url to your clipboard!"],
+        ["li#copyplaylist > a",  copyDiscordPlaylist,
+        "copies a max length, discord music bot compatible, youtube playlist url to your clipboard! (rips generated based on your current filters)"],
+        ["li#dark > a",          theme_switch.bind(null, is_background_white),
+        "toggle light/dark mode"],
+        ["li#previous > a",      previousVid,
+        "go back to the previous rip (hotkey: shift-p)"],
+        ["li#skip > a",          skipVid,
+        "pulls up the next random rip according to your filters and sorting (hotkey: shift-n)"],
+        ["li#autoplay > a",      toggleAutoplay,
+        "pull up a new random rip (according to filters and sorting) when the current rip ends"],
+        ["li#allowrepeats > a",  toggleAllowRepeats,
+        "allow rips to be repeated (only available when unsorted) (rip watch history is stored in your localstorage)"],
+        ["li#autowiki > a",      autoWikiPopup,
+        "creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)"],
+        ["li#skipduration > a",  skipDurationClicked,
+        "skip rips that are over the specified duration (click to cycle through durations)"],
+        ["li#sort > a",          sortClicked,
+        "order rips in various ways (click to cycle through order options)"],
+        ["li#skipkfad > a",      skipKFADClicked,
+        "skip rips that have variants of \'king for a day\' in the title"],
+        ["li#nowiki > a",        noWikiClicked,
+        "only plays rips in need of a wiki article"],
+        ["li#channels > a",      () => toggleChannel(""),
+        "select specific ripping channels to play random rips from (click this to toggle all channels)"],
+        ["li#siiva > a",         () => toggleChannel("siiva"),
+        "play rips from SiIvaGunner"],
+        ["li#ttgd > a",          () => toggleChannel("ttgd"),
+        "play rips from TimmyTurnersGrandDad"],
+        ["li#vavr > a",          () => toggleChannel("vavr"),
+        "play rips from VvvvvaVvvvvvr"],
+        ["li#bootleg > a",       () => toggleChannel("bootleg"),
+        "play vids from all other fan channels (inclusion previously based on the siiva wiki list of fan channels) i do not endorse anything here lol"],
+        ["a#hidetwitter",        () => hideTwitter(false),
+        ""],
+        ["a#permahidetwitter",   () => hideTwitter(true),
+        ""],
+      ].forEach(entry => {
+        let [selector, toCall, tooltipMessage] = entry
+        let element = document.querySelector(selector)
+        element.onclick = toCall;
+        if (toCall) {
+          element.onkeydown = (event) => {
+            switch (event.code) {
+              case 'Space':
+              case 'Enter':
+                toCall();
+            }
+          };
+        }
+        element.onmouseenter = tooltip.bind(null, tooltipMessage);
+        element.onmouseout = tooltip.bind(null, '');
+        element.onfocus = tooltip.bind(null, tooltipMessage);
+        element.onblur = tooltip.bind(null, '');
+      });
 
       navigator.mediaSession.setActionHandler('nexttrack', function() {
         skipVid();
@@ -609,9 +683,67 @@
         previousVid();
       });
 
-      document.addEventListener('keyup', event => {
-        if (event.code === 'Space') {
-          onSpaceBarPressed();
+      document.addEventListener('keydown', event => {
+        switch (event.code) {
+          case 'Space':
+          case 'KeyK':
+            onSpaceBarPressed();
+            break;
+          case 'End':
+            player.seekTo(player.getDuration(), true);
+            break;
+          case 'Home':
+            player.seekTo(0, true);
+            break;
+          case 'KeyM':
+            player.isMuted() ? player.unMute() : player.mute();
+            break;
+          case 'ArrowUp':
+            player.setVolume(Math.min(player.getVolume() + 5, 100));
+            break;
+          case 'ArrowDown':
+            player.setVolume(Math.max(player.getVolume() - 5, 0));
+            break;
+          case 'ArrowRight':
+            player.seekTo(Math.min(player.getCurrentTime() + 5, player.getDuration()), true);
+            break;
+          case 'ArrowLeft':
+            player.seekTo(Math.max(player.getCurrentTime() - 5, 0), true);
+            break;
+          case 'KeyL':
+            player.seekTo(Math.min(player.getCurrentTime() + 10, player.getDuration()), true);
+            break;
+          case 'KeyJ':
+            player.seekTo(Math.max(player.getCurrentTime() - 10, 0), true);
+            break;
+          case 'KeyF':
+            if (event.ctrlKey && event.shiftKey)
+              window.open(wikiLinkFromTitle(currentVidTitle, currentChannel), '_blank').focus();
+            break;
+        }
+        let rates;
+        switch (event.key) {
+          case 'N':
+            skipVid();
+            break;
+          case 'P':
+            previousVid();
+            break;
+          case '>':
+            rates = player.getAvailablePlaybackRates();
+            player.setPlaybackRate(rates[
+              Math.min(rates.indexOf(player.getPlaybackRate()) + 1, rates.length)
+            ]);
+            break;
+          case '<':
+            rates = player.getAvailablePlaybackRates();
+            player.setPlaybackRate(rates[
+              Math.max(rates.indexOf(player.getPlaybackRate()) - 1, 0)
+            ]);
+            break;
+        }
+        if (typeof event.key == Number && event.key >= 0 && event.key <= 9) {
+          player.seekTo(Math.floor(player.getDuration() * event.key / 10));
         }
       });
 
@@ -686,7 +818,7 @@
 
     function sortClicked() {
       sortIndex = (sortIndex + 1) % sortOptions.length;
-      if (sortIndex == 0) {
+      if (sortIndex < 3) {
         allowRepeatLock = false;
       } else {
         allowRepeatLock = true;
@@ -811,8 +943,14 @@
         height: parseInt(embedcontainerElement.offsetHeight),
         width: parseInt(embedcontainerElement.offsetWidth),
         videoId: await first_vid_promise,
-        autoplay: '1',
-        enablejsapi: '1',
+        playerVars: {
+          autoplay: 1,
+          enablejsapi: 1,
+          disablekb: 0,
+          modestbranding: 1,
+          rel: 0,
+          widget_referrer: 'https://brubsby.com/randomsiiva',
+        },
         origin: 'https://brubsby.com',
         events: {
           'onReady': onPlayerReady,
@@ -886,14 +1024,16 @@
     function copyRipLink() {
       var yt_link = "https://www.youtube.com/watch?v=" + currentVidId;
       copyToClipboard(yt_link);
-      document.querySelector("li#copy > a").text = "COPIED.......";
-      setTimeout(() => document.querySelector("li#copy > a").text = "COPY RIP LINK", 1000);
+      tooltip("rip link copied!");
+      document.querySelector("li#copy > a").textContent = "COPIED.......";
+      setTimeout(() => document.querySelector("li#copy > a").textContent = "COPY RIP LINK", 1000);
     }
 
     function copyDiscordPlaylist() {
-      copyDiscordPlaylistToClipboard()
-      document.querySelector("li#copyplaylist > a").text = "COPIED.......";
-      setTimeout(() => document.querySelector("li#copyplaylist > a").text = "GENERATE PLAYLIST", 1000);
+      copyDiscordPlaylistToClipboard();
+      tooltip("playlist command copied!");
+      document.querySelector("li#copyplaylist > a").textContent = "COPIED...........";
+      setTimeout(() => document.querySelector("li#copyplaylist > a").textContent = "GENERATE PLAYLIST", 1000);
     }
 
     function newVid(markWatched) {
@@ -1030,6 +1170,9 @@
     }
 
     function onSpaceBarPressed() {
+      if (document.activeElement.nodeName == 'A') {
+        return; // don't pause the vid if tab navigating the page and focused on a link
+      }
       if (player.getPlayerState() == YT.PlayerState.ENDED && !isAutoplay) {
         newVid(true);
       } else if (player.getPlayerState() == YT.PlayerState.PLAYING
