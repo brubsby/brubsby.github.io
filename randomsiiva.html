@@ -223,9 +223,11 @@
         </ol>
       </div>
       <div class="playercontainer">
-        <h2>NOW PLAYING:</h2>
-        <h2 id="nowplaying">&nbsp</h2>
-        <h2 id="author">&nbsp</h2>
+        <div class="ripmetadata" onmouseover="metadataTooltip()" onmouseout="tooltip()">
+          <h2>NOW PLAYING:</h2>
+          <h2 id="nowplaying">&nbsp</h2>
+          <h2 id="author">&nbsp</h2>
+        </div>
         <div style="display:none" id="timeover"></div>
         <div class="embedcontainer">
           <div id="player">Loading...</div>
@@ -621,11 +623,17 @@
       }
     });
 
-    window.tooltip = (msg = "") =>  {
+    function tooltip(msg = "") {
       document.querySelector("h3#tooltip").textContent = msg;
     }
 
-    window.channelProgressTooltip = (channel="") => {
+    function metadataTooltip() {
+      if(currentChannel && currentVidTitle) {
+        tooltip(`current ${currentChannel} rip: ${currentVidTitle}`);
+      }
+    }
+
+    function channelProgressTooltip(channel = "") {
       var num_total_vids, num_unwatched_vids, channelText;
       if (channel == "") {
         num_total_vids = siiva_vids.length + ttgd_vids.length + vavr_vids.length + bootleg_vids.length;
@@ -648,7 +656,7 @@
         num_unwatched_vids = unwatched_bootleg_vids.length;
         channelText = 'all remaining fan channels';
       }
-      document.querySelector("h3#tooltip").textContent = `you've watched ${(num_total_vids - num_unwatched_vids).toLocaleString()} out of ${num_total_vids.toLocaleString()} total rips on ${channelText}, only ${num_unwatched_vids.toLocaleString()} more to go!`;
+      tooltip(`you've watched ${(num_total_vids - num_unwatched_vids).toLocaleString()} out of ${num_total_vids.toLocaleString()} total rips on ${channelText}, only ${num_unwatched_vids.toLocaleString()} more to go!`);
     }
 
     function updateCheckboxes() {
