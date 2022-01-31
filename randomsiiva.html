@@ -625,9 +625,9 @@
         ["li#dark > a",          theme_switch.bind(null, is_background_white),
         "toggle light/dark mode"],
         ["li#previous > a",      previousVid,
-        "go back to the previous rip (hotkey: shift-p)"],
+        "go back to the previous rip (hotkeys: ctrl+left shift-p)"],
         ["li#skip > a",          skipVid,
-        "pulls up the next random rip according to your filters and sorting (hotkey: shift-n)"],
+        "pulls up the next random rip according to your filters and sorting (hotkeys: ctrl+right shift-n)"],
         ["li#autoplay > a",      toggleAutoplay,
         "pull up a new random rip (according to filters and sorting) when the current rip ends"],
         ["li#allowrepeats > a",  toggleAllowRepeats,
@@ -705,10 +705,18 @@
             player.setVolume(Math.max(player.getVolume() - 5, 0));
             break;
           case 'ArrowRight':
-            player.seekTo(Math.min(player.getCurrentTime() + 5, player.getDuration()), true);
+            if (event.ctrlKey) {
+              skipVid();
+            } else {
+              player.seekTo(Math.min(player.getCurrentTime() + 5, player.getDuration()), true);
+            }
             break;
           case 'ArrowLeft':
-            player.seekTo(Math.max(player.getCurrentTime() - 5, 0), true);
+            if (event.ctrlKey) {
+              previousVid();
+            } else {
+              player.seekTo(Math.max(player.getCurrentTime() - 5, 0), true);
+            }
             break;
           case 'KeyL':
             player.seekTo(Math.min(player.getCurrentTime() + 10, player.getDuration()), true);
