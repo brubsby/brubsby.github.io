@@ -72,7 +72,6 @@
       font-size: 1.25em;
       font-family: Courier, monospace;
       margin: auto;
-      /*padding: 2em 3em 2em 3em;*/
     }
 
     div.container {
@@ -132,7 +131,6 @@
     h3 {
       margin: 0;
       font-weight: normal;
-      white-space: nowrap;
       style: none;
       font-size: .85em;
       font-family: "DF", monospace;
@@ -144,9 +142,30 @@
       font-style: oblique;
     }
     h3#tooltip {
+      visibility: visible;
+      position: relative;
+      padding: .25em;
+      word-break: break-all;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      z-index: 1;
+    }
+    div#tooltipcontainer {
+      visibility: hidden;
       position: absolute;
-      top: .25em;
-      left: .25em;
+      top: 0;
+      left: 0;
+      background-color: inherit;
+    }
+    div#tooltipbg {
+      visibility: visible;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: inherit;
+      height: 100%;
+      width: 100%;
+      opacity: 0.5;
     }
     h3#twitter {
       position: absolute;
@@ -194,7 +213,11 @@
     </style>
   </head>
   <body>
-    <h3 id="tooltip">&nbsp</h3>
+    <div id="tooltipcontainer">
+      <h3 id="tooltip">&nbsp</h3>
+      <div id="tooltipbg">
+      </div>
+    </div>
     <div class="container">
       <div class="menu">
         <h4 id="homepage"><a
