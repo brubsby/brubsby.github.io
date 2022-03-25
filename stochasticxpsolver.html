@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<style>
+  body {
+    background-color:black;
+    color:white;
+  }
+</style>
+<script src="js/latex.js"></script>
+<script src="js/object_hash.js" type="text/javascript"></script>
+<script type="text/javascript" src="http://localhost:35729/livereload.js"></script>
+<script>
+// ctrl+shift+R for live reload in atom
+window.onload = () => { try {
+
+  window.log = msg => document.body.appendChild(
+    document.createElement('div')).innerHTML = msg
+
+  window.latex = text => {
+    let generator = new latexjs.HtmlGenerator({ hyphenate: false })
+    generator = latexjs.parse(text, { generator: generator })
+    document.head.appendChild(generator.stylesAndScripts("https://cdn.jsdelivr.net/npm/latex.js@0.12.4/dist/"))
+    // document.head.appendChild(generator.stylesAndScripts(""))
+    document.body.appendChild(generator.domFragment())
+  }
+
+  let stringify = (txt) => JSON.stringify(txt, (_key, value) => (value instanceof Set ? [...value] : value), 2)
+
+  let basexp = 175
+  //generated from google sheet and https://csvjson.com/csv2json
+  // replace ^.*"",?\r\n$ with blank to get rid of blank rows
+
+  let data = [
+    {
+      "Observed XP": 175,
+    },
+    {
+      "Observed XP": 239,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+    },
+    {
+      "Observed XP": 244,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Skilling outfit": 0.02,
+    },
+    {
+      "Observed XP": 226,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Skilling outfit": 0.02,
+    },
+    {
+      "Observed XP": 221,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+    },
+    {
+      "Observed XP": 228,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 229,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Skilling outfit": 0.01,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 232,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Skilling outfit": 0.02,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 229,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 237,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 232,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 225,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 229,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 236,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 241,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 265,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 257,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 254,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 262,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 249,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 257,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 253,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 261,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 230,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 234,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 239,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 242,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 234,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 238,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+    },
+    {
+      "Observed XP": 242,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 246,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Aura": 0.025,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 230,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+    },
+    {
+      "Observed XP": 234,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+    },
+    {
+      "Observed XP": 237,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 241,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 249,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+    },
+    {
+      "Observed XP": 253,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+    },
+    {
+      "Observed XP": 257,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 260,
+      "Yak track bonus": 0.2,
+      "Torstol incense": 0.02,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 245,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+    },
+    {
+      "Observed XP": 249,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+    },
+    {
+      "Observed XP": 252,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 257,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Pulse core (explosion)": 0.1,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+      "Skilling outfit": 0.02,
+      "Wise Perk": 0.04,
+    },
+    {
+      "Observed XP": 226,
+      "Yak track bonus": 0.2,
+      "Avatar bonus": 0.06,
+      "Sceptre of enchantment": 0.02,
+      "Coin of enchantment": 0.01,
+    }
+  ];
+
+  // keys that don't need to be stochastically assigned to groups
+  let specialkeys = ["Observed XP", "Dxp", "Bxp"]
+  let keys = [...new Set(data.map(Object.keys).flat())]
+  let filteredkeys = keys.filter(key => !specialkeys.includes(key))
+
+  let groupdefaultvalues = {
+    additive: 0,
+    additivebxp: 0,
+    additivedxp: 0,
+    multiplicative: 1,
+    summedmultiplicative1: 1,
+    summedmultiplicative2: 1,
+    summedmultiplicative3: 1,
+  }
+
+  let groupstemplate = Object.fromEntries(Object.keys(groupdefaultvalues).map(value => [value, new Set()]));
+
+  let combinations = Math.pow(Object.keys(groupstemplate).length, filteredkeys.length)
+
+  let heaviside = x => Math.max(0, Math.sign(x))
+  let zeroiflteone = x => x * heaviside(x - 1)
+
+  let calculatexp = (grouptoboosts, sample) => {
+    let groupvalues = Object.fromEntries(Object.entries(groupdefaultvalues).map(([group, defaultvalue]) => {
+      if (!grouptoboosts[group].size) {
+        return [group, defaultvalue]
+      }
+      boosts = [...grouptoboosts[group]].map(boost => sample[boost] || 0)
+      let value;
+      switch (group) {
+        case "additive":
+        case "additivebxp":
+        case "additivedxp":
+          value = boosts.reduce((prev, cur) => prev + cur, 0)
+          break
+        case "multiplicative":
+          value = boosts.reduce((prev, cur) => prev * (1 + cur), 1)
+          break
+        case "summedmultiplicative1":
+        case "summedmultiplicative2":
+        case "summedmultiplicative3":
+        default:
+          value = boosts.reduce((prev, cur) => prev + cur, 1)
+          break
+      }
+      return [group, value]
+    }))
+    let xpmultiplier = (
+        1 + (sample.Bxp || 0) + (sample.Dxp || 0) + groupvalues.additive
+        + (1 + (sample.Bxp || 0)) * groupvalues.additivebxp
+        + (1 + (sample.Dxp || 0)) * groupvalues.additivedxp
+    ) * groupvalues.multiplicative *
+    Object.keys(groupvalues).filter(
+      group => group.startsWith("summedmultiplicative")
+    ).reduce(
+      (ret, group) => ret * groupvalues[group], 1
+    )
+    return xpmultiplier * basexp
+  }
+
+  let sampleerror = (grouptoboosts, sample) => {
+    return zeroiflteone(Math.abs(sample["Observed XP"] - calculatexp(grouptoboosts, sample)))
+  }
+
+  let scoreequation = (grouptoboosts, samples) =>
+    samples.reduce((ret, sample) => // error -1 < e < 1 is okay
+      ret + sampleerror(grouptoboosts, sample), 0)
+
+  let generateequation = (keys, groupstemplate, testedhashes, simplify=true) => {
+    if (!testedhashes) testedhashes = new Set()
+    let groupstoboosts
+    let groups = Object.keys(groupstemplate)
+    let filteredkeys = keys.filter(key => !specialkeys.includes(key))
+    let hasbxp = keys.includes("Bxp")
+    let hasdxp = keys.includes("Dxp")
+    let starttime = performance.now()
+    do {
+      groupstoboosts = Object.fromEntries(Object.entries(groupstemplate).map(([key, value]) => [key, new Set()]))
+      filteredkeys.forEach(key => groupstoboosts[groups[Math.floor(Math.random() * groups.length)]].add(key))
+      if (simplify) {
+        groupstoboosts = simplifyisomorphisms(groupstoboosts, filteredkeys, hasbxp, hasdxp)
+      }
+      if ((performance.now() - starttime) > 3000) {
+        throw "couldn't generate new equation after 3 seconds, stopping"
+      }
+    } while (testedhashes.has(objectHash.sha1(groupstoboosts)))
+    return groupstoboosts
+  }
+
+  // many randomly generated equations can be simplified to reduce search space
+  let simplifyisomorphisms = (groupstoboosts, filteredkeys, hasbxp, hasdxp) => {
+
+    //singular summed multiplicative boosts can be moved to the multiplicative group
+    let groups = Object.keys(groupstoboosts)
+    let summedmultiplicativegroups = groups.filter(group => group.startsWith("summedmultiplicative"))
+    summedmultiplicativegroups.filter(group => groupstoboosts[group].size == 1)
+      .forEach(group => {
+        let [boost] = groupstoboosts[group]
+        groupstoboosts.multiplicative.add(boost)
+        groupstoboosts[group].clear()
+      })
+    let sortedsummedmultiplicativegroups = [...summedmultiplicativegroups]
+    //sort summed multiplicative boosts by hash
+    sortedsummedmultiplicativegroups.sort((a,b)=>{
+      if (groupstoboosts[b].size == groupstoboosts[a].size) {
+        return objectHash.sha1(groupstoboosts[b])-objectHash.sha1(groupstoboosts[a])
+      }
+      return groupstoboosts[b].size - groupstoboosts[a].size
+    })
+    sortedsummedmultiplicativegroups.map(group => groupstoboosts[group])
+      .forEach((boost, index) => groupstoboosts[summedmultiplicativegroups[index]] = boost)
+
+    //if no bxp or dxp in samples, all respective additive bonuses can be moved
+    if (!hasbxp) {
+      groupstoboosts.additive = new Set([...groupstoboosts.additive, ...groupstoboosts.additivebxp])
+      groupstoboosts.additivebxp.clear()
+    }
+    if (!hasdxp) {
+      groupstoboosts.additive = new Set([...groupstoboosts.additive, ...groupstoboosts.additivedxp])
+      groupstoboosts.additivedxp.clear()
+    }
+
+    return groupstoboosts
+  }
+
+  window.latex(`
+      \\documentclass{standalone}
+      \\begin{document}
+      \\(\\begin{array}{l}
+      \\text{Final XP multiplier:}
+      \\end{array}\\)
+
+      \\[\\displaystyle
+      X = \\Bigg(1 + B_{xp} + D_{xp} +
+        \\sum_{i=1}^{n_u} A_i^u
+        + (1+B_{xp}) \\times \\sum_{i=1}^{n_b} A_i^{bxp} +
+        (1 + D_{xp}) \\times \\sum_{i=1}^{n_d} A_i^{dxp} \\Bigg)
+        \\times \\prod_{i=1}^{n_m}\\bigg( 1 + M_i \\bigg)
+        \\times \\prod_{j=1}^m{\\Bigg(1+\\sum_{i=1}^{n_{j}} S_i^j}\\Bigg)
+      \\]
+
+      \\(\\begin{array}{l}
+      \\text{XP drops can then be calculated with:}
+      \\end{array}\\)
+
+      \\(
+      \\def\\arraystretch{1.25}
+      \\begin{array}{llcl}
+        & \\text{XP}_\\text{final} & = & \\dfrac
+        {\\lfloor \\text{XP}_\\text{base} \\times X \\times I_{per} \\times 10 \\rfloor}
+        {10}\\\\
+        \\text{Where:} & \\\\
+        & B_{xp} & = &
+          \\begin{cases}
+          0, & \\text{if you don't have any bonus xp} \\\\
+          1, & \\text{if you do have bonus xp}
+          \\end{cases}
+        \\\\
+        & D_{xp} & = &
+          \\begin{cases}
+          0, & \\text{if there is no double xp bonus active} \\\\
+          1, & \\text{if double xp bonus is active}
+          \\end{cases}
+        \\\\
+        & A_i^u & = & \\text{The }i\\text{th additive boost that is unaffected by both } B_{xp} \\text{ and }D_{xp}\\\\
+        & A_i^{bxp} & = & \\text{The }i\\text{th additive boost that is affected by }B_{xp}\\\\
+        & A_i^{dxp} & = & \\text{The }i\\text{th additive boost that is affected by }D_{xp}\\\\
+        & M_i & = & \\text{The }i\\text{th multiplicative boost}\\\\
+        & S_i^j & = & \\text{The }i\\text{th summed multiplicative boost in group }j\\\\
+        & m & = & \\text{Number of summed multiplicative groups}\\\\
+        & n_u & = & \\text{Number of additive boosts unaffected by both } B_{xp} \\text{ and }D_{xp}\\\\
+        & n_b & = & \\text{Number of additive boosts affected by }B_{xp}\\\\
+        & n_d & = & \\text{Number of additive boosts affected by }D_{xp}\\\\
+        & n_m & = & \\text{Number of multiplicative boosts}\\\\
+        & n_j & = & \\text{Number of boosts in group }j\\\\
+        & I_{per} & = & \\text{Number of items made per action, for example using 50 pure essence at once}\\\\
+      \\end{array}
+      \\)
+
+      \\(\\begin{array}{l}
+      \\text{All boosts are in the form of }3\\% = 0.03\\\\
+      \\end{array}\\)
+      \\end{document}`)
+
+  window.log("Log Output:")
+  window.log(`keys: ${keys}`)
+  window.log(`number of unique boosts in data: ${keys.filter(key => !specialkeys.includes(key)).length}`)
+  window.log(`number of expression groups: ${Object.keys(groupstemplate).length}`)
+  window.log(`possible combinations with no symmetries removed: ${combinations}`)
+  let i = 0
+  let testedhashes = new Set()
+  let minscore = 9999999
+  let minequation
+  let attempts = 1000
+  while (i < attempts) {
+    let equation
+    try {
+      equation = generateequation(keys, groupstemplate, testedhashes);
+    } catch (error) {
+      console.error("generation error", error)
+      break
+    }
+    testedhashes.add(objectHash.sha1(equation))
+    let score = scoreequation(equation, data)
+    if (minscore > score) {
+      minscore = score
+      minequation = equation
+      console.log(`min score: ${minscore}`)
+      console.log(`min equation: ${stringify(minequation)}`)
+    }
+    i++
+    if (i % (attempts / 100) == 0) {
+      console.log(`distinct equation #${i}`)
+    }
+  }
+  window.log(`min score: ${minscore}`)
+  window.log(`min equation: ${stringify(minequation)}`)
+  // let equation = generateequation(keys, groupstemplate, new Set(), false);
+  // window.log(stringify(equation))
+  // window.log(stringify(simplifyisomorphisms(equation, filteredkeys, keys.includes("Bxp"), keys.includes("Dxp"))))
+} catch (error) {
+  window.log(error)
+  throw error
+}}
+</script>
+</head>
+<body>
+</body>
+<html>
