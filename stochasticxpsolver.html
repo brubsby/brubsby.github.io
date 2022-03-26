@@ -14,10 +14,14 @@
 <script type="text/javascript" src="http://localhost:35729/livereload.js"></script>
 <script>
 // ctrl+shift+R for live reload in atom
-window.onload = () => { try {
+(async () => { //make all the js async
+window.onload = async () => { try {
 
-  window.log = msg => document.body.appendChild(
+  window.log = async msg => {
+    await new Promise(r => setTimeout(r, 50))
+    document.body.appendChild(
     document.createElement('div')).innerHTML = msg
+  }
 
   window.latex = text => {
     let generator = new latexjs.HtmlGenerator({ hyphenate: false })
@@ -31,388 +35,732 @@ window.onload = () => { try {
 
   let basexp = 175
   //generated from google sheet and https://csvjson.com/csv2json
-  // replace ^.*"",?\r\n$ with blank to get rid of blank rows
+  // replace ^.*"",?\r\n with blank to get rid of blank rows
 
   let data = [
-    {
-      "Observed XP": 175,
-    },
-    {
-      "Observed XP": 239,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-    },
-    {
-      "Observed XP": 244,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Skilling outfit": 0.02,
-    },
-    {
-      "Observed XP": 226,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Skilling outfit": 0.02,
-    },
-    {
-      "Observed XP": 221,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-    },
-    {
-      "Observed XP": 228,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 229,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Skilling outfit": 0.01,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 232,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Skilling outfit": 0.02,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 229,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 237,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 232,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 225,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 229,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 236,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 241,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 265,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 257,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 254,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 262,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 249,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 257,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 253,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 261,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 230,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 234,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 239,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 242,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 234,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 238,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-    },
-    {
-      "Observed XP": 242,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 246,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Aura": 0.025,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 230,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-    },
-    {
-      "Observed XP": 234,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-    },
-    {
-      "Observed XP": 237,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 241,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 249,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-    },
-    {
-      "Observed XP": 253,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-    },
-    {
-      "Observed XP": 257,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 260,
-      "Yak track bonus": 0.2,
-      "Torstol incense": 0.02,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 245,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-    },
-    {
-      "Observed XP": 249,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-    },
-    {
-      "Observed XP": 252,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 257,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Pulse core (explosion)": 0.1,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-      "Skilling outfit": 0.02,
-      "Wise Perk": 0.04,
-    },
-    {
-      "Observed XP": 226,
-      "Yak track bonus": 0.2,
-      "Avatar bonus": 0.06,
-      "Sceptre of enchantment": 0.02,
-      "Coin of enchantment": 0.01,
-    }
-  ];
+  {
+    "Observed XP": 175,
+  },
+  {
+    "Observed XP": 239,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+  },
+  {
+    "Observed XP": 244,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 226,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 221,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+  },
+  {
+    "Observed XP": 228,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 229,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.01,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 232,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 229,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 237,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 232,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 225,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 229,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 236,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 241,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 265,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 257,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 254,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 262,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 249,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 257,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 253,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 261,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 230,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 234,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 239,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 242,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 234,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 238,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+  },
+  {
+    "Observed XP": 242,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 246,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Aura": 0.025,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 230,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+  },
+  {
+    "Observed XP": 234,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 237,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 241,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 249,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+  },
+  {
+    "Observed XP": 253,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 257,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 260,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 245,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+  },
+  {
+    "Observed XP": 249,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 252,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 257,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 226,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Sceptre of enchantment": 0.02,
+    "Coin of enchantment": 0.01,
+  },
+  {
+    "Observed XP": 290,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Aura": 0.1,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 283,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Aura": 0.1,
+  },
+  {
+    "Observed XP": 279,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Aura": 0.1,
+  },
+  {
+    "Observed XP": 286,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Avatar bonus": 0.06,
+    "Pulse core (explosion)": 0.1,
+    "Aura": 0.1,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 277,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Aura": 0.1,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 270,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Aura": 0.1,
+  },
+  {
+    "Observed XP": 266,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+    "Aura": 0.1,
+  },
+  {
+    "Observed XP": 274,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+    "Aura": 0.1,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 260,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 252,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 249,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+  },
+  {
+    "Observed XP": 256,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Pulse core (explosion)": 0.1,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 242,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 234,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 231,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+  },
+  {
+    "Observed XP": 238,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Premier artefact": 0.1,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 290,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 282,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 278,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 286,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 269,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 261,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Skilling outfit": 0.02,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 257,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 264,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 264,
+    "Yak track bonus": 0.2,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 256,
+    "Yak track bonus": 0.2,
+    "Skilling outfit": 0.02,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 252,
+    "Yak track bonus": 0.2,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 260,
+    "Yak track bonus": 0.2,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 277,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 269,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Skilling outfit": 0.02,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 264,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 274,
+    "Yak track bonus": 0.2,
+    "Avatar bonus": 0.06,
+    "Wise Perk": 0.04,
+    "VoS": 0.2
+  },
+  {
+    "Observed XP": 242,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 234,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 231,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+  },
+  {
+    "Observed XP": 238,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Pulse core (explosion)": 0.1,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 224,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 217,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 214,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+  },
+  {
+    "Observed XP": 220,
+    "Yak track bonus": 0.2,
+    "Torstol incense": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 220,
+    "Yak track bonus": 0.2,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 214,
+    "Yak track bonus": 0.2,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 210,
+    "Yak track bonus": 0.2,
+  },
+  {
+    "Observed XP": 217,
+    "Yak track bonus": 0.2,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 238,
+    "Yak track bonus": 0.2,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+    "Wise Perk": 0.04,
+  },
+  {
+    "Observed XP": 231,
+    "Yak track bonus": 0.2,
+    "Pulse core (explosion)": 0.1,
+    "Skilling outfit": 0.02,
+  },
+  {
+    "Observed XP": 228,
+    "Yak track bonus": 0.2,
+    "Pulse core (explosion)": 0.1,
+  },
+  {
+    "Observed XP": 235,
+    "Yak track bonus": 0.2,
+    "Pulse core (explosion)": 0.1,
+    "Wise Perk": 0.04,
+  }
+]
 
   // keys that don't need to be stochastically assigned to groups
   let specialkeys = ["Observed XP", "Dxp", "Bxp"]
@@ -423,10 +771,10 @@ window.onload = () => { try {
     additive: 0,
     additivebxp: 0,
     additivedxp: 0,
-    multiplicative: 1,
-    summedmultiplicative1: 1,
-    summedmultiplicative2: 1,
-    summedmultiplicative3: 1,
+    multiplicative: [1],
+    summedmultiplicative1: [1],
+    summedmultiplicative2: [1],
+    summedmultiplicative3: [1],
   }
 
   let groupstemplate = Object.fromEntries(Object.keys(groupdefaultvalues).map(value => [value, new Set()]));
@@ -435,8 +783,10 @@ window.onload = () => { try {
 
   let heaviside = x => Math.max(0, Math.sign(x))
   let zeroiflteone = x => x * heaviside(x - 1)
+  let runetrunc = (x, p=1) => Math.floor(x * Math.pow(10,p)) / Math.pow(10,p)
+  let truncmult = (x, m) => Math.floor(x * 10 * m) / 10
 
-  let calculatexp = (grouptoboosts, sample) => {
+  let calculatexp = (basexp, grouptoboosts, sample) => {
     let groupvalues = Object.fromEntries(Object.entries(groupdefaultvalues).map(([group, defaultvalue]) => {
       if (!grouptoboosts[group].size) {
         return [group, defaultvalue]
@@ -447,10 +797,10 @@ window.onload = () => { try {
         case "additive":
         case "additivebxp":
         case "additivedxp":
-          value = boosts.reduce((prev, cur) => prev + cur, 0)
+          value = boosts.reduce((prev, cur) => prev + truncmult(cur, basexp), 0)
           break
         case "multiplicative":
-          value = boosts.reduce((prev, cur) => prev * (1 + cur), 1)
+          value = boosts
           break
         case "summedmultiplicative1":
         case "summedmultiplicative2":
@@ -461,26 +811,31 @@ window.onload = () => { try {
       }
       return [group, value]
     }))
-    let xpmultiplier = (
-        1 + (sample.Bxp || 0) + (sample.Dxp || 0) + groupvalues.additive
-        + (1 + (sample.Bxp || 0)) * groupvalues.additivebxp
-        + (1 + (sample.Dxp || 0)) * groupvalues.additivedxp
-    ) * groupvalues.multiplicative *
-    Object.keys(groupvalues).filter(
-      group => group.startsWith("summedmultiplicative")
-    ).reduce(
-      (ret, group) => ret * groupvalues[group], 1
+    let bxp = sample.Bxp || 0
+    let dxp = sample.Dxp || 0
+
+    let xpvalue = (
+      basexp + truncmult(basexp, bxp) + truncmult(basexp, bxp)
+      + groupvalues.additive
+      + truncmult(1 + bxp, groupvalues.additivebxp)
+      + truncmult(1 + dxp, groupvalues.additivedxp)
     )
-    return xpmultiplier * basexp
+    xpvalue = groupvalues.multiplicative.concat(
+      Object.entries(groupvalues).filter(
+        ([group, value]) => group.startsWith("summedmultiplicative")
+      ).map(([group, value]) => value)
+    ).reduce((prev, cur) => truncmult(prev, cur), xpvalue)
+    return xpvalue
+
   }
 
-  let sampleerror = (grouptoboosts, sample) => {
-    return zeroiflteone(Math.abs(sample["Observed XP"] - calculatexp(grouptoboosts, sample)))
+  let sampleerror = (basexp, grouptoboosts, sample) => {
+    return zeroiflteone(Math.abs(sample["Observed XP"] - calculatexp(basexp, grouptoboosts, sample)))
   }
 
-  let scoreequation = (grouptoboosts, samples) =>
+  let scoreequation = (basexp, grouptoboosts, samples) =>
     samples.reduce((ret, sample) => // error -1 < e < 1 is okay
-      ret + sampleerror(grouptoboosts, sample), 0)
+      ret + sampleerror(basexp, grouptoboosts, sample), 0)
 
   let generateequation = (keys, groupstemplate, testedhashes, simplify=true) => {
     if (!testedhashes) testedhashes = new Set()
@@ -607,7 +962,7 @@ window.onload = () => { try {
   let testedhashes = new Set()
   let minscore = 9999999
   let minequation
-  let attempts = 1000
+  let attempts = 10000
   while (i < attempts) {
     let equation
     try {
@@ -617,7 +972,7 @@ window.onload = () => { try {
       break
     }
     testedhashes.add(objectHash.sha1(equation))
-    let score = scoreequation(equation, data)
+    let score = scoreequation(basexp, equation, data)
     if (minscore > score) {
       minscore = score
       minequation = equation
@@ -626,7 +981,7 @@ window.onload = () => { try {
     }
     i++
     if (i % (attempts / 100) == 0) {
-      console.log(`distinct equation #${i}`)
+      window.log(`distinct equation #${i}`)
     }
   }
   window.log(`min score: ${minscore}`)
@@ -638,6 +993,7 @@ window.onload = () => { try {
   window.log(error)
   throw error
 }}
+})()
 </script>
 </head>
 <body>
