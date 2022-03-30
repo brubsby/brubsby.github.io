@@ -5,13 +5,21 @@
 <meta name="google" content="notranslate">
 <style>
   body {
-    background-color:black;
-    color:white;
+    background-color:#141515;
+    color:#d6d4d2;
+    margin:5%;
   }
 </style>
-<script src="js/latex.js"></script>
-<script src="js/object_hash.js" type="text/javascript"></script>
+<script type="text/javascript" src="js/object_hash.js"></script>
+<script type="text/javascript" async src="js/math.js"></script>
 <script type="text/javascript" src="http://localhost:35729/livereload.js"></script>
+<!--hosting cdn files in my repo in case versions ever get lost-->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [ ['$$','$$'], ['\\[','\\]'] ]}});
+</script>
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<!-- <script type="text/javascript" async src="js/MathJax.js?config=TeX-AMS_CHTML"></script> -->
+
 <script>
 // ctrl+shift+R for live reload in atom
 (async () => { //make all the js async
@@ -781,10 +789,10 @@ window.onload = async () => { try {
 
   let combinations = Math.pow(Object.keys(groupstemplate).length, filteredkeys.length)
 
-  let heaviside = x => Math.max(0, Math.sign(x))
-  let zeroiflteone = x => x * heaviside(x - 1)
+  let ramp = x => Math.max(0, x)
+  let zeroiflteone = x => ramp(x - 1)
   let runetrunc = (x, p=1) => Math.floor(x * Math.pow(10,p)) / Math.pow(10,p)
-  let truncmult = (x, m) => Math.floor(x * 10 * m) / 10
+  let truncmult = (x, m, p=1) => Math.floor(x * Math.pow(10,p) * m) / Math.pow(10,p)
 
   let calculatexp = (basexp, grouptoboosts, sample) => {
     let groupvalues = Object.fromEntries(Object.entries(groupdefaultvalues).map(([group, defaultvalue]) => {
@@ -894,65 +902,6 @@ window.onload = async () => { try {
     return groupstoboosts
   }
 
-  window.latex(`
-      \\documentclass{standalone}
-      \\begin{document}
-      \\(\\begin{array}{l}
-      \\text{Final XP multiplier:}
-      \\end{array}\\)
-
-      \\[\\displaystyle
-      X = \\Bigg(1 + B_{xp} + D_{xp} +
-        \\sum_{i=1}^{n_u} A_i^u
-        + (1+B_{xp}) \\times \\sum_{i=1}^{n_b} A_i^{bxp} +
-        (1 + D_{xp}) \\times \\sum_{i=1}^{n_d} A_i^{dxp} \\Bigg)
-        \\times \\prod_{i=1}^{n_m}\\bigg( 1 + M_i \\bigg)
-        \\times \\prod_{j=1}^m{\\Bigg(1+\\sum_{i=1}^{n_{j}} S_i^j}\\Bigg)
-      \\]
-
-      \\(\\begin{array}{l}
-      \\text{XP drops can then be calculated with:}
-      \\end{array}\\)
-
-      \\(
-      \\def\\arraystretch{1.25}
-      \\begin{array}{llcl}
-        & \\text{XP}_\\text{final} & = & \\dfrac
-        {\\lfloor \\text{XP}_\\text{base} \\times X \\times I_{per} \\times 10 \\rfloor}
-        {10}\\\\
-        \\text{Where:} & \\\\
-        & B_{xp} & = &
-          \\begin{cases}
-          0, & \\text{if you don't have any bonus xp} \\\\
-          1, & \\text{if you do have bonus xp}
-          \\end{cases}
-        \\\\
-        & D_{xp} & = &
-          \\begin{cases}
-          0, & \\text{if there is no double xp bonus active} \\\\
-          1, & \\text{if double xp bonus is active}
-          \\end{cases}
-        \\\\
-        & A_i^u & = & \\text{The }i\\text{th additive boost that is unaffected by both } B_{xp} \\text{ and }D_{xp}\\\\
-        & A_i^{bxp} & = & \\text{The }i\\text{th additive boost that is affected by }B_{xp}\\\\
-        & A_i^{dxp} & = & \\text{The }i\\text{th additive boost that is affected by }D_{xp}\\\\
-        & M_i & = & \\text{The }i\\text{th multiplicative boost}\\\\
-        & S_i^j & = & \\text{The }i\\text{th summed multiplicative boost in group }j\\\\
-        & m & = & \\text{Number of summed multiplicative groups}\\\\
-        & n_u & = & \\text{Number of additive boosts unaffected by both } B_{xp} \\text{ and }D_{xp}\\\\
-        & n_b & = & \\text{Number of additive boosts affected by }B_{xp}\\\\
-        & n_d & = & \\text{Number of additive boosts affected by }D_{xp}\\\\
-        & n_m & = & \\text{Number of multiplicative boosts}\\\\
-        & n_j & = & \\text{Number of boosts in group }j\\\\
-        & I_{per} & = & \\text{Number of items made per action, for example using 50 pure essence at once}\\\\
-      \\end{array}
-      \\)
-
-      \\(\\begin{array}{l}
-      \\text{All boosts are in the form of }3\\% = 0.03\\\\
-      \\end{array}\\)
-      \\end{document}`)
-
   window.log("Log Output:")
   window.log(`keys: ${keys}`)
   window.log(`number of unique boosts in data: ${keys.filter(key => !specialkeys.includes(key)).length}`)
@@ -962,7 +911,7 @@ window.onload = async () => { try {
   let testedhashes = new Set()
   let minscore = 9999999
   let minequation
-  let attempts = 10000
+  let attempts = 100
   while (i < attempts) {
     let equation
     try {
@@ -981,7 +930,9 @@ window.onload = async () => { try {
     }
     i++
     if (i % (attempts / 100) == 0) {
-      window.log(`distinct equation #${i}`)
+
+      await new Promise(r => setTimeout(r, 50))
+      console.log(`distinct equation #${i}`)
     }
   }
   window.log(`min score: ${minscore}`)
@@ -997,5 +948,254 @@ window.onload = async () => { try {
 </script>
 </head>
 <body>
+  \[\Large\text{Introduction}\]
+  On this page we will attempt to find a mathematical model of how exactly
+  experience boosts and multipliers in RuneScape interact with each other.
+  There has been much confusion about how exactly XP multipliers interact,
+  and as such it has been difficult to create accurate calculators and
+  determine experience rates for various activities non-empirically with
+  optimal boosts stacked together. It's rumored that when asked, even jmods
+  were unable to convey exactly how the math worked. But hopefully we will
+  be able to do so.
+  <p>
+  RuneScript, the scripting language that the majority of runescape
+  is written in, does not have any floating point math capabilities. So XP
+  is accounted for instead with integers, usually representing tenths of XP
+  (e.g. 333 tenths XP = 33.3 XP). This means two things for us, first, the
+  XP values will be truncated to the tenths place at most (if not all) steps
+  in this calculation. And second, the multiplication operator for this
+  purpose is now intransitive, which substantially increases the difficulty
+  of finding the correct mathematical model, due to the fact that the
+  behavior of the model is prone to the order in which the boosts are
+  applied.
+
+  \[\Large\text{The Model}\]
+  We first define a general real number truncation function $trunc_n(r)$
+  , to help represent this pseudo fixed point RuneScript math for real
+  numbers:
+  \[trunc_n(r) = \dfrac{\text{sign}(r)\lfloor10^n|r|\rfloor}{10^n}\tag{1.1}\]
+  \[r \in \mathbb{R}, \quad n \in \mathbb{N}\]
+
+  But as there's not currently any negative xp boosts or negative xp, and it
+  is thought that all xp math is done on integers of tenths, we can use a
+  simplified version for $n = 1$, $r \gt 0$:
+  \[trunc_1(r) = \dfrac{\lfloor r \times 10\rfloor}{10}\tag{1.2}\]
+  \[r \gt 0\]
+
+  And it will be useful to define the RuneScript intransitive xp
+  multiplication operator $tm(xp, b)$. Which operates on the rational
+  numbers $xp$ (representing a base xp or partially boosted xp value) and
+  $b$ (which represents a percentile boost such that a 3\% boost would be
+  represented by the rational number 3/100):
+  \[tm(xp,b) = trunc_1(xp \times b)\tag{1.3}\]
+  \[xp,b \in \mathbb{Q}, \quad (xp \times 10) \in \mathbb{Z}, \quad xp \gt 0, \quad b \gt 0\]
+
+  Then we define $k$ percentile boosts $b$ as the elements of set $B$, which
+  represents all relevant xp boosts that we are trying to capture in our
+  model:
+  \[B = \{b_1, \ldots, b_k\}\tag{2.1}\]
+  \[k \geq 1, \quad b \gt 0, \quad |B|=k\]
+
+  Next, we define XP boost group $G_i$ as a set containing one to $n_i$
+  percentile boosts $gb_{i,j}$, where $i$ is the index of the boost group,
+  and $j$ is the index of the boost within the group $i$:
+  \[G_i = \{gb_{i,1}, \ldots, gb_{i,n_i}\}\tag{2.2}\]
+  \[1 \leq i \leq k, \quad 1 \leq n_i \leq k, \quad 1 \leq j \leq n_i, \quad G_i \subseteq B, \quad |G_i|=n_i\]
+
+  We can also say that the totally ordered set $G$, which contains all $h$
+  of the boost group sets $G_i$, is an ordered partition of $B$, which will
+  be useful for reasoning about the space of all possible equations later:
+  \[G = \{G_1, \ldots, G_h\}\tag{2.3}\]
+  \[1 \leq i \leq k, \quad G \text{ is an ordered partition of } B, \quad |G|=h\]
+
+  Now we can define a function $g_i(xp)$, which applies the boost
+  group defined by $G_i$ to an xp value, using our previously defined
+  truncation multiplication operation $tm(xp,b)$:
+  \[g_i(xp) = tm\big(xp, \Big( 1 + \sum G_i \Big)\big)\tag{2.4}\]
+
+  Then, we can define another totally ordered set $S_g$, which is comprised of
+  $h$ boost group functions, where h is between 1 and $k$, the total number
+  of boosts in the model:
+  \[S_g = \{g_1, \ldots, g_h\}\tag{2.5}\]
+  \[1 \leq h \leq k, \quad |S_g|=h\]
+
+  Now we can define a function $X(xp_{\text{base}}, S_g)$ that iteratively
+  applies the ordered boost group functions that comprise $S_g$, to a base
+  "xp drop" $xp_{\text{base}}$, to determine the final boosted "xp drop"
+  $xp_{\text{final}}$, for a given set of boosts $B$:
+  \[X(xp_{\text{base}}, S_g) = g_h(\ldots g_1(xp_\text{base})\ldots) = xp_\text{final}\tag{2.6}\]
+
+  And we believe this model will be sufficient to caclulate all the current
+  xp boosts implemented in the game as of March 27th 2022, and hopefully in
+  perpetuity. Although more formal definitions may be needed for vague or
+  complex xp boosts to clarify their mathematical application (including but
+  not limited to, bonus xp, double xp, cinder cores, knowledge bombs, etc.)
+  and how they fit into this model.
+
+  Now that we have defined boost groups and the way they are applied, we
+  will take a moment to address some historical misunderstandings about xp
+  boosts. In the case that a group contains only 1 boost, it might be
+  described by some as a "multiplicative boost". If it contains more than 1
+  boost, the boosts are often described as being "additive boosts".
+
+  This terminology alone does not sufficiently describe a boost's behavior,
+  as the order in which the groups are applied matters, and the existence of
+  multiple additive groups can make adding another "additive boost" to the
+  calculation nontrivial. This is why it has previously been so difficult to
+  classify boosts as one category or the other. The additive or
+  multiplicative descriptor can only be used to describe its relation with
+  other boosts or boost groups, and every boost is multiplicative when
+  applied alone to the base xp drop.
+
+  Another side note, on some level, all of RuneScript only operates with
+  integer math, so this model could have been formulated to only operate on
+  integers representing "tenths" and may or may not have changed the
+  complexity of analysis going forward.
+
+  \[\Large\text{Search Spaces}\]
+  So now that we have a mathematical model defined, there is just one
+  problem. At the time of writing we have no idea which boosts are grouped
+  together, or the ordering of these groups for which we know nothing about.
+  But, we would like to find this information out.
+
+  To guide our efforts, let's first calculate the number of possible
+  realizations of our model, given $k$ boosts. Since the set $G$ is an
+  ordered partition of $B$, and $|B|=k$, we know the number of possible
+  ordered partitions is equal to the Ordered Bell number for $k$.
+  For 17 boosts, (the starting number of boosts we're attempting to place),
+  this would be 130,370,767,029,135,901 possibilities. This number is too
+  large for even a computer to enumerate and test against all the data for,
+  so we'll have to be at least a little bit clever.
+
+  Just to have it on hand, we can also find the number of unordered
+  partitions, which is equal to the Bell number for $k$. For 17, there are
+  82,864,869,804 possibilities, which is much more tractible. This number
+  represents the number of different ways you could combine boosts into
+  different boost groups irrespective of ordering, and would be the search
+  space for a solution to this problem if the multiplication for boosts was
+  transitive. We still may have use for this yet however, as solving the
+  grouping before the ordering may lend itself to a solution.
+
+  \[\Large\text{Collecting Data}\]
+
+  To start, We'll collect data by recording the base xp of a drop, and then
+  permute the different boosts we have access to, while recording the
+  boosted xp drops at every permutation. We can't record every possible
+  permutation, as the number of distinct permutations would be
+  $\prod_{i=1}^kd_i$, where $k$ is the number of boosts we're permuting,
+  and $d_i$ is the number of different values a single boost can have (e.g.
+  outfit pieces can have a 0\%, 1\%, 2\%, 3\%, 4\%, 5\%, or 6\%
+  boost).
+  For 17 boosts, that would be well over $2^n$, as every boost can be at
+  least turned on or off, giving 131,072 data points as the very lower
+  bound. This is already infeasible for manual collection, due to the shear
+  size, not to mention that many boosts can only be turned on infrequently,
+  cost in game money, or real money. So we'll have to figure out a way to
+  figure out an ordering with a reasonably small dataset.
+
+  Also, a caveat about data collection here. Whenever you get an xp drop,
+  it renders as an integer, such that if you were to get 10 xp drops of
+  1.7 xp, 7 of them would be 2 xp, and 3 of them would be 1 xp. This is
+  likely implemented as the difference between your old and new xp values,
+  truncated to an integer. This means that if we record the first integer
+  value we see, it won't be perfectly accurate to what we're actually
+  gaining. However, getting 10 xp drops per boost permutation to figure out
+  the decimal place also isn't cost or time effective. There are also other
+  ways to discern exact xp drop values, but none of them are feasible at the
+  moment. So we will try to make due with the integer values. We define
+  $xp_\text{observed}$ such that:
+  \[xp_\text{observed}-1 \le xp_\text{final} \le xp_\text{observed}+1\]
+  \[xp_\text{observed} \in \mathbb{Q}\]
+  We can attempt
+  to deal with this by defining the error of an ordered boost group set
+  $S_g$ for a specific sample as:
+  \[
+  E(S_g, xp_b, xp_o) =
+  \begin{cases}
+  0 & \big|X(xp_b,S_g)-xp_o\big| \le 1 \\
+  \big|X(xp_b,S_g)-xp_o\big| - 1 & \big|X(xp_b,S_g)-xp_o\big| \gt 1
+  \end{cases}
+  \]
+  Where $xp_b$ is the base xp of the activity, and $xp_o$ is the observed xp
+  integer. So that cases where an xp flip could explain sample disparity do
+  not count as errors. This can also be simplified with the Ramp function:
+  \[
+  R(x) =
+  \begin{cases}
+  x & x \ge 0 \\
+  0 & x \lt 0
+  \end{cases}
+  \]
+  \[E(S_g, xp_b, xp_o) = R\big(\big|X(xp_b,S_g)-xp_o\big|-1\big)\]
+
+  It's also worth mentioning at this time, that when you get an xp drop, you
+  get a parenthetical "bonus xp" drop as well, which shows the tenths place.
+  For example, the text of a drop might read "+259 xp (69.5 bonus xp)"
+  This is different than the normal idea of bonus xp in RuneScape, as you
+  can still receive it when you have only boosts that are not specifically
+  bonus xp (as awarded by prismatic stars). This drop seems to satisfy the
+  equation:
+
+  \[xp_\text{final}=xp_\text{bonus}+xp_\text{bbase}\]
+
+  Where $xp_\text{bbase}$ is the boosted base xp not observed,
+  $xp_\text{bonus}$ is the parenthetical part of the drop with tenths digit
+  observeable, and $xp_\text{final}$ is an integer that may or may not have
+  been rounded in either direction.
+  <p>
+  We believe this bonus xp amount is the difference between the fully
+  boosted xp drop, and the xp sampled at some point between applications
+  of two ordered boost group functions. Many people say any boost that
+  applies before this sample point is a boost that affects "base xp". It may
+  be useful to record this bonus xp number, as it may allow us to split
+  the problem into two sub-problems: finding the correct ordered partition
+  of the "base xp" boosts, and finding the correct ordered partition for the
+  rest. However, the fact that we only know the exact value of the bonus xp,
+  instead of the boosted base xp, means we are still unable to easily
+  collect exact data for either group. But we can quantify our uncertainty
+  as:
+  \[xp_\text{observed}-xp_\text{bonus}-1 \le xp_\text{bbase} \le xp_\text{observed}-xp_\text{bonus}+1\]
+  Which could be useful for solving the two sub-problems.
+
+  \[\Large\text{Searching For a Solution}\]
+
+  To start with the search, we'll attempt to generate uniform random ordered
+  partitions using some guy's math, test them and see if it's the best one,
+  and then repeat
+  <p>
+  notes about partitioning boosts into buckets, methodology for rng
+  <p>
+  we can be a little clever at this point by immediately rejecting equations
+  once the total error exceeds our best performer. in addition, it may or
+  may not be faster to hash tested partitions and skip them if they come up
+  again, but i imagine the process of hashing might even be slower than
+  testing with this speedup
+  <p>
+  more smartly, if the search space ends up being too huge, we can build a
+  partial order from exact samples to help narrow the search space.
+  <p>
+  to prove a link of the partial ordering you need to have a sample where
+  \[b_1 \ne b_2 \\
+  tm(tm(xp,b_1),b_2) \ne tm(tm(xp,b_2),b_1) \\
+  tm(xp,b_1+b_2) \ne tm(tm(xp,b_1),b_2) \\
+  tm(xp,b_1+b_2) \ne tm(tm(xp,b_2),b_1) \\
+  \]
+  and one of the above expressions is equal to an exact measured xp value for the group
+  <p>
+  but you can select xp, $b_1$, and $b_2$ per relation above, and xp can be either
+  a base value, or a boosted value, as long as you're sure every boost used
+  to produce it comes before these two boosts
+  <p>
+  however, building the partial order off other boosted values can be
+  catastrophic, since one bad piece of data can keep a solution from
+  converging
+  <p>
+  maximum possible truncation error is 0.1
+  <p>
+  the truncation error for a given xp and b is
+  $\varepsilon$ for a boost $b$ and $xp$:
+  \[tm(xp,b) = \dfrac{\lfloor xp \times b \times 10\rfloor}{10} \le \dfrac{xp \times b \times 10 + \varepsilon}{10}\]
+  \[ 0 \leq \varepsilon \lt 1 \]
+
 </body>
 <html>
