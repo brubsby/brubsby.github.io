@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="google" content="notranslate">
+        <style>
+            body, textarea {
+              background: black;
+              color: white;
+            }
+
+            textarea {
+                width: 100%;
+                height: 50%;
+            }
+        </style>
+        <script src="https://unpkg.com/peggy"></script>
+        <script>
+            (async () => { //make all the js async
+            window.onload = async () => {
+                let parse = () => {
+                    console.log(JSON.stringify(window.parser.parse(document.getElementById("toparse").value), null, 2))
+                }
+                let update_parser = () =>
+                    fetch('./js/anydice_grammar.peggy')
+                        .then(response => response.text())
+                        .then(grammar => {
+                            window.parser = peggy.generate(grammar, {trace: false})
+                            parse()
+                        })
+                update_parser()
+                
+                let toparse = document.getElementById("toparse")
+                toparse.value = window.localStorage.getItem("anydicescript")
+                toparse.onkeyup = (event) => {
+                    clearTimeout(window.parseTimeout)
+                    window.parseTimeout = setTimeout(parse, 500)
+                    window.localStorage.setItem("anydicescript", event.target.value)
+                }
+            }})()
+        </script>
+        <script>
+            document.write(
+              '<script src="http://' +
+                (location.host || '${1:localhost}').split(':')[0] +
+                ':${2:35729}/livereload.js?snipver=1"></' +
+                'script>'
+            );
+        </script>
+    </head>
+    <body>
+        <textarea id="toparse"></textarea>
+    </body>
+</html>
