@@ -85,7 +85,19 @@
       return new ProbabilitySequence(retMap)
     }
 
-    sumSequence(that) {
+    isSingular() {
+      return this.probabilityMap.size == 1
+    }
+
+    getSingular() {
+      return this.probabilityMap.keys().next().value
+    }
+
+    negate() {
+      return this.scaleAmounts(-1)
+    }
+
+    addDice(that) {
       let retMap = new Map()
       this.probabilityMap.forEach((thisProbability, thisAmount) =>
         that.probabilityMap.forEach((thatProbability, thatAmount) => {
@@ -97,9 +109,10 @@
       return new ProbabilitySequence(retMap)
     }
 
-    sumSequenceNTimes(n) {
+    addDiceNTimes(n) {
       let sign = Math.sign(n)
-      let retProbSeq = new Array(Math.abs(n)).fill(this).reduce((prev, cur) => prev.sumSequence(cur))
+      let retProbSeq = new Array(Math.abs(n)).fill(this).reduce(
+        (prev, cur) => prev.addDice(cur), ProbabilitySequence.fromInt(0))
       if (sign < 0) {
         retProbSeq = retProbSeq.scaleAmounts(-1)
       }
@@ -109,21 +122,25 @@
     scaleAmounts(scale) {
       return new ProbabilitySequence(
         new Map(Array.from(this.probabilityMap).map(
-          ([amount, probability]) => [amount * scale, probability])))
+          ([amount, probability]) => [amount * scale, probability]
+        ))
+      )
     }
 
     scaleProbability(scale) {
       return new ProbabilitySequence(
         new Map(Array.from(this.probabilityMap).map(
-          ([amount, probability]) => [amount, probability * scale])))
+          ([amount, probability]) => [amount, probability * scale]
+        ))
+      )
     }
 
-    isSingular() {
-      return this.probabilityMap.size == 1
-    }
-
-    getSingular() {
-      return this.probabilityMap.keys().next().value
+    addScalar(scalar) {
+      return new ProbabilitySequence(
+        new Map(Array.from(this.probabilityMap).map(
+          ([amount, probability]) => [amount + scalar, probability]
+        ))
+      )
     }
 
     mean() {
@@ -144,17 +161,17 @@
       right = ProbabilitySequence.fromSequence(right)
     }
     if (Number.isInteger(left)) {
-      return right.sumSequenceNTimes(left)
+      return right.addDiceNTimes(left)
     }
     if (left instanceof ProbabilitySequence && left.isSingular()) {
-      return right.sumSequenceNTimes(left.getSingular())
+      return right.addDiceNTimes(left.getSingular())
     }
     if (left instanceof Sequence) {
-      return right.sumSequenceNTimes(left.total())
+      return right.addDiceNTimes(left.total())
     }
     if (left instanceof ProbabilitySequence) {
       return Array.from(left.probabilityMap).reduce((previous, [leftAmount, leftProbability]) => {
-        right.sumSequenceNTimes(leftAmount).scaleProbability(leftProbability)
+        right.addDiceNTimes(leftAmount).scaleProbability(leftProbability)
           .probabilityMap.forEach((newProbability, newAmount) => 
             previous.probabilityMap.set(newAmount, 
               newProbability + (previous.probabilityMap.get(newAmount) || 0)))
@@ -165,6 +182,111 @@
 
   function dOperatorUnary(value) {
     return dOperator(1, value)
+  }
+
+  function additionOperator(left, right) {
+    if (left instanceof Sequence) {
+      left = left.total()
+    }
+    if (right instanceof Sequence) {
+      right = right.total()
+    }
+    if (Number.isInteger(left)) {
+      if (Number.isInteger(right)) {
+        return left + right
+      }
+      if (right instanceof ProbabilitySequence) {
+        return right.addScalar(left)
+      }
+    }
+    if (left instanceof ProbabilitySequence) {
+      if (right instanceof ProbabilitySequence) {
+        return left.addDice(right)
+      }
+      if (Number.isInteger(right)) {
+        return left.addScalar(right)
+      }
+    }
+  }
+
+  function subtractionOperator(left, right) {
+    if (left instanceof Sequence) {
+      left = left.total()
+    }
+    if (right instanceof Sequence) {
+      right = right.total()
+    }
+    if (Number.isInteger(left)) {
+      if (Number.isInteger(right)) {
+        return left - right
+      }
+      if (right instanceof ProbabilitySequence) {
+        return right.negate().addScalar(left)
+      }
+    }
+    if (left instanceof ProbabilitySequence) {
+      if (right instanceof ProbabilitySequence) {
+        return left.addDice(right.negate())
+      }
+      if (Number.isInteger(right)) {
+        return left.addScalar(-right)
+      }
+    }
+  }
+
+  function positiveOperator(expression) {
+    return expression;
+  }
+
+  function negativeOperator(expression) {
+    if (Number.isInteger(expression)) {
+      return -expression
+    }
+    if (expression instanceof Sequence) {
+      return -expression.total()
+    }
+    if (expression instanceof ProbabilitySequence) {
+      return expression.negate()
+    }
+  }
+
+  function compare(left, right, operator) {
+    if (left instanceof Sequence) {
+      left = left.total()
+    }
+    if (right instanceof Sequence) {
+      right = right.total()
+    }
+    if (left instanceof ProbabilitySequence && right instanceof ProbabilitySequence) {
+      let retMap = new Map()
+      left.probabilityMap.forEach((leftProbability, leftAmount) =>
+        right.probabilityMap.forEach((rightProbability, rightAmount) => {
+          let amount = operator(leftAmount, rightAmount) ? 1 : 0
+          retMap.set(amount,
+            leftProbability * rightProbability + (retMap.get(amount) || 0))
+        })
+      )
+      return new ProbabilitySequence(retMap)
+    }
+    if (Number.isInteger(left) && right instanceof ProbabilitySequence) {
+      let retMap = new Map()
+      right.probabilityMap.forEach((rightProbability, rightAmount) => {
+        let amount = operator(left, rightAmount) ? 1 : 0
+        retMap.set(amount,
+          rightProbability + (retMap.get(amount) || 0))
+      })
+      return new ProbabilitySequence(retMap)
+    }
+    if (left instanceof ProbabilitySequence && Number.isInteger(right)) {
+      let retMap = new Map()
+      left.probabilityMap.forEach((leftProbability, leftAmount) => {
+        let amount = operator(leftAmount, right) ? 1 : 0
+        retMap.set(amount,
+          leftProbability + (retMap.get(amount) || 0))
+      })
+      return new ProbabilitySequence(retMap)
+    }
+    return operator(left, right) ? 1 : 0
   }
 }}
 
@@ -213,17 +335,44 @@ ParenExpression
   = "(" __ expression:Expression __ ")" { return expression }
 
 Expression
-  = BinaryExpression
+  = EqualityExpression
 
-BinaryExpression
-  = head:UnaryExpression
-    tail:(__ BinaryOperator __ UnaryExpression)*
+EqualityExpression
+  = head: RelationalExpression
+    tail:(__ EqualityOperator __ EqualityExpression)*
     { return tail.reduce((previous, current) => current[1](previous, current[3]), head)  }
 
-BinaryOperator
+EqualityOperator
+  = "=" { return (left, right) => compare(left, right, (l, r) => l == r) }
+  / "!=" { return (left, right) => compare(left, right, (l, r) => l != r) }
+
+RelationalExpression
+  = head: BinaryExpression1
+    tail:(__ RelationalOperator __ RelationalExpression)*
+    { return tail.reduce((previous, current) => current[1](previous, current[3]), head)  }
+
+RelationalOperator
+  = "<=" { return (left, right) => compare(left, right, (l, r) => l <= r) }
+  / ">=" { return (left, right) => compare(left, right, (l, r) => l >= r) }
+  / "<" { return (left, right) => compare(left, right, (l, r) => l < r) }
+  / ">" { return (left, right) => compare(left, right, (l, r) => l > r) }
+
+BinaryExpression1
+  = head:BinaryExpression2
+    tail:(__ BinaryOperator1 __ BinaryExpression1)*
+    { return tail.reduce((previous, current) => current[1](previous, current[3]), head)  }
+
+BinaryOperator1
+  = "+" { return additionOperator }
+  / "-" { return subtractionOperator }
+
+BinaryExpression2
+  = head:UnaryExpression
+    tail:(__ BinaryOperator2 __ BinaryExpression2)*
+    { return tail.reduce((previous, current) => current[1](previous, current[3]), head) }
+  
+BinaryOperator2
   = "d" { return dOperator }
-  // / "+" { return additionOperator }
-  // / "-" { return subtractionOperator }
 
 UnaryExpression
   = Integer / Sequence / ParenExpression
@@ -231,8 +380,8 @@ UnaryExpression
 
 UnaryOperator
   = "d" { return dOperatorUnary }
-  // / "+" { return positiveOperator }
-  // / "-" { return negativeOperator }
+  / "+" { return positiveOperator }
+  / "-" { return negativeOperator }
 
 Sequence
   = "{" elements:SomeSequenceElements+ _ "}" { return Sequence.fromVaried(elements) }
@@ -246,7 +395,8 @@ SequenceElement
   / expression:Expression { return expression }
 
 Integer
-  = ([-]?[1-9]+[0-9]*) { return parseInt(text(), 10); }
+  = "0" { return 0 }
+  / [1-9]+[0-9]* { return parseInt(text(), 10); }
 
 // Unicode Character Categories
 //
