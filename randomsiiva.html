@@ -238,6 +238,7 @@
           <hr>
           <li id="sort"><a tabindex="0">ORDER: <span class="sortoption">RANDOM</span></a></li>
           <li id="skipduration"><a tabindex="0">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
+          <li id="yearfilter"><a tabindex="0">YEAR: <span class="sortoption">ALL</span></a></li>
           <li id="skipkfad"><a tabindex="0"><span class="checkbox">☐</span> SKIP KFAD</a></li>
           <li id="nowiki"><a tabindex="0"><span class="checkbox">☐</span> NO WIKI ONLY</a></li>
           <li id="allowrepeats"><a tabindex="0"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
@@ -366,6 +367,7 @@
     var isVAVRCheck = false;
     var isBootlegCheck = false;
     var durationOfVidToSkip = Number.MAX_SAFE_INTEGER;
+    var yearFilterSelected = Number.NaN;
     var watchedVidIds;
     var skipDurations = [
       ["☒", Number.MAX_SAFE_INTEGER],
@@ -381,6 +383,9 @@
       [">30 SEC", 30]
     ];
     var skipDurationIndex = 0;
+    var yearFilterYears = Array.from(Array(new Date().getUTCFullYear() - 2016 + 1).keys()).map(x => 2016 + x)
+    var yearFilterOptions = ["ALL"].concat(yearFilterYears);
+    var yearFilterIndex = 0;
     // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
     var sortOptions = [
       ["RANDOM", v => v[3], Math.random, v => v[3]],
@@ -659,6 +664,8 @@
         "creates a popup that will automatically navigate to the currently playing rip\'s wiki page! (automatic joke lists!)"],
         ["li#skipduration > a",  skipDurationClicked,
         "skip rips that are over the specified duration (click to cycle through durations)"],
+        ["li#yearfilter > a",    yearFilterClicked,
+        "view only rips from the selected year"],
         ["li#sort > a",          sortClicked,
         "order rips in various ways (click to cycle through order options)"],
         ["li#skipkfad > a",      skipKFADClicked,
@@ -847,6 +854,12 @@
       durationOfVidToSkip = skipDurations[skipDurationIndex][1];
     }
 
+    function yearFilterClicked() {
+      yearFilterIndex = (yearFilterIndex + 1) % yearFilterOptions.length;
+      document.querySelector("li#yearfilter > a > span.sortoption").textContent = yearFilterOptions[yearFilterIndex];
+      yearFilterSelected = parseInt(yearFilterOptions[yearFilterIndex]);
+    }
+
     function sortClicked() {
       sortIndex = (sortIndex + 1) % sortOptions.length;
       if (sortIndex < 3) {
@@ -907,6 +920,9 @@
       }
       if (skipDurationIndex != 0) {
         filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[4] < durationOfVidToSkip);
+      }
+      if (yearFilterIndex != 0) {
+        filteredSortedVids = filteredSortedVids.filter((vid_info) => new Date(vid_info[3]).getFullYear() == yearFilterSelected);
       }
       if (isNoWiki) {
         filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[2] === false);
@@ -978,7 +994,7 @@
           autoplay: 1,
           enablejsapi: 1,
           disablekb: 0,
-          modestbranding: 1,
+          modestbranding: 0,
           rel: 0,
           widget_referrer: 'https://brubsby.com/randomsiiva',
         },
