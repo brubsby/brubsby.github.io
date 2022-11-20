@@ -210,6 +210,17 @@
       margin-top: .3em;
       margin-bottom: .3em;
     }
+    #pastearea {
+      visibility: hidden;
+    }
+    #pastearea > textarea {
+      width: 99%;
+      height: 100%;
+      min-height: 4.1em;
+      resize: none;
+      background-color: inherit;
+      color: inherit;
+    }
     </style>
   </head>
   <body>
@@ -238,11 +249,12 @@
           <hr>
           <li id="sort"><a tabindex="0">ORDER: <span class="sortoption">RANDOM</span></a></li>
           <li id="skipduration"><a tabindex="0">SKIP LONG RIPS <span class="checkbox">☒</span></a></li>
-          <li id="yearfilter"><a tabindex="0">YEAR: <span class="sortoption">ALL</span></a></li>
+          <li id="yearfilter"><a tabindex="0">YEAR: <span class="checkbox">ALL</span></a></li>
           <li id="skipkfad"><a tabindex="0"><span class="checkbox">☐</span> SKIP KFAD</a></li>
           <li id="nowiki"><a tabindex="0"><span class="checkbox">☐</span> NO WIKI ONLY</a></li>
           <li id="allowrepeats"><a tabindex="0"><span class="checkbox">☐</span> ALLOW REPEATS</a></li>
           <li id="channels"><a tabindex="0">CHANNELS:</a> <a class="percentcomplete"
+            onclick="channelProgressClicked()"
             onmouseover="channelProgressTooltip()"
             onmouseout="tooltip()"
             onfocus="channelProgressTooltip()"
@@ -288,6 +300,15 @@
         <div style="display:none" id="timeover"></div>
         <div class="embedcontainer">
           <div id="player">Loading...</div>
+        </div>
+        <div id="pastearea">
+          <h4>Watch progress string:</h4>
+          <textarea></textarea>
+          <a id="overwrite"
+          onclick="overWriteClicked()"
+          onmouseover="tooltip('save this string to export your watch history, or paste an exported one here, and click OVERWRITE to import (a blank string clears your watch history)')"
+          onmouseout="tooltip()"
+          >OVERWRITE?</a>
         </div>
       </div>
     </div>
@@ -803,30 +824,76 @@
       }
     }
 
+    function channelProgressClicked() {
+      var pasteAreaElement = document.querySelector("#pastearea");
+      var isPasteAreaVisible = pasteAreaElement.style.visibility == "visible";
+      document.querySelector("#overwrite").textContent = "OVERWRITE?";
+      document.querySelector("#pastearea > textarea").value = btoa(watchedVidIds.join(','));
+      pasteAreaElement.style.visibility = isPasteAreaVisible ? "hidden" : "visible";
+      document.querySelector("#pastearea > textarea").select();
+    }
+
+    function overWriteClicked() {
+      var overwriteText = document.querySelector("#overwrite").textContent
+      switch (overwriteText) {
+        case 'OVERWRITE?':
+          document.querySelector("#overwrite").textContent = "ARE YOU SURE?";
+          break;
+        case "ARE YOU SURE?":
+          document.querySelector("#overwrite").textContent = "REALLY REALLY SURE?";
+          break;
+        case "REALLY REALLY SURE?":
+          if (document.querySelector("#pastearea > textarea").value == "") {
+            watchedVidIds = [];
+            document.querySelector("#overwrite").textContent = "WATCH HISTORY CLEARED";
+          } else {
+            var importedVidIds = atob(document.querySelector("#pastearea > textarea").value).split(",")
+            var importError = importedVidIds.some(vidId => !/[a-zA-Z0-9_-]{11}/.test(vidId));
+            if (importError) {
+              document.querySelector("#overwrite").textContent = "SAVE STRING PARSE ERROR";
+            } else {
+              watchedVidIds = importedVidIds;
+              window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
+              document.querySelector("#overwrite").textContent = `LOADED ${importedVidIds.length} WATCHED VIDS...`;
+            }
+          }
+          updateWatchPercentages();
+          break;
+        default:
+          document.querySelector("#overwrite").textContent = "OVERWRITE?";
+          break;
+      }
+    }
+
     function channelProgressTooltip(channel = "") {
-      var num_total_vids, num_unwatched_vids, channelText;
+      var num_total_vids, num_unwatched_vids, channelText, parenthetical;
       if (channel == "") {
         num_total_vids = siiva_vids.length + ttgd_vids.length + vavr_vids.length + bootleg_vids.length;
         num_unwatched_vids = unwatched_siiva_vids.length + unwatched_ttgd_vids.length + unwatched_vavr_vids.length + unwatched_bootleg_vids.length;
         channelText = 'siiva and all fan channels';
+        parenthetical = "(click to open progress import/export menu)";
       } else if (channel == "siiva") {
         num_total_vids = siiva_vids.length;
         num_unwatched_vids = unwatched_siiva_vids.length;
         channelText = 'SiIvaGunner\'s channel';
+        parenthetical = "";
       } else if (channel == "ttgd") {
         num_total_vids = ttgd_vids.length;
         num_unwatched_vids = unwatched_ttgd_vids.length;
         channelText = 'TimmyTurnersGrandDad\'s channel';
+        parenthetical = "";
       } else if (channel == "vavr") {
         num_total_vids = vavr_vids.length;
         num_unwatched_vids = unwatched_vavr_vids.length;
         channelText = 'VvvvvaVvvvvvr\'s channel';
+        parenthetical = "";
       } else if (channel == "bootleg"){
         num_total_vids = bootleg_vids.length;
         num_unwatched_vids = unwatched_bootleg_vids.length;
         channelText = 'all remaining fan channels';
+        parenthetical = "";
       }
-      tooltip(`you've watched ${(num_total_vids - num_unwatched_vids).toLocaleString()} out of ${num_total_vids.toLocaleString()} total rips on ${channelText}, only ${num_unwatched_vids.toLocaleString()} more to go!`);
+      tooltip(`you've watched ${(num_total_vids - num_unwatched_vids).toLocaleString()} out of ${num_total_vids.toLocaleString()} total rips on ${channelText}, only ${num_unwatched_vids.toLocaleString()} more to go! ${parenthetical}`);
     }
 
     function updateCheckboxes() {
@@ -856,7 +923,7 @@
 
     function yearFilterClicked() {
       yearFilterIndex = (yearFilterIndex + 1) % yearFilterOptions.length;
-      document.querySelector("li#yearfilter > a > span.sortoption").textContent = yearFilterOptions[yearFilterIndex];
+      document.querySelector("li#yearfilter > a > span.checkbox").textContent = yearFilterOptions[yearFilterIndex];
       yearFilterSelected = parseInt(yearFilterOptions[yearFilterIndex]);
     }
 
@@ -938,7 +1005,8 @@
           return filteredSortedVids.splice(Math.floor(filteredSortedVids.length * sort_sampler()), 1)[0][0];
         }).filter(Boolean);
       } else {
-        var mapped_vids = filteredSortedVids.filter(sortOptions[sortIndex][3]).map(sortOptions[sortIndex][1])
+        filteredSortedVids = filteredSortedVids.filter(sortOptions[sortIndex][3])
+        var mapped_vids = filteredSortedVids.map(sortOptions[sortIndex][1])
         return Array(numVids).fill(0).map(() => {
           var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
           if (vid_index == -1) return;
