@@ -848,15 +848,22 @@
             document.querySelector("#overwrite").textContent = "WATCH HISTORY CLEARED";
           } else {
             var importedVidIds = atob(document.querySelector("#pastearea > textarea").value).split(",")
-            var importError = importedVidIds.some(vidId => !/[a-zA-Z0-9_-]{11}/.test(vidId));
+            var importError = importedVidIds.some(vidId => !/^[a-zA-Z0-9_-]{11}$/.test(vidId));
             if (importError) {
               document.querySelector("#overwrite").textContent = "SAVE STRING PARSE ERROR";
+              console.error(`parse error, unrecognized ID formats:`)
+              console.error(importedVidIds.filter(vidId => !/^[a-zA-Z0-9_-]{11}$/.test(vidId)))
             } else {
               watchedVidIds = importedVidIds;
               window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
               document.querySelector("#overwrite").textContent = `LOADED ${importedVidIds.length} WATCHED VIDS...`;
             }
           }
+          var differenceWatched = x => !watchedVidIds.includes(x[0]);
+          unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
+          unwatched_ttgd_vids = ttgd_vids.filter(differenceWatched);
+          unwatched_vavr_vids = vavr_vids.filter(differenceWatched);
+          unwatched_bootleg_vids = bootleg_vids.filter(differenceWatched);
           updateWatchPercentages();
           break;
         default:
