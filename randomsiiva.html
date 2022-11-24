@@ -99,6 +99,8 @@
     }
     li {
       line-height: 1.25em;
+    }
+    a {
       -webkit-touch-callout: none; /* iOS Safari */
         -webkit-user-select: none; /* Safari */
          -khtml-user-select: none; /* Konqueror HTML */
@@ -847,6 +849,7 @@
             watchedVidIds = [];
             document.querySelector("#overwrite").textContent = "WATCH HISTORY CLEARED";
           } else {
+            document.querySelector("#overwrite").textContent = `PROCESSING...`;
             var importedVidIds = atob(document.querySelector("#pastearea > textarea").value).split(",")
             var importError = importedVidIds.some(vidId => !/^([a-zA-Z0-9_-]{11}|Unknown|)$/.test(vidId));
             var importWarning = importedVidIds.some(vidId => /^(Unknown|)$/.test(vidId));
@@ -862,15 +865,18 @@
               }
               watchedVidIds = importedVidIds;
               window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
-              document.querySelector("#overwrite").textContent = `LOADED ${importedVidIds.length} WATCHED VIDS...`;
+              
             }
           }
-          var differenceWatched = x => !watchedVidIds.includes(x[0]);
-          unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
-          unwatched_ttgd_vids = ttgd_vids.filter(differenceWatched);
-          unwatched_vavr_vids = vavr_vids.filter(differenceWatched);
-          unwatched_bootleg_vids = bootleg_vids.filter(differenceWatched);
-          updateWatchPercentages();
+          window.setTimeout(() => {
+            var differenceWatched = x => !watchedVidIds.includes(x[0]);
+            unwatched_siiva_vids = siiva_vids.filter(differenceWatched);
+            unwatched_ttgd_vids = ttgd_vids.filter(differenceWatched);
+            unwatched_vavr_vids = vavr_vids.filter(differenceWatched);
+            unwatched_bootleg_vids = bootleg_vids.filter(differenceWatched);
+            updateWatchPercentages();
+            document.querySelector("#overwrite").textContent = `LOADED ${importedVidIds.length} WATCHED VIDS...`;
+          }, 0);
           break;
         default:
           document.querySelector("#overwrite").textContent = "OVERWRITE?";
