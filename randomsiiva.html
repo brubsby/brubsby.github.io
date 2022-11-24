@@ -848,12 +848,18 @@
             document.querySelector("#overwrite").textContent = "WATCH HISTORY CLEARED";
           } else {
             var importedVidIds = atob(document.querySelector("#pastearea > textarea").value).split(",")
-            var importError = importedVidIds.some(vidId => !/^[a-zA-Z0-9_-]{11}$/.test(vidId));
+            var importError = importedVidIds.some(vidId => !/^([a-zA-Z0-9_-]{11}|Unknown|)$/.test(vidId));
+            var importWarning = importedVidIds.some(vidId => /^(Unknown|)$/.test(vidId));
             if (importError) {
               document.querySelector("#overwrite").textContent = "SAVE STRING PARSE ERROR";
-              console.error(`parse error, unrecognized ID formats:`)
-              console.error(importedVidIds.filter(vidId => !/^[a-zA-Z0-9_-]{11}$/.test(vidId)))
+              console.error(`parse error, unrecognized ID formats:`);
+              console.error(importedVidIds.filter(vidId => !/^[a-zA-Z0-9_-]{11}$/.test(vidId)));
             } else {
+              if (importWarning) {
+                console.warn(`unusual (but recoverable) parse errors found:`);
+                console.warn(importedVidIds.filter(vidId => /^(Unknown|)$/.test(vidId)));
+                importedVidIds = importedVidIds.filter(vidId => !/^(Unknown|)$/.test(vidId));
+              }
               watchedVidIds = importedVidIds;
               window.localStorage.setItem(LOCALSTORAGE_WATCHED_VID_IDS, JSON.stringify(watchedVidIds));
               document.querySelector("#overwrite").textContent = `LOADED ${importedVidIds.length} WATCHED VIDS...`;
