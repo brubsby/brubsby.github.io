@@ -608,7 +608,7 @@
     function processBootlegSheetsJSON(bootlegSheetsJSON) {
         var filter_func = row => !["Private", "Deleted"].includes(row[3]) && row[5] != null && row[1] != null;
         var mapping_func = row => [row[0], row[1].replaceAll(/\s{2,}/g,' '), false,
-          Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+          Date.parse(row[4].replace(/\s+/, " ")), parseISO8601DurationToSeconds(row[5]),
           parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
         var outer_mapping_func = n => bootlegSheetsJSON["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
         return [].concat.apply([], Array.from(Array(bootlegSheetsJSON["valueRanges"].length).keys()).map(outer_mapping_func));
