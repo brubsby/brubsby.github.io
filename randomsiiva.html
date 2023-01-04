@@ -599,7 +599,7 @@
         // vid info map: 0 id, 1 title, 2 wiki status bool, 3 date posted as unix timestamp, 4 length, 5 views, 6 likes, 7 dislikes, 8 comments
         var filter_func = row => !["Private", "Deleted"].includes(row[3]);
         var mapping_func = row => [row[0], row[1].replaceAll(/\s{2,}/g,' '), row[2] == "Documented" ? true : (row[2] == "Undocumented" ? false : null),
-          Date.parse(row[4]), parseISO8601DurationToSeconds(row[5]),
+          Date.parse(row[4].replace(/\s+/, " ")), parseISO8601DurationToSeconds(row[5]),
           parseInt(row[7]), parseInt(row[8]), parseInt(row[9]), parseInt(row[10])];
         var outer_mapping_func = n => sheetsjson["valueRanges"][n]["values"].filter(filter_func).map(mapping_func);
         return [0,1,2].map(outer_mapping_func);
