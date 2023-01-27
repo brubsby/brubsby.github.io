@@ -1,0 +1,128 @@
+<html>
+  <script>
+    // redirect to oeis page if there was a raw path
+    let this_url = new URL(window.location.href)
+    let oeis_match = this_url.pathname.match(/^\/(A\d{6})$/)
+    if (oeis_match) {
+      let oeis_id = oeis_match[1]
+      this_url.pathname = "oeis.html"
+      this_url.searchParams.append("id", oeis_id)
+      location.replace(this_url.toString())
+    }
+  </script>
+  <head>
+  <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
+  <meta name="title" content="404">
+  <meta name="description" content="page not found">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="language" content="English">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+
+  <title>404</title>
+
+  <style>
+
+  @font-face {
+    font-family: 'DF';
+    src: url('assets/LessPerfectDOSVGA.woff') format('woff'), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+     url('assets/LessPerfectDOSVGA.ttf') format('truetype'); /* Chrome 4+, Firefox 3.5, Opera 10+, Safari 3—5 */
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: black;
+      color: white;
+    }
+  }
+  @media (prefers-color-scheme: no-preference), (prefers-color-scheme: light) {
+    body {
+      background: white;
+      color: black;
+    }
+  }
+
+  html {
+    overflow: hidden;
+  }
+
+  body {
+    font-size: 20px;
+    font-family: Courier, monospace;
+  	padding: 2em 3em 2em 3em;
+  }
+
+  div.container {
+    display: grid;
+    grid-column-gap: 68px;
+    grid-row-gap: 10px;
+    grid-template-columns: min-content auto;
+    grid-template-rows: min-content auto;
+    height: 100%;
+  }
+  div {
+  	font-weight: normal;
+  }
+  ol, li {
+    list-style-type: none;
+    padding-left: 8px;
+  }
+  div.menu {
+    margin: 0;
+    grid-area: 1 / 1 / span 1 / span 1;
+  }
+  h1 {
+    margin: 0;
+    font-weight: normal;
+    style: none;
+    font-size: 3em;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  li:hover {
+    text-decoration: underline;
+  }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152720878-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-152720878-1');
+  </script>
+  <script>
+  $(document).ready(function() {
+
+    var dark_link = document.getElementById("dark");
+    var theme_switch = (should_dark_mode_func) => {
+      if (should_dark_mode_func()) {
+        document.body.style.background = "black";
+        document.body.style.color = "white";
+        document.cookie = "theme=dark; SameSite=Strict";
+      } else {
+        document.body.style.background = "white";
+        document.body.style.color = "black";
+        document.cookie = "theme=light; SameSite=Strict";
+      }
+    }
+    var is_background_white = () => document.body.style.background == "white";
+    theme_switch(() => !document.cookie.split(';').filter(
+        (item) => item.includes('theme=light')).length);
+  });
+  </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="menu">
+        <a href="/"><h1>404</h1></a>
+        <ol id="links">
+          <li id="home"><a href="/">HOME</a></li>
+        </ol>
+      </div>
+    </div>
+  </body>
+</html>
