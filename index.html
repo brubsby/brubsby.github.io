@@ -694,7 +694,7 @@
         }
       }
       frame_count++;
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
     }, 1)
     // random text wipe
     .put((this_animation) => {
@@ -771,7 +771,7 @@
       if (flat_index_list.length <= 0) {
         return;
       }
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
       frame_count++;
     }, 4)
     // 10 print styles up or down
@@ -829,7 +829,7 @@
         }
       }
       frame_count++;
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
     }, 1)
     // entombing triangles
     .put((this_animation) => {
@@ -872,7 +872,7 @@
         }
       }
       frame_count++;
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
     }, 1)
     // growing heart / entombing heart
     .put((this_animation) => {
@@ -921,7 +921,7 @@
           return;
         }
       }
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
     }, 0.125)
     // simplex growth
     .put((this_animation) => {
@@ -943,7 +943,7 @@
           return;
         }
       }
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
       frame_count++;
     }, 1.25)
     // mapgen
@@ -1008,7 +1008,7 @@
       }
       if (!any_pixels) return;
       frame_count++;
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
     }, 3)
     // dvd ball
     .put((this_animation) => {
@@ -1075,7 +1075,7 @@
         }
       }
       frame_count++;
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
     }, 1)
     //poob
     .put((this_animation) => {
@@ -1120,7 +1120,7 @@
           return;
         }
       }
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
       frame_count++;
     }, 0.75)
     // bresenham bounce
@@ -1293,7 +1293,7 @@
       canvas.text(text);
       frame_count++;
       if (particles.length == 0 && frame_count > 1000) return;
-      setTimeout(this_animation.bind(null, this_animation), 0);
+      requestAnimationFrame(this_animation.bind(null, this_animation));
     }, 2)
     // analog clock
     .put((this_animation) => {
@@ -1771,10 +1771,8 @@
         <h1><a href="">BRUBSBY</a></h1>
         <ol id="links">
           <li id="links"><a href="https://linktr.ee/brubsby">LINKS</a></li>
-          <li id="shop"><a href="http://shop.brubsby.com">SHOP</a></li>
           <li id="kofi"><a href="https://ko-fi.com/brubsby">KOFI</a></li>
           <li id="cozyvec"><a href="http://brubsby.com/cozyvec">COZYVEC</a></li>
-          <li id="art"><a href="https://twitter.com/search?q=(%23plottertwitter%20OR%20%23generative%20OR%20%23pico8)%20(from%3Abrubsby)&src=typed_query">ART</a></li>
           <li id="inquiries"><a href="https://twitter.com/messages/compose?recipient_id=2402350662">INQUIRIES</a></li>
           <li id="randomsiiva"><a href="https://brubsby.com/randomsiiva">RANDOMSIIVA</a></li>
           <li id="dark"><a tabindex="0"></a></li>
