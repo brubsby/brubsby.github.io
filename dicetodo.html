@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
+    <meta name="title" content="Dice TODO">
+    <meta name="description" content="Page that allows you to use virtual dice to pick things off a todo list.">
+    <meta name="keywords" content="dice todo list">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@brubsby" />
+    <meta name="twitter:creator" content="@brubsby" />
+    <meta property="og:url" content="https://brubsby.com/dicetodo" />
+    <meta property="og:title" content="Dice TODO" />
+    <meta property="og:description" content="Page that allows you to use virtual dice to pick things off a todo list." />
+    <title>Dice TODO</title>
+    <style>
+
+    @font-face {
+      font-family: 'DF';
+      src: url('assets/LessPerfectDOSVGA.woff') format('woff'), /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+       url('assets/LessPerfectDOSVGA.ttf') format('truetype'); /* Chrome 4+, Firefox 3.5, Opera 10+, Safari 3—5 */
+    }
+
+    @media (prefers-color-scheme: no-preference), (prefers-color-scheme: dark) {
+      body {
+        background: black;
+        color: white;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      body {
+        background: white;
+        color: black;
+      }
+    }
+
+    @media (orientation: landscape) {
+        div.playercontainer {
+          grid-area: 1 / 2 / span 2 / span 1;
+        }
+        div.menu {
+          grid-area: 1 / 1 / span 2 / span 1;
+        }
+      }
+
+    @media (orientation: portrait) {
+      div.playercontainer {
+        grid-area: 2 / 1 / span 1 / span 2;
+      }
+      div.menu {
+        grid-area: 1 / 1 / span 1 / span 2;
+      }
+    }
+
+    @media (pointer: none), (pointer: coarse) {
+      /* mobile specific stuff */
+    }
+
+    html {
+      display: flex;
+      min-height: 100%;
+      position: relative;
+    }
+
+    body {
+      font-size: 1.25em;
+      font-family: Courier, monospace;
+      margin: auto;
+      /*padding: 2em 3em 2em 3em;*/
+    }
+
+    div.container {
+      display: grid;
+      justify-content: center;
+      align-content: center;
+      grid-column-gap: 68px;
+      grid-row-gap: 10px;
+      grid-template-columns: min-content auto;
+      grid-template-rows: min-content auto;
+      height: 100%;
+      margin: 1em;
+    }
+    div.menu {
+      margin: 0;
+      justify-self: center;
+    }
+    div.arrowcol {
+      margin: 0;
+      justify-self: center;
+      margin-top: 4.5px;
+      line-height: 1rem;
+      grid-area: 2 / 1 / span 1 / span 1;
+      width: 100%;
+    }
+    div.todocontainer {
+      display: grid;
+      grid-column-gap: 0px;
+      grid-row-gap: 0px;
+      grid-template-columns: 1.5em auto;
+      grid-template-rows: min-content auto;
+      width: min(100vw - 2em, 640px);
+      height: 390px;
+    }
+    div.blankcorner {
+      grid-area: 1 / 1 / span 1 / span 1;
+    }
+    div.tasks {
+      grid-area: 1 / 2 / span 1 / span 1;
+    }
+    textarea {
+      grid-area: 2 / 2 / span 1 / span 1;
+      line-height: 1rem;
+      color: inherit;
+      background-color: inherit;
+      width: 100%;
+      height: 100%;
+      resize: none;
+    }
+    div {
+    	font-weight: normal;
+    }
+    ol, li {
+      list-style-type: none;
+      padding-left: 8px;
+      white-space: nowrap;
+    }
+    li {
+      line-height: 1.25em;
+      -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+         -khtml-user-select: none; /* Konqueror HTML */
+           -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+    }
+    h1 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: 1.5em;
+    }
+    h2 {
+      margin: 0;
+      font-weight: normal;
+      style: none;
+      font-size: 1em;
+      font-family: "DF", monospace;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    h3 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: .85em;
+      font-family: "DF", monospace;
+    }
+    h3 > a {
+      text-decoration: underline;
+    }
+    h3 > a:hover {
+      font-style: oblique;
+    }
+    h3#tooltip {
+      position: absolute;
+      top: .25em;
+      left: .25em;
+    }
+    h3#twitter {
+      position: absolute;
+      bottom: .25em;
+      left: .25em;
+      background: inherit;
+      white-space: normal;
+    }
+    h4 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: .75em;
+      font-family: "DF", monospace;
+    }
+    h4 > a {
+      text-decoration: underline;
+    }
+    h4 > a:hover {
+      font-style: oblique;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    a:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    hr {
+      border-style: solid;
+      margin-top: .3em;
+      margin-bottom: .3em;
+    }
+    </style>
+    </head>
+    <body>
+      <h3 id="tooltip">&nbsp</h3>
+      <div class="container">
+        <div class="menu">
+          <h4><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="https://brubsby.com" target="_blank" rel="noopener noreferrer">BRUBSBY'S</a></h4>
+          <h1>DICE TODO</h1>
+          <ol id="links">
+            <li id="roll"><a onmouseover="tooltip('click to roll an item to complete')" onmouseout="tooltip()">ROLL TASK</a></li>
+            <li id="delete"><a onmouseover="tooltip('click to delete the item that was rolled')" onmouseout="tooltip()">FINISH TASK</a></li>
+            <li id="undo"><a onmouseover="tooltip('click to undo changes in the list')" onmouseout="tooltip()">UNDO</a></li>
+            <li id="redo"><a onmouseover="tooltip('click to redo changes in the list')" onmouseout="tooltip()">REDO</a></li>
+            <hr>
+            <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
+          </ol>
+        </div>
+        <div class="todocontainer">
+          <div class="blankcorner"></div>
+          <div class="arrowcol"></div>
+          <h2><span class="tasks">TASKS</span></h2>
+          <textarea id="task-input" placeholder="Enter your to-do list, one task per line"></textarea>
+        </div>
+      </div>
+      <h3 id="twitter" style="display:none"><a  target="_blank" rel="noopener noreferrer" href="https://twitter.com/brubsby">follow me on twitter</a> or <a  target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/brubsby">buy me a coffee</a> if you like the page! (<a id="hidetwitter">not today</a> / <a id="permahidetwitter">not ever</a>)</h3>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+      <script src="js/lz-string.min.js"></script>
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152720878-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-152720878-1');
+      </script>
+      <script>
+
+      var browserHasLocalStorage = typeof(Storage) !== "undefined";
+
+      // Date.now() polyfill
+      if (!Date.now) {
+        Date.now = function now() {
+          return new Date().getTime();
+        };
+      }
+
+      var LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP = "twitter_ignore_timestamp";
+
+      var iso8601DurationRegex = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
+
+      function makeGetRequest(url){
+        var Httpreq = new XMLHttpRequest(); // a new request
+        Httpreq.open("GET", url, false);
+        Httpreq.send(null);
+        return Httpreq.responseText;
+      }
+
+      function makeJSONRequest(url) {
+        return JSON.parse(makeGetRequest(url));
+      }
+
+      $(document).ready(function() {
+        if (browserHasLocalStorage && window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)
+          && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP)) > Date.now()) {
+          document.querySelector("h3#twitter").style.display = "none";
+        } else {
+          document.querySelector("h3#twitter").style.display = "";
+        }
+
+        var dark_link = document.getElementById("dark");
+        var theme_switch = (should_dark_mode_func) => {
+          if (should_dark_mode_func()) {
+            document.body.style.background = "black";
+            document.body.style.color = "white";
+            document.cookie = "theme=dark; SameSite=Strict";
+            document.getElementById("dark").children[0].text = "LIGHT";
+          } else {
+            document.body.style.background = "white";
+            document.body.style.color = "black";
+            document.cookie = "theme=light; SameSite=Strict";
+            document.getElementById("dark").children[0].text = "DARK";
+          }
+        }
+        var is_background_white = () => document.body.style.background.includes("white");
+
+        if (is_background_white()) {
+          document.getElementById("dark").children[0].text = "DARK";
+        } else {
+          document.getElementById("dark").children[0].text = "LIGHT";
+        }
+        document.querySelector("li#dark > a").onclick = theme_switch.bind(null, is_background_white);
+        theme_switch(() => !document.cookie.split(';').filter(
+            (item) => item.includes('theme=light')).length);
+
+        document.querySelector("li#roll > a").onclick = () => rollClicked();
+        document.querySelector("li#delete > a").onclick = () => deleteClicked();
+        document.querySelector("li#undo > a").onclick = () => undoClicked();
+        document.querySelector("li#redo > a").onclick = () => redoClicked();
+        document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
+        document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
+        document.getElementById('task-input').addEventListener('input', scheduleSaveTodo);
+
+        loadTodo();
+
+      });
+
+      const scheduleSaveTodo = (() => {
+        return (() => {
+          let saveTimeout;
+
+          return () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveTodo, 1000);
+          };
+        })();
+      })()
+
+      function saveTodo() {
+          const todoInput = document.getElementById('task-input');
+          const todoText = todoInput.value;
+
+          localStorage.setItem('todoText', todoText);
+      }
+
+      function loadTodo() {
+          const todoInput = document.getElementById('task-input');
+          const savedTodoText = localStorage.getItem('todoText');
+
+          if (savedTodoText) {
+              todoInput.value = savedTodoText;
+          }
+      }
+
+      function tooltip(msg = "") {
+        document.querySelector("h3#tooltip").textContent = msg;
+      }
+
+      function hideTwitter(perma) {
+        document.querySelector("h3#twitter").style.display = "none";
+        if (browserHasLocalStorage) {
+          window.localStorage.setItem(LOCALSTORAGE_SHOW_TWITTER_TIMESTAMP, perma ? Number.MAX_SAFE_INTEGER : Date.now() + 80000000)
+        }
+      }
+
+      String.prototype.replaceAt = function(index, replacement) {
+        return this.substring(0, index) + replacement + this.substring(index + replacement.length);
+      }
+
+      const diceUnicode = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+      async function rollClicked() {
+        const taskInput = document.getElementById("task-input");
+        const taskText = taskInput.value.trim();
+        const tasks = taskText.split("\n");
+
+        // Calculate the number of dice needed
+        const numTasks = tasks.length;
+        const numDice = Math.ceil((numTasks - 1) / 5);
+
+        let selectedIndex = 0;
+        let diceSum = 0;
+        let diceResults = "";
+
+
+        let arrowcol = document.getElementsByClassName("arrowcol")[0]
+        arrowcol.innerHTML = "";
+        // Simulate rolling dice
+        for (let i = 0; i < numDice; i++) {
+          await new Promise(r => setTimeout(r, 50));
+          window.requestAnimationFrame(r => {});
+          const diceRoll = Math.floor(Math.random() * 6);
+          for (let j = 0; j < diceRoll; j++) {
+            arrowcol.innerHTML += `  <br>`;
+          }
+          arrowcol.innerHTML += `${diceUnicode[diceRoll]}`;
+          if (numDice - 1 == i) {
+            let numBreaks = (arrowcol.innerHTML.match(/<br>/g) || []).length;
+            if (numBreaks >= numTasks) {
+              arrowcol.innerHTML = arrowcol.innerHTML.replaceAt((numBreaks-numTasks)*6+1, `►`);
+              arrowcol.innerHTML = arrowcol.innerHTML.replaceAt((numBreaks-numTasks)*6, `\xa0`);
+            } else {
+              arrowcol.innerHTML += `►`;
+            }
+            break;
+          } else {
+            arrowcol.innerHTML += `  `;
+          }
+          arrowcol.innerHTML += `<br>`;
+        }
+      }
+
+      function deleteClicked() {
+        let arrowcol = document.getElementsByClassName("arrowcol")[0];
+        let numBreaks = (arrowcol.innerHTML.substring(0, arrowcol.innerHTML.indexOf(`►`)).match(/<br>/g) || []).length;
+        let taskInput = document.getElementById("task-input");
+        let taskText = taskInput.value.trim();
+        let tasks = taskText.split("\n");
+        let deletedTask = tasks.splice(numBreaks, 1);
+
+        // Focus the textarea and set the selection range to the start of the line to be deleted
+        taskInput.focus();
+        let selectionStart = taskText.indexOf((deletedTask[0] || "\n\n"));
+        let selectionEnd = selectionStart + (deletedTask[0] || "").length + 1;
+        taskInput.setSelectionRange(selectionStart, selectionEnd);
+
+        // Use execCommand to delete the line
+        document.execCommand('delete');
+
+        arrowcol.innerHTML = "";
+        saveTodo();
+      }
+
+      function undoClicked() {
+        let taskInput = document.getElementById("task-input");
+        taskInput.focus(); // Make sure the textarea is focused
+        document.execCommand("undo");
+      }
+
+      function redoClicked() {
+        let taskInput = document.getElementById("task-input");
+        taskInput.focus(); // Make sure the textarea is focused
+        document.execCommand("redo");
+      }
+
+
+
+    </script>
+</body>
+</html>
