@@ -220,6 +220,7 @@
             <li id="delete"><a onmouseover="tooltip('click to delete the item that was rolled')" onmouseout="tooltip()">FINISH TASK</a></li>
             <li id="undo"><a onmouseover="tooltip('click to undo changes in the list')" onmouseout="tooltip()">UNDO</a></li>
             <li id="redo"><a onmouseover="tooltip('click to redo changes in the list')" onmouseout="tooltip()">REDO</a></li>
+            <li id="clear"><a onmouseover="tooltip('click to clear the roll')" onmouseout="tooltip()">CLEAR ROLL</a></li>
             <hr>
             <li id="dark"><a onmouseover="tooltip('toggle light/dark mode')" onmouseout="tooltip()">LIGHT</a></li>
           </ol>
@@ -306,6 +307,7 @@
         document.querySelector("li#delete > a").onclick = () => deleteClicked();
         document.querySelector("li#undo > a").onclick = () => undoClicked();
         document.querySelector("li#redo > a").onclick = () => redoClicked();
+        document.querySelector("li#clear > a").onclick = () => clearRollClicked();
         document.querySelector("a#hidetwitter").onclick = () => hideTwitter(false);
         document.querySelector("a#permahidetwitter").onclick = () => hideTwitter(true);
         document.getElementById('task-input').addEventListener('input', scheduleSaveTodo);
@@ -432,7 +434,10 @@
         document.execCommand("redo");
       }
 
-
+      function clearRollClicked() {
+        let arrowcol = document.getElementsByClassName("arrowcol")[0];
+        arrowcol.innerHTML = "";
+      }
 
     </script>
 </body>
