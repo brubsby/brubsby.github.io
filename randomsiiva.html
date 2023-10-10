@@ -1110,7 +1110,20 @@
 
     function updateNowPlaying() {
       document.querySelector("h2#nowplaying").textContent = currentVidTitle;
+      document.title = currentVidTitle;
+      updateMediaSession();
       document.querySelector("h2#author").textContent = currentChannel;
+    }
+
+    function updateMediaSession() {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentVidTitle,
+        artist: currentChannel,
+        album: '',
+        artwork: [
+        { src: 'https://img.youtube.com/vi/' + currentVidId + '/0.jpg', sizes: '480x360', type: 'image/jpg' },
+        ]
+      });
     }
 
     function updateTitleMaxWidth() {
