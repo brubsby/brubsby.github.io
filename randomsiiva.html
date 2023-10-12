@@ -1110,16 +1110,16 @@
 
     function updateNowPlaying() {
       document.querySelector("h2#nowplaying").textContent = currentVidTitle;
-      document.title = currentVidTitle;
+      document.title = currentVidTitle + " - Random Rip Player";
       updateMediaSession();
       document.querySelector("h2#author").textContent = currentChannel;
     }
 
     function updateMediaSession() {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentVidTitle,
+        title: currentVidTitle.match(/^.*?((?=\s[-|]\s)|$)/g),
         artist: currentChannel,
-        album: '',
+        album: currentVidTitle.match(/(?<=\s[-|]\s).*$/g),
         artwork: [
         { src: 'https://img.youtube.com/vi/' + currentVidId + '/0.jpg', sizes: '480x360', type: 'image/jpg' },
         ]
