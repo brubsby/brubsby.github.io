@@ -1014,6 +1014,7 @@
         filteredSortedVids = filteredSortedVids.filter((vid_info) => vid_info[2] === false);
       }
       filteredSortedVids = filteredSortedVids.filter((vid_info) => !RIP_BLOCKLIST.includes(cyrb53(vid_info[0])));
+      filteredSortedVids = filteredSortedVids.filter((vid_info) => !vid_info[0])
       if (sortOption.startsWith("RANDOM")) {
         if (sortOption != "RANDOM") { // time based random needs sorted
           filteredSortedVids.sort((a, b) => sortOptions[sortIndex][1](b) - sortOptions[sortIndex][1](a));
