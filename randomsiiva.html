@@ -1030,7 +1030,11 @@
           var vid_index = mapped_vids.indexOf(sortOptions[sortIndex][2].apply(null, mapped_vids));
           if (vid_index == -1) return;
           mapped_vids.slice(vid_index, 1);
-          return filteredSortedVids.splice(vid_index, 1)[0][0];
+          var inner = filteredSortedVids.splice(vid_index, 1)[0]
+          if (!inner) {
+            return;
+          }
+          return inner[0];
         }).filter(Boolean);
       }
     }
@@ -1124,6 +1128,7 @@
         { src: 'https://img.youtube.com/vi/' + currentVidId + '/0.jpg', sizes: '480x360', type: 'image/jpg' },
         ]
       });
+      navigator.mediaSession.setActionHandler()
     }
 
     function updateTitleMaxWidth() {
