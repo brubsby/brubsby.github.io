@@ -540,11 +540,27 @@
       vavr_vids = vid_db[2];
     }
 
+    function chunk(arr, size) {
+      if (arr.length <= size) {
+        return [ arr ]
+      } else {
+        return [ arr.slice(0, size), ...chunk(arr.slice(size), size) ]
+      }
+    }
+
     function checkBootlegSheets() {
       if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
         var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
         var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title) && !CHANNEL_BLOCKLIST.includes(cyrb53(title)));
-        var bootlegSheetsJSON = makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + bootlegSheetNames.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join(''));
+        // too many bootleg channels, gotta bach the queries
+        var bootlegSheetNameBatches = chunk(bootlegSheetNames, 100);
+        var bootlegSheetsJSONs = bootlegSheetNameBatches.map(names => makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + names.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join('')));
+        // merge the multiple queries into one JSON
+        var bootlegSheetsJSON = bootlegSheetsJSONs.reduce((retval, bootlegJSON) => {
+          retval['spreadsheetId'] = bootlegJSON['spreadsheetId'];
+          retval['valueRanges'] = (retval['valueRanges'] ? retval['valueRanges'] : []).concat(bootlegJSON['valueRanges']);
+          return retval;
+        }, {})
         bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
         if (browserHasLocalStorage) {
           window.localStorage.setItem(LOCALSTORAGE_BOOTLEG_VID_DB, LZString.compressToUTF16(JSON.stringify(bootleg_vid_db)));
