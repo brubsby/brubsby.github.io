@@ -684,7 +684,7 @@
         ["h4#homepage > a",      undefined,
         "visit my homepage!"],
         ["li#rip_wiki_link > a", undefined,
-        "opens link to the wikia page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!) (hotkey: ctrl-shift-f)"],
+        "opens link to the wiki page for this rip (if it exists) in a new tab. (consider making one if it doesn\'t!) (hotkey: ctrl-shift-f)"],
         ["li#copy > a",          copyRipLink,
         "copies this rip\'s youtube url to your clipboard!"],
         ["li#copyplaylist > a",  copyDiscordPlaylist,
@@ -1066,17 +1066,17 @@
       copyToClipboard(url);
     }
 
-    function wikiLinkFromTitle(title, wikia) {
-      if (wikia == 'SiIvaGunner') {
-        wikia == "siivagunner"
-      } else if (wikia == "TimmyTurnersGrandDad") {
-        wikia = "ttgd";
-      } else if (wikia == "VvvvvaVvvvvvr") {
-        wikia = "vvvvvavvvvvr";
+    function wikiLinkFromTitle(title, wiki) {
+      if (wiki == 'SiIvaGunner') {
+        wiki == "siivagunner"
+      } else if (wiki == "TimmyTurnersGrandDad") {
+        wiki = "ttgd.fandom.com";
+      } else if (wiki == "VvvvvaVvvvvvr") {
+        wiki = "vvvvvavvvvvr.fandom.com";
       } else {
-        return "";
+        return "siivagunner.wiki";
       }
-      return 'https://' + wikia + '.fandom.com/wiki/' + title.replaceAll(' ', '_')
+      return 'https://' + wiki + '/wiki/' + title.replaceAll(' ', '_')
         .replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')').replaceAll('?', '%3F');
     }
 
@@ -1319,7 +1319,7 @@
     function autoWikiPopup() {
       var wikiLink = wikiLinkFromTitle(currentVidTitle, currentChannel);
       if (!wikiLink) {
-        wikiLink = "https://siivagunner.fandom.com/wiki/SiIvaGunner_Wikia";
+        wikiLink = "https://www.siivagunner.wiki/wiki/SiIvaGunner_Wiki";
       }
       autoWikiWindow = window.open(wikiLink,
       "Auto Updating Wiki Popup", ["resizable", "scrollbars", "status"]);
