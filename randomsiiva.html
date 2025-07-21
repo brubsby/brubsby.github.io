@@ -1074,7 +1074,7 @@
       } else if (wiki == "VvvvvaVvvvvvr") {
         wiki = "vvvvvavvvvvr.fandom.com";
       } else {
-        return "siivagunner.wiki";
+        return;
       }
       return 'https://' + wiki + '/wiki/' + title.replaceAll(' ', '_')
         .replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')').replaceAll('?', '%3F');
