@@ -372,6 +372,7 @@
 
     var skewed_distribution = (x, c) => (1 + c) * x / (1 + c * x);
 
+    var nextVidId;
     var currentVidId;
     var previousVidId;
     var currentVidTitle;
@@ -744,13 +745,6 @@
         element.onblur = tooltip.bind(null, '');
       });
 
-      navigator.mediaSession.setActionHandler('nexttrack', function() {
-        skipVid();
-      });
-
-      navigator.mediaSession.setActionHandler('previoustrack', function() {
-        previousVid();
-      });
 
       document.addEventListener('keydown', event => {
         switch (event.code) {
@@ -1051,7 +1045,7 @@
       }
     }
 
-    function nextVidId() {
+    function getNextVidId() {
       return getVidIds(1)[0] || "h6Ja9JyXs-I";
     }
 
@@ -1080,6 +1074,42 @@
         .replaceAll(/[#|]+/gi,'').replaceAll('[','(').replaceAll(']',')').replaceAll('?', '%3F');
     }
 
+    // Handle updating the fake playlist that we feed the YouTube player API.
+    function onSongTransition(newIndex){
+      const isTransitionForward = newIndex === 2 || (newIndex === 1 && !previousVidId);
+      if (isTransitionForward) {
+        markVidWatched(currentVidId);
+        previousVidId = currentVidId;
+        if (nextVidId) {
+          currentVidId = nextVidId; // TODO: doesn't account for setting changes between videos
+        } else {
+          currentVidId = getNextVidId();
+          player.stopVideo(); // neccessary to overwrite the current video
+        }
+        window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, getRandomUnwatchedSiivaVid());
+        previousChannel = currentChannel;
+        isPreviousVidKFAD = isCurrentVidKFAD;
+        isInfoReady = false;
+        
+        var newIds = [];
+        newIds.push(previousVidId);
+        newIds.push(currentVidId);
+        nextVidId = getNextVidId();
+        newIds.push(nextVidId);
+        player.loadPlaylist(newIds, 1);
+      } else if (newIndex === 0 && previousVidId) {
+        // transition backwards
+        nextVidId = currentVidId;
+        currentVidId = previousVidId;
+        previousVidId = null;
+        isInfoReady = false;
+      }
+    }
+
+    function initialPlaylist() {
+      return [currentVidId, "7VcYz6KZtqs"].join(',');
+    }
+
     var tag = document.createElement('script');
 
     tag.src = "https://www.youtube.com/iframe_api";
@@ -1089,11 +1119,13 @@
     var player;
     window.onYouTubeIframeAPIReady = async () => {
       var embedcontainerElement = document.querySelector('div.embedcontainer');
+      currentVidId = await first_vid_promise;
       player = new YT.Player('player', {
         height: parseInt(embedcontainerElement.offsetHeight),
         width: parseInt(embedcontainerElement.offsetWidth),
-        videoId: await first_vid_promise,
         playerVars: {
+          playlist: initialPlaylist(),
+          index: 0,
           autoplay: 1,
           enablejsapi: 1,
           disablekb: 0,
@@ -1108,7 +1140,6 @@
           'onError': onError
         }
       });
-      currentVidId = await first_vid_promise;
     }
 
     function onTitleReady() {
@@ -1127,19 +1158,7 @@
     function updateNowPlaying() {
       document.querySelector("h2#nowplaying").textContent = currentVidTitle;
       document.title = currentVidTitle + " - Random Rip Player";
-      updateMediaSession();
       document.querySelector("h2#author").textContent = currentChannel;
-    }
-
-    function updateMediaSession() {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentVidTitle.match(/^.*?((?=\s[-|]\s)|$)/g),
-        artist: currentChannel,
-        album: currentVidTitle.match(/(?<=\s[-|]\s).*$/g),
-        artwork: [
-        { src: 'https://img.youtube.com/vi/' + currentVidId + '/0.jpg', sizes: '480x360', type: 'image/jpg' },
-        ]
-      });
     }
 
     function updateTitleMaxWidth() {
@@ -1200,18 +1219,7 @@
     }
 
     function newVid(markWatched) {
-      if (markWatched) {
-        markVidWatched(currentVidId);
-      }
-      previousVidId = currentVidId;
-      currentVidId = nextVidId();
-      //store a random vid id in localstorage so we can load fast on refresh
-      window.localStorage.setItem(LOCALSTORAGE_RANDOM_VID, getRandomUnwatchedSiivaVid());
-      previousChannel = currentChannel;
-      isPreviousVidKFAD = isCurrentVidKFAD;
-      isInfoReady = false;
-      player.loadVideoById(currentVidId);
-      player.playVideo();
+      player.nextVideo(); // TODO: don't think this is enough if autoplay is off?
     }
 
     function markVidWatched(vidId) {
@@ -1234,13 +1242,19 @@
     }
 
     function onPlayerStateChange(event) {
-      if (event.data == YT.PlayerState.ENDED) {
+      if (event.data == YT.PlayerState.UNSTARTED || event.data == YT.PlayerState.ENDED) { // fires during playlist transitions
         clearTimeOver();
-        if (isAutoplay) {
-          newVid(true);
+        var newIndex = player.getPlaylistIndex(); // should always be 0 (skip back), 1 (second video after initial load), or 2 (skip forward)
+        if (!autoplay && event.data == YT.PlayerState.UNSTARTED) { // todo: going backwards triggers this too
+          player.pauseVideo(); // don't play more if autoplay is off
+          return;
         }
+        if (!autoplay && event.data == YT.PlayerState.ENDED) {
+          return;
+        }
+        onSongTransition(newIndex);
       } else if (event.data == YT.PlayerState.PLAYING && !isInfoReady) {
-          onTitleReady();
+        onTitleReady();
       }
       if (event.data == YT.PlayerState.PLAYING) {
         setTimeOver();
@@ -1259,12 +1273,7 @@
 
     function previousVid() {
       if (previousVidId) {
-        var swap = currentVidId;
-        currentVidId = previousVidId;
-        previousVidId = swap;
-        isInfoReady = false;
-        player.loadVideoById(currentVidId);
-        player.playVideo();
+        player.previousVideo();
       }
     }
 
