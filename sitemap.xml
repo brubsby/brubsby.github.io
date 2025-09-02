@@ -2,7 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
    <url>
       <loc>https://brubsby.com</loc>
-      <lastmod>2020-10-26</lastmod>
+      <lastmod>2020-09-02</lastmod>
+   </url>
+      <url>
+      <loc>https://brubsby.com</links/loc>
+      <lastmod>2025-09-02</lastmod>
    </url>
    <url>
       <loc>https://brubsby.com/randomsiiva</loc>

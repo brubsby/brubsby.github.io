@@ -153,6 +153,11 @@
       throw "sample error, random value was " + index_val + " but total weight was " + this.total_weight;
     }
     get_index(i) {return this.objects[i]["obj"];}
+    index_of(o) {
+      for (var i = 0; i < this.objects.length; i++) {
+        if (this.objects[i]["obj"] === o) return i;
+      }
+    }
     size() {return this.objects.length;}
   }
 
@@ -1758,7 +1763,7 @@
       var tooltip = $("span.tooltip");
       tooltip.empty();
       if (txt) {
-        tooltip.append(txt);
+        tooltip.append('<a href="?a=' + animations.index_of(animation) + '">' + txt + '</a>');
       }
   }
 
@@ -1771,10 +1776,8 @@
         <h1><a href="">BRUBSBY</a></h1>
         <ol id="links">
           <li id="github"><a href="https://github.com/brubsby">GITHUB</a></li>
-          <li id="links"><a href="https://linktr.ee/brubsby">LINKS</a></li>
-          <li id="kofi"><a href="https://ko-fi.com/brubsby">KOFI</a></li>
+          <li id="links"><a href="links.html">LINKS</a></li>
           <li id="cozyvec"><a href="http://brubsby.com/cozyvec">COZYVEC</a></li>
-          <li id="inquiries"><a href="https://twitter.com/messages/compose?recipient_id=2402350662">INQUIRIES</a></li>
           <li id="randomsiiva"><a href="https://brubsby.com/randomsiiva">RANDOMSIIVA</a></li>
           <li id="dicetodo"><a href="https://brubsby.com/dicetodo">DICETODO</a></li>
           <li id="dark"><a tabindex="0"></a></li>
