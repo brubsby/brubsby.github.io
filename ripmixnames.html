@@ -330,7 +330,19 @@
         if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
           var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
           var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title) && !CHANNEL_BLOCKLIST.includes(cyrb53(title)));
-          var bootlegSheetsJSON = makeJSONRequest(BOOTLEG_SHEETS_BATCH_QUERY + bootlegSheetNames.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join(''));
+          
+          var combinedValueRanges = [];
+          var chunkSize = 50;
+          for (var i = 0; i < bootlegSheetNames.length; i += chunkSize) {
+            var chunk = bootlegSheetNames.slice(i, i + chunkSize);
+            var chunkUrl = BOOTLEG_SHEETS_BATCH_QUERY + chunk.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join('');
+            var chunkJson = makeJSONRequest(chunkUrl);
+            if (chunkJson && chunkJson.valueRanges) {
+              combinedValueRanges = combinedValueRanges.concat(chunkJson.valueRanges);
+            }
+          }
+          var bootlegSheetsJSON = { valueRanges: combinedValueRanges };
+
           bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
           if (browserHasLocalStorage) {
             setTimeout(() => {
