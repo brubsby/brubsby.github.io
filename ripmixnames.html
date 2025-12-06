@@ -280,27 +280,28 @@
       var statIndex = 0;
       var statOption = statOptions[statIndex];
 
-      checkSheets();
-      checkBootlegSheets();
-      recalculateStats();
-
-      function makeGetRequest(url){
-        var Httpreq = new XMLHttpRequest(); // a new request
-        Httpreq.open("GET", url, false);
-        Httpreq.send(null);
-        return Httpreq.responseText;
+      async function init() {
+        await Promise.all([checkSheets(), checkBootlegSheets()]);
+        recalculateStats();
       }
+      init();
 
-      function makeJSONRequest(url) {
-        return JSON.parse(makeGetRequest(url));
+      async function makeJSONRequest(url) {
+        try {
+          const response = await fetch(url);
+          return await response.json();
+        } catch(e) {
+          console.error(e);
+          return null;
+        }
       }
 
       var siiva_vids, ttgd_vids, vavr_vids, bootleg_vids;
       var vid_db, bootleg_vid_db;
 
-      function checkSheets() {
+      async function checkSheets() {
         if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_SHEET_TIMESTAMP)) > Date.now())) {
-          var sheetsjson = makeJSONRequest(SHEETS_QUERY);
+          var sheetsjson = await makeJSONRequest(SHEETS_QUERY);
           vid_db = processSheetsJSON(sheetsjson);
           if (browserHasLocalStorage) {
             setTimeout(() => {
@@ -317,7 +318,7 @@
           } catch (e) {
             window.localStorage.removeItem(LOCALSTORAGE_VID_DB);
             window.localStorage.removeItem(LOCALSTORAGE_SHEET_TIMESTAMP);
-            checkSheets();
+            await checkSheets();
             return;
           }
         }
@@ -326,21 +327,27 @@
         vavr_vids = vid_db[2];
       }
 
-      function checkBootlegSheets() {
+      async function checkBootlegSheets() {
         if (!browserHasLocalStorage || window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_VID_DB) === null || !(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP) && parseInt(window.localStorage.getItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP)) > Date.now())) {
-          var bootlegSheetNameJSON = makeJSONRequest(BOOTLEG_SHEET_QUERY);
+          var bootlegSheetNameJSON = await makeJSONRequest(BOOTLEG_SHEET_QUERY);
           var bootlegSheetNames = bootlegSheetNameJSON['sheets'].map(sheet => sheet.properties['title']).filter(title => !['Summary', 'Template'].includes(title) && !CHANNEL_BLOCKLIST.includes(cyrb53(title)));
           
           var combinedValueRanges = [];
           var chunkSize = 50;
+          var promises = [];
           for (var i = 0; i < bootlegSheetNames.length; i += chunkSize) {
             var chunk = bootlegSheetNames.slice(i, i + chunkSize);
             var chunkUrl = BOOTLEG_SHEETS_BATCH_QUERY + chunk.map(name => '&ranges=' + encodeURIComponent(name) + '!A2:K').join('');
-            var chunkJson = makeJSONRequest(chunkUrl);
+            promises.push(makeJSONRequest(chunkUrl));
+          }
+          
+          var results = await Promise.all(promises);
+          results.forEach(chunkJson => {
             if (chunkJson && chunkJson.valueRanges) {
               combinedValueRanges = combinedValueRanges.concat(chunkJson.valueRanges);
             }
-          }
+          });
+
           var bootlegSheetsJSON = { valueRanges: combinedValueRanges };
 
           bootleg_vid_db = processBootlegSheetsJSON(bootlegSheetsJSON);
@@ -359,7 +366,7 @@
           } catch (e) {
             window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_VID_DB);
             window.localStorage.removeItem(LOCALSTORAGE_BOOTLEG_SHEET_TIMESTAMP);
-            checkBootlegSheets();
+            await checkBootlegSheets();
             return;
           }
         }
