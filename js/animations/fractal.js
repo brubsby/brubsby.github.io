@@ -120,6 +120,18 @@ export default (this_animation) => {
       "description" : "celtic mandelbrot",
       "setup": function(seed) { return { formula: this.formula, start: seed }; }
     };
+    var tippetts = {
+      "formula" : (z, c) => {
+        var x = z.re * z.re - z.im * z.im + c.re;
+        var y = 2 * x * z.im + c.im;
+        return window.math.complex(x, y);
+      },
+      "theta_func" : () => Math.random() * 2 * Math.PI,
+      "boundary_finder_iteration_multiplier" : 0.5,
+      "start_func" : () => window.math.complex(0, 0),
+      "description" : "tippetts mandelbrot",
+      "setup": function(seed) { return { formula: this.formula, start: seed }; }
+    };
     var mandelpower = {
       "theta_func" : () => Math.random() * 2 * Math.PI,
       "boundary_finder_iteration_multiplier" : 0.5,
@@ -156,6 +168,7 @@ export default (this_animation) => {
       .put(cubic, 2)
       .put(quartic, 2)
       .put(celtic, 2)
+      .put(tippetts, 2)
       .put(mandelpower, 2)
       .put(julia, 4);
 
