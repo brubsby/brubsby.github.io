@@ -117,6 +117,7 @@ export default (this_animation) => {
       .put(celtic, 2)
       .put(julia, 4);
 
+    window.sub_animation_size = window.fractals.size();
     if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < window.fractals.size()) {
       window.fractal = window.fractals.get_index(window.sub_animation_index);
     } else {

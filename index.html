@@ -275,7 +275,7 @@
     } else {
       dark_link.children[0].text = "LIGHT";
     }
-    let theme_switch_oncall = theme_switch.bind(null, is_background_white)
+    var theme_switch_oncall = theme_switch.bind(null, is_background_white)
     dark_link.onclick = theme_switch_oncall;
     dark_link.onkeydown = (event) => {
       switch (event.code) {
@@ -289,9 +289,56 @@
 
     reset_canvas();
 
+    var updateBrubsbyLink = function() {
+        var brubsby = $("h1 > a:first").get()[0];
+        var a_param = getUrlParameter("a");
+        var b_param = getUrlParameter("b");
+        var c_param = getUrlParameter("c");
+
+        var new_a = a_param;
+        var new_b = b_param;
+        var new_c = c_param;
+
+        if (c_param !== undefined) {
+            var parsed_c = parseInt(c_param, 10);
+            new_c = isNaN(parsed_c) ? c_param + "1" : parsed_c + 1;
+        } else if (b_param !== undefined) {
+            var parsed_b = parseInt(b_param, 10);
+            var parsed_a = parseInt(a_param, 10) || 0;
+            var sub_size = window.sub_animation_size || 1;
+            
+            if (!isNaN(parsed_b)) {
+                if (parsed_b + 1 >= sub_size) {
+                    new_a = (parsed_a + 1) % window.animations.size();
+                    new_b = 0;
+                } else {
+                    new_b = parsed_b + 1;
+                }
+            }
+        } else if (a_param !== undefined) {
+            var parsed_a = parseInt(a_param, 10);
+            if (!isNaN(parsed_a)) {
+                new_a = (parsed_a + 1) % window.animations.size();
+            }
+        } else {
+            brubsby.href = window.location.pathname;
+            return;
+        }
+
+        var params = [];
+        if (new_a !== undefined && new_a !== null) params.push("a=" + new_a);
+        if (new_b !== undefined && new_b !== null) params.push("b=" + new_b);
+        if (new_c !== undefined && new_c !== null) params.push("c=" + new_c);
+        
+        brubsby.href = "?" + params.join("&");
+    };
+
     import(`./js/animations/${animation_file}`).then(module => {
         const animationFunc = module.default;
-        setTimeout(animationFunc.bind(null, animationFunc), 0);
+        setTimeout(() => {
+            animationFunc.call(null, animationFunc);
+            updateBrubsbyLink();
+        }, 0);
     });
   });
   </script>

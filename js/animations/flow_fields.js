@@ -15,6 +15,7 @@ export default (this_animation) => {
       .put(() => [0, Math.random() * height], height)
       .put(() => [width, Math.random() * height], height);
     
+    window.sub_animation_size = window.random_edge_point_sampler.size();
     var sampler_index;
     if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < window.random_edge_point_sampler.size()) {
       sampler_index = window.sub_animation_index;

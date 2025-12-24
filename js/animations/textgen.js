@@ -63,6 +63,7 @@ export default (this_animation) => {
       }, "pi"], 1);
     } catch(e) {}
 
+        window.sub_animation_size = textgen_funcs.size();
         var textgen_sample;
         var textgen_index;
         if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < textgen_funcs.size()) {

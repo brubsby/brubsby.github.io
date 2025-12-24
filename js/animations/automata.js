@@ -21,10 +21,10 @@ export default (this_animation) => {
           // rules that would confuse the audience / class 1
         weight = 0.1;
       }
-      rulesets.put(ruleset, weight);
-    }
-            window.universe = universe_generators.sample()(window.columns);
-            if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < rulesets.size()) {
+                rulesets.put(ruleset, weight);
+              }
+              window.sub_animation_size = rulesets.size();
+              window.universe = universe_generators.sample()(window.columns);            if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < rulesets.size()) {
               window.rules = rulesets.get_index(window.sub_animation_index);
             } else {
               window.rules = rulesets.sample();

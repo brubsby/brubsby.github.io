@@ -17,7 +17,8 @@ export default (this_animation) => {
       .put([() => ['\u2588', ' '][Math.floor(Math.random()*2)], ".5\u2588_"], 0.25)
       .put([() => '\\', "\\"], 0.5)
       .put([() => '/', "/"], 0.5);
-            var character_generator_sample;
+        window.sub_animation_size = character_generators.size();
+        var character_generator_sample;
             var character_generator_index;
             if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < character_generators.size()) {
               character_generator_index = window.sub_animation_index;

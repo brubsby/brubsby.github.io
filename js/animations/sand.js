@@ -36,9 +36,9 @@ export default (this_animation) => {
       .put([(freq, i) => 1, "right"], 0.25)
       .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.5), "simplex(o=1)"], 1)
       .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.25, 2), "simplex(o=2)"], 0.5)
-      .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.125, 3), "simplex(o=3)"], 0.5);
-            var dropper;
-            var dropper_index;
+                .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.125, 3), "simplex(o=3)"], 0.5);
+              window.sub_animation_size = window.dropper_movement_funcs.size();
+              var dropper;            var dropper_index;
             if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < window.dropper_movement_funcs.size()) {
               dropper_index = window.sub_animation_index;
               dropper = window.dropper_movement_funcs.get_index(dropper_index);
