@@ -69,73 +69,54 @@ export default (this_animation) => {
     var center_finder_iterations = iterations;
     var center_finder_max_radius = 4;
 
-    var mandelbrot = {
-      "formula" : (z, c) => window.math.add(window.math.pow(z, 2), c),
+    var createFractal = (props) => Object.assign({
       "theta_func" : () => Math.random() * 2 * Math.PI,
       "boundary_finder_iteration_multiplier" : 0.5,
       "start_func" : () => window.math.complex(0, 0),
-      "description" : "mandelbrot",
       "setup": function(seed) { return { formula: this.formula, start: seed }; }
-    };
-    var tricorn = {
+    }, props);
+
+    var mandelbrot = createFractal({
+      "formula" : (z, c) => window.math.add(window.math.pow(z, 2), c),
+      "description" : "mandelbrot"
+    });
+    var tricorn = createFractal({
       "formula" : (z, c) => window.math.add(window.math.pow(window.math.conj(z), 2), c),
       "theta_func" : () => (Math.random() * 2 - 1) * 0.13 + Math.PI + (Math.floor(Math.random() * 3) * 2 * Math.PI / 3),
       "boundary_finder_iteration_multiplier" : 0.99,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "tricorn",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }
-    };
-    var burningShip = {
+      "description" : "tricorn"
+    });
+    var burningShip = createFractal({
       "formula" : (z, c) => window.math.add(window.math.pow(window.math.complex(window.math.abs(z.re), window.math.abs(z.im)), 2), c),
       "theta_func" : () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
       "boundary_finder_iteration_multiplier" : 0.95,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "burning ship",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }
-    };
-    var cubic = {
+      "description" : "burning ship"
+    });
+    var cubic = createFractal({
       "formula" : (z, c) => window.math.add(window.math.pow(z, 3), c),
-      "theta_func" : () => Math.random() * 2 * Math.PI,
-      "boundary_finder_iteration_multiplier" : 0.5,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "cubic mandelbrot",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }
-    };
-    var quartic = {
+      "description" : "cubic mandelbrot"
+    });
+    var quartic = createFractal({
       "formula" : (z, c) => window.math.add(window.math.pow(z, 4), c),
-      "theta_func" : () => Math.random() * 2 * Math.PI,
-      "boundary_finder_iteration_multiplier" : 0.5,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "quartic mandelbrot",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }
-    };
-    var celtic = {
+      "description" : "quartic mandelbrot"
+    });
+    var celtic = createFractal({
       "formula" : (z, c) => {
         var z2 = window.math.pow(z, 2);
         return window.math.add(window.math.complex(window.math.abs(z2.re), z2.im), c);
       },
-      "theta_func" : () => Math.random() * 2 * Math.PI,
-      "boundary_finder_iteration_multiplier" : 0.5,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "celtic mandelbrot",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }
-    };
-    var tippetts = {
+      "theta_func" : () => Math.PI + (Math.random() - 0.5) * Math.PI * 0.75,
+      "description" : "celtic mandelbrot"
+    });
+    var tippetts = createFractal({
       "formula" : (z, c) => {
         var x = z.re * z.re - z.im * z.im + c.re;
         var y = 2 * x * z.im + c.im;
         return window.math.complex(x, y);
       },
-      "theta_func" : () => Math.random() * 2 * Math.PI,
-      "boundary_finder_iteration_multiplier" : 0.5,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "tippetts mandelbrot",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }
-    };
-    var mandelpower = {
-      "theta_func" : () => Math.random() * 2 * Math.PI,
-      "boundary_finder_iteration_multiplier" : 0.5,
-      "start_func" : () => window.math.complex(0, 0),
+      "description" : "tippetts mandelbrot"
+    });
+    var mandelpower = createFractal({
       "description" : "mandelpower",
       "setup": function(seed) {
           var M;
@@ -151,15 +132,13 @@ export default (this_animation) => {
           this.M = M;
           return { formula: (z, c) => window.math.add(window.math.pow(z, M), c), start: null };
       }
-    };
-    var julia = {
-      "formula" : (z, c) => window.math.add(window.math.pow(z, 2), c),
-      "theta_func" : () => Math.random() * 2 * Math.PI,
+    });
+    var julia = createFractal({
       "boundary_finder_iteration_multiplier" : 0.75,
       "start_func" : () => find_boundary_point(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot),
       "description" : "julia",
       "setup": function(seed) { return { formula: (z) => window.math.add(window.math.pow(z, 2), seed), start: null }; }
-    };
+    });
 
     window.fractals = new ObjectSampler()
       .put(mandelbrot, 2)
