@@ -18,6 +18,24 @@ var fractal_iteration = (point, formula, max_iterations, start=0, threshold=2) =
   return iterations == max_iterations;
 }
 
+var find_boundary_point = (center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal) => {
+  var theta = fractal["theta_func"]();
+  var low = 0;
+  var high = center_finder_max_radius;
+  var candidate_radius = Math.random() * center_finder_max_radius;
+  var candidate_point;
+  for (var i = 0; i < center_finder_iterations; i++) {
+    candidate_point = window.math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
+    if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"])) {
+      low = candidate_radius;
+    } else {
+      high = candidate_radius;
+    }
+    candidate_radius = (low + high) / 2;
+  }
+  return candidate_point;
+}
+
 export default (this_animation) => {
   var width = window.columns * window.char_width;
   var height = window.rows * window.char_height;
@@ -25,75 +43,94 @@ export default (this_animation) => {
   var this_timestamp = (new Date()).getTime();
   var framerate = 1000 / (this_timestamp - window.last_timestamp);
   window.last_timestamp = this_timestamp;
-  if (window.frame_count == 0) {
-    var find_center_corrected = (center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal) => {
-      var theta = fractal["theta_func"]();
-      var low = 0;
-      var high = center_finder_max_radius;
-      var candidate_radius = Math.random() * center_finder_max_radius;
-      var candidate_point;
-      for (var i = 0; i < center_finder_iterations; i++) {
-        candidate_point = window.math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
-        if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"])) {
-          low = candidate_radius;
-        } else {
-          high = candidate_radius;
-        }
-        candidate_radius = (low + high) / 2;
-      }
-      return candidate_point;
-    }
 
+  if (window.frame_count == 0) {
     var center_finder_iterations = iterations;
     var center_finder_max_radius = 4;
 
     var mandelbrot = {
       "formula" : (z, c) => window.math.add(window.math.pow(z, 2), c),
       "theta_func" : () => Math.random() * 2 * Math.PI,
-      "center_finder_iteration_multiplier" : 0.5,
+      "boundary_finder_iteration_multiplier" : 0.5,
       "start_func" : () => window.math.complex(0, 0),
       "description" : "mandelbrot",
+      "setup": function(seed) { return { formula: this.formula, start: seed }; }
+    };
+    var tricorn = {
+      "formula" : (z, c) => window.math.add(window.math.pow(window.math.conj(z), 2), c),
+      "theta_func" : () => (Math.random() * 2 - 1) * 0.13 + Math.PI + (Math.floor(Math.random() * 3) * 2 * Math.PI / 3),
+      "boundary_finder_iteration_multiplier" : 0.99,
+      "start_func" : () => window.math.complex(0, 0),
+      "description" : "tricorn",
+      "setup": function(seed) { return { formula: this.formula, start: seed }; }
+    };
+    var burningShip = {
+      "formula" : (z, c) => window.math.add(window.math.pow(window.math.complex(window.math.abs(z.re), window.math.abs(z.im)), 2), c),
+      "theta_func" : () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
+      "boundary_finder_iteration_multiplier" : 0.95,
+      "start_func" : () => window.math.complex(0, 0),
+      "description" : "burning ship",
+      "setup": function(seed) { return { formula: this.formula, start: seed }; }
+    };
+    var cubic = {
+      "formula" : (z, c) => window.math.add(window.math.pow(z, 3), c),
+      "theta_func" : () => Math.random() * 2 * Math.PI,
+      "boundary_finder_iteration_multiplier" : 0.5,
+      "start_func" : () => window.math.complex(0, 0),
+      "description" : "cubic",
+      "setup": function(seed) { return { formula: this.formula, start: seed }; }
+    };
+    var quartic = {
+      "formula" : (z, c) => window.math.add(window.math.pow(z, 4), c),
+      "theta_func" : () => Math.random() * 2 * Math.PI,
+      "boundary_finder_iteration_multiplier" : 0.5,
+      "start_func" : () => window.math.complex(0, 0),
+      "description" : "quartic",
+      "setup": function(seed) { return { formula: this.formula, start: seed }; }
+    };
+    var celtic = {
+      "formula" : (z, c) => {
+        var z2 = window.math.pow(z, 2);
+        return window.math.add(window.math.complex(window.math.abs(z2.re), z2.im), c);
+      },
+      "theta_func" : () => Math.random() * 2 * Math.PI,
+      "boundary_finder_iteration_multiplier" : 0.5,
+      "start_func" : () => window.math.complex(0, 0),
+      "description" : "celtic",
       "setup": function(seed) { return { formula: this.formula, start: seed }; }
     };
     var julia = {
       "formula" : (z, c) => window.math.add(window.math.pow(z, 2), c),
       "theta_func" : () => Math.random() * 2 * Math.PI,
-      "center_finder_iteration_multiplier" : 0.75,
-      "start_func" : () => find_center_corrected(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot),
+      "boundary_finder_iteration_multiplier" : 0.75,
+      "start_func" : () => find_boundary_point(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot),
       "description" : "julia",
       "setup": function(seed) { return { formula: (z) => window.math.add(window.math.pow(z, 2), seed), start: null }; }
     };
+
     window.fractals = new ObjectSampler()
       .put(mandelbrot, 2)
-      //tricorn
-      .put({"formula" : (z, c) => window.math.add(window.math.pow(window.math.conj(z), 2), c),
-      "theta_func" : () => (Math.random() * 2 - 1) * 0.13 + Math.PI + (Math.floor(Math.random() * 3) * 2 * Math.PI / 3),
-      "center_finder_iteration_multiplier" : 0.99,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "tricorn",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }}, 2)
-      //burning ship
-      .put({"formula" : (z, c) => window.math.add(window.math.pow(window.math.complex(window.math.abs(z.re), window.math.abs(z.im)), 2), c),
-      "theta_func" : () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
-      "center_finder_iteration_multiplier" : 0.95,
-      "start_func" : () => window.math.complex(0, 0),
-      "description" : "burning ship",
-      "setup": function(seed) { return { formula: this.formula, start: seed }; }}, 2)
+      .put(tricorn, 2)
+      .put(burningShip, 2)
+      .put(cubic, 2)
+      .put(quartic, 2)
+      .put(celtic, 2)
       .put(julia, 4);
+
     window.fractal = window.fractals.sample();
     var seed = window.fractal["start_func"]();
     var config = window.fractal.setup(seed);
     window.fractal.formula = config.formula;
     window.fractal.start = config.start;
 
-    var center_finder_num_recurses = Math.floor(iterations * window.fractal["center_finder_iteration_multiplier"]);
-    var theta = window.fractal["theta_func"]();
-    window.center = find_center_corrected(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, window.fractal);
-    tooltip(`${window.fractal["description"]}<br>${roundFloat(window.center["re"])}${window.center['im']<0?'':'+'}${roundFloat(window.center["im"]) }i`)
+    var center_finder_num_recurses = Math.floor(iterations * window.fractal["boundary_finder_iteration_multiplier"]);
+    window.center = find_boundary_point(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, window.fractal);
+    tooltip(`${window.fractal["description"]}<br>${roundFloat(window.center["re"])}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"])}i`);
+    
     window.target_framerate = 30;
-    framerate = window.target_framerate;
     window.average_framerate = window.target_framerate;
   }
+
   var framerate_adjuster_magnitude = 2;
   var buffered_framecount = 10 + window.frame_count;
   window.average_framerate = (window.average_framerate * buffered_framecount + framerate) / (buffered_framecount + 1);
@@ -148,5 +185,5 @@ export default (this_animation) => {
   if (window.frame_count > 10 && (!any_empty || !any_filled)) return;
 
   window.frame_count++;
-  setTimeout(this_animation.bind(null, this_animation), 0)
+  setTimeout(this_animation.bind(null, this_animation), 0);
 }
