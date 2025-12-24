@@ -1,4 +1,4 @@
-import { ObjectSampler, tooltip, roundFloat } from '../utils.js';
+import { ObjectSampler, tooltip, roundFloat, isInt } from '../utils.js';
 
 var grid_coords_to_complex = (y, x, height, width, char_height, char_width, bounds) => {
   var re_range = bounds[1].re - bounds[0].re;
@@ -20,13 +20,34 @@ var fractal_iteration = (point, formula, max_iterations, start=0, threshold=2) =
 
 var find_boundary_point = (center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal) => {
   var theta = fractal["theta_func"]();
+  var sample_count = 20;
   var low = 0;
   var high = center_finder_max_radius;
-  var candidate_radius = Math.random() * center_finder_max_radius;
+  
+  // Stage 1: Linear sampling to find a boundary transition
+  var found = false;
+  var low_status = null;
+  for (var i = 0; i <= sample_count; i++) {
+    var r = (i / sample_count) * center_finder_max_radius;
+    var p = window.math.complex(r * Math.cos(theta), r * Math.sin(theta));
+    var status = fractal_iteration(p, fractal["formula"], center_finder_num_recurses, fractal["start"]);
+    if (i > 0 && status !== low_status) {
+      low = ((i - 1) / sample_count) * center_finder_max_radius;
+      high = r;
+      found = true;
+      break;
+    }
+    low_status = status;
+  }
+
+  // Stage 2: Binary search on the identified segment
+  if (!found) return window.math.complex(0, 0); // fallback
+
+  var candidate_radius = (low + high) / 2;
   var candidate_point;
   for (var i = 0; i < center_finder_iterations; i++) {
     candidate_point = window.math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
-    if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"])) {
+    if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"]) === low_status) {
       low = candidate_radius;
     } else {
       high = candidate_radius;
@@ -77,7 +98,7 @@ export default (this_animation) => {
       "theta_func" : () => Math.random() * 2 * Math.PI,
       "boundary_finder_iteration_multiplier" : 0.5,
       "start_func" : () => window.math.complex(0, 0),
-      "description" : "cubic",
+      "description" : "cubic mandelbrot",
       "setup": function(seed) { return { formula: this.formula, start: seed }; }
     };
     var quartic = {
@@ -85,7 +106,7 @@ export default (this_animation) => {
       "theta_func" : () => Math.random() * 2 * Math.PI,
       "boundary_finder_iteration_multiplier" : 0.5,
       "start_func" : () => window.math.complex(0, 0),
-      "description" : "quartic",
+      "description" : "quartic mandelbrot",
       "setup": function(seed) { return { formula: this.formula, start: seed }; }
     };
     var celtic = {
@@ -96,8 +117,28 @@ export default (this_animation) => {
       "theta_func" : () => Math.random() * 2 * Math.PI,
       "boundary_finder_iteration_multiplier" : 0.5,
       "start_func" : () => window.math.complex(0, 0),
-      "description" : "celtic",
+      "description" : "celtic mandelbrot",
       "setup": function(seed) { return { formula: this.formula, start: seed }; }
+    };
+    var mandelpower = {
+      "theta_func" : () => Math.random() * 2 * Math.PI,
+      "boundary_finder_iteration_multiplier" : 0.5,
+      "start_func" : () => window.math.complex(0, 0),
+      "description" : "mandelpower",
+      "setup": function(seed) {
+          var M;
+          if (Math.random() < 0.5) { // Integer
+              if (Math.random() < 0.5) { // 3 to 10
+                  M = Math.floor(Math.random() * (10 - 3 + 1)) + 3;
+              } else { // -10 to -2
+                  M = Math.floor(Math.random() * (-2 - (-10) + 1)) - 10;
+              }
+          } else { // Non-integer
+              M = Math.random() * 20 - 10;
+          }
+          this.M = M;
+          return { formula: (z, c) => window.math.add(window.math.pow(z, M), c), start: null };
+      }
     };
     var julia = {
       "formula" : (z, c) => window.math.add(window.math.pow(z, 2), c),
@@ -115,6 +156,7 @@ export default (this_animation) => {
       .put(cubic, 2)
       .put(quartic, 2)
       .put(celtic, 2)
+      .put(mandelpower, 2)
       .put(julia, 4);
 
     window.sub_animation_size = window.fractals.size();
@@ -131,7 +173,17 @@ export default (this_animation) => {
 
     var center_finder_num_recurses = Math.floor(iterations * window.fractal["boundary_finder_iteration_multiplier"]);
     window.center = find_boundary_point(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, window.fractal);
-    tooltip(`${window.fractal["description"]}<br>${roundFloat(window.center["re"])}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"])}i`, fractal_index);
+    
+    var desc = window.fractal["description"];
+    if (desc.startsWith("mandelpower")) {
+      var m_display = isInt(window.fractal.M) ? window.fractal.M.toString() : roundFloat(window.fractal.M);
+      desc += ` M=${m_display}`;
+    }
+    if (window.fractal["description"] === 'julia') {
+      desc += ` c=${roundFloat(seed.re)}${seed.im < 0 ? '' : '+'}${roundFloat(seed.im)}i`;
+    }
+
+    tooltip(`${desc}<br>${roundFloat(window.center["re"])}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"])}i`, fractal_index);
     
     window.target_framerate = 30;
     window.average_framerate = window.target_framerate;

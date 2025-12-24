@@ -235,25 +235,6 @@
   /*----------- on doc ready -----------*/
 
   $(document).ready(function() {
-    // website name will iterate seeds if an integer one is defined
-    var brubsby = $("h1 > a:first").get()[0];
-    var a_param = getUrlParameter("a");
-    var b_param = getUrlParameter("b");
-    var c_param = getUrlParameter("c");
-    
-    if (c_param) {
-      var new_c = c_param;
-      var parsed = parseInt(c_param, 10);
-      if (!isNaN(parsed)) new_c = parsed + 1;
-      
-      var params = [];
-      if (a_param) params.push("a=" + a_param);
-      if (b_param) params.push("b=" + b_param);
-      params.push("c=" + new_c);
-      brubsby.href = "?" + params.join("&");
-    }
-
-
     var dark_link = document.getElementById("dark");
     var theme_switch = (should_dark_mode_func) => {
       if (should_dark_mode_func()) {
@@ -299,36 +280,36 @@
         var new_b = b_param;
         var new_c = c_param;
 
-        if (c_param !== undefined) {
-            var parsed_c = parseInt(c_param, 10);
-            new_c = isNaN(parsed_c) ? c_param + "1" : parsed_c + 1;
-        } else if (b_param !== undefined) {
-            var parsed_b = parseInt(b_param, 10);
-            var parsed_a = parseInt(a_param, 10) || 0;
+        var getNum = (val, def) => {
+            var p = parseInt(val, 10);
+            return isNaN(p) ? def : p;
+        };
+
+        if (typeof c_param !== 'undefined') {
+            new_c = getNum(c_param, 0) + 1;
+        } else if (typeof b_param !== 'undefined') {
+            var parsed_b = getNum(b_param, 0);
+            var parsed_a = getNum(a_param, 0);
             var sub_size = window.sub_animation_size || 1;
             
-            if (!isNaN(parsed_b)) {
-                if (parsed_b + 1 >= sub_size) {
-                    new_a = (parsed_a + 1) % window.animations.size();
-                    new_b = 0;
-                } else {
-                    new_b = parsed_b + 1;
-                }
-            }
-        } else if (a_param !== undefined) {
-            var parsed_a = parseInt(a_param, 10);
-            if (!isNaN(parsed_a)) {
+            if (parsed_b + 1 >= sub_size) {
                 new_a = (parsed_a + 1) % window.animations.size();
+                new_b = 0;
+            } else {
+                new_b = parsed_b + 1;
             }
+        } else if (typeof a_param !== 'undefined') {
+            var parsed_a = getNum(a_param, 0);
+            new_a = (parsed_a + 1) % window.animations.size();
         } else {
             brubsby.href = window.location.pathname;
             return;
         }
 
         var params = [];
-        if (new_a !== undefined && new_a !== null) params.push("a=" + new_a);
-        if (new_b !== undefined && new_b !== null) params.push("b=" + new_b);
-        if (new_c !== undefined && new_c !== null) params.push("c=" + new_c);
+        if (typeof new_a !== 'undefined' && new_a !== null) params.push("a=" + new_a);
+        if (typeof new_b !== 'undefined' && new_b !== null) params.push("b=" + new_b);
+        if (typeof new_c !== 'undefined' && new_c !== null) params.push("c=" + new_c);
         
         brubsby.href = "?" + params.join("&");
     };
