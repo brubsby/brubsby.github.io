@@ -314,7 +314,7 @@ export var getUrlParameter = function getUrlParameter(sParam) {
   }
 };
 export var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
-export var roundFloat = a => a.toFixed(2).replace(/(^|(?<=-))0+/,'');
+export var roundFloat = (a, precision = 2) => a.toFixed(precision).replace(/(^|(?<=-))0+/,'');
 export var get_random_int_with_expected_float_average = (expected) => (Math.random() < expected % 1 ? 1 : 0) + Math.floor(expected)
 export var get_coord_offset = (coord, offset) => [coord[0] + offset[0], coord[1] + offset[1]];
 export var mark_grid = (grid, coord, value) => {grid[coord[0]][coord[1]] = value}

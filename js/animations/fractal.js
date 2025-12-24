@@ -85,6 +85,7 @@ export default (this_animation) => {
       "theta_func" : () => Math.random() * 2 * Math.PI,
       "boundary_finder_iteration_multiplier" : 0.5,
       "start_func" : () => window.math.complex(0, 0),
+      "zoom_speed" : 0.1,
       "setup": function(seed) { return { formula: this.formula, start: seed }; }
     }, props);
 
@@ -127,6 +128,42 @@ export default (this_animation) => {
         return window.math.complex(x, y);
       },
       "description" : "tippetts mandelbrot"
+    });
+    var cactus = createFractal({
+      "description" : "cactus",
+      "formula" : (z, c) => window.math.subtract(window.math.add(window.math.pow(z, 3), window.math.multiply(window.math.subtract(c, 1), z)), c),
+      "setup": function(seed) { return { formula: this.formula, start: null }; }
+    });
+    var marek = createFractal({
+      "description" : "marek",
+      "setup": function(seed) {
+          var r;
+          if (Math.random() < 0.5) {
+            r = Math.random();
+          } else {
+            r = (1 - (Math.sqrt(2) - Math.sqrt(3) + Math.sqrt(5)) / 2.0);
+          }
+          this.r = r;
+          var zc = window.math.exp(window.math.complex(0, 2 * Math.PI * r));
+          return {
+            formula: (z) => window.math.add(window.math.multiply(zc, z), window.math.pow(z, 2)),
+            start: null
+          };
+      }
+    });
+    var lemon = createFractal({
+      "description" : "lemon",
+      "formula" : (z, c) => {
+        var z2 = window.math.pow(z, 2);
+        var num = window.math.multiply(z2, window.math.add(z2, 1));
+        var den = window.math.pow(window.math.subtract(z2, 1), 2);
+        return window.math.multiply(c, window.math.divide(num, den));
+      },
+      "boundary_finder_iteration_multiplier" : 0.9,
+      "max_radius": 4,
+      "zoom_speed" : 0.1,
+      "threshold" : 100,
+      "setup": function(seed) { return { formula: this.formula, start: null, threshold: this.threshold }; }
     });
     var mandelpower = createFractal({
       "description" : "mandelpower",
@@ -177,6 +214,9 @@ export default (this_animation) => {
       .put(quartic, 2)
       .put(celtic, 2)
       .put(tippetts, 2)
+      .put(cactus, 2)
+      .put(marek, 2)
+      .put(lemon, 0)
       .put(mandelpower, 2)
       .put(multimandel, 2)
       .put(julia, 4);
@@ -192,9 +232,11 @@ export default (this_animation) => {
     var config = window.fractal.setup(seed);
     window.fractal.formula = config.formula;
     window.fractal.start = config.start;
+    window.fractal.render_threshold = config.threshold || 2;
 
     var center_finder_num_recurses = Math.floor(iterations * window.fractal["boundary_finder_iteration_multiplier"]);
-    window.center = find_boundary_point(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, window.fractal);
+    var current_max_radius = window.fractal.max_radius || center_finder_max_radius;
+    window.center = find_boundary_point(center_finder_iterations, current_max_radius, center_finder_num_recurses, window.fractal);
     
     var desc = window.fractal["description"];
     if (desc === "mandelpower") {
@@ -202,13 +244,15 @@ export default (this_animation) => {
       desc += ` M=${m_display}`;
     } else if (desc === "multimandel") {
       desc += ` p=${window.fractal.p}`;
+    } else if (desc === "marek") {
+      desc += ` r=${roundFloat(window.fractal.r, 4)}`;
     }
     
     if (window.fractal["description"] === 'julia') {
-      desc += ` c=${roundFloat(seed.re)}${seed.im < 0 ? '' : '+'}${roundFloat(seed.im)}i`;
+      desc += ` c=${roundFloat(seed.re, 4)}${seed.im < 0 ? '' : '+'}${roundFloat(seed.im, 4)}i`;
     }
 
-    tooltip(`${desc}<br>${roundFloat(window.center["re"])}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"])}i`, fractal_index);
+    tooltip(`${desc}<br>${roundFloat(window.center["re"], 4)}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"], 4)}i`, fractal_index);
     
     window.target_framerate = 30;
     window.average_framerate = window.target_framerate;
@@ -219,7 +263,7 @@ export default (this_animation) => {
   window.average_framerate = (window.average_framerate * buffered_framecount + framerate) / (buffered_framecount + 1);
   iterations = Math.floor(iterations + framerate_adjuster_magnitude * (window.average_framerate - window.target_framerate));
 
-  var radius = 10 * Math.pow(Math.E, -window.frame_count * 0.1);
+  var radius = 10 * Math.pow(Math.E, -window.frame_count * window.fractal.zoom_speed);
   var min_x, max_x, min_y, max_y, x_radius, y_radius;
   if (window.rows < window.columns) {
     min_y = window.center.im - radius;
@@ -244,8 +288,8 @@ export default (this_animation) => {
     grid.push(row);
   }
 
-  var fractal_iteration_currier = (formula, iterations, start) => (point) => fractal_iteration(point, formula, iterations, start);
-  var curried_fractal_iteration = fractal_iteration_currier(window.fractal["formula"], iterations, window.fractal["start"]);
+  var fractal_iteration_currier = (formula, iterations, start, threshold) => (point) => fractal_iteration(point, formula, iterations, start, threshold);
+  var curried_fractal_iteration = fractal_iteration_currier(window.fractal["formula"], iterations, window.fractal["start"], window.fractal.render_threshold);
 
   var graphics_grid = window.math.map(grid, curried_fractal_iteration);
 
