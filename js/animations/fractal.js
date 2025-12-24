@@ -19,42 +19,54 @@ var fractal_iteration = (point, formula, max_iterations, start=0, threshold=2) =
 }
 
 var find_boundary_point = (center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal) => {
-  var theta = fractal["theta_func"]();
   var sample_count = 20;
-  var low = 0;
-  var high = center_finder_max_radius;
+  var max_attempts = 10;
   
-  // Stage 1: Linear sampling to find a boundary transition
-  var found = false;
-  var low_status = null;
-  for (var i = 0; i <= sample_count; i++) {
-    var r = (i / sample_count) * center_finder_max_radius;
-    var p = window.math.complex(r * Math.cos(theta), r * Math.sin(theta));
-    var status = fractal_iteration(p, fractal["formula"], center_finder_num_recurses, fractal["start"]);
-    if (i > 0 && status !== low_status) {
-      low = ((i - 1) / sample_count) * center_finder_max_radius;
-      high = r;
-      found = true;
-      break;
+  for (var attempt = 0; attempt < max_attempts; attempt++) {
+    var theta = fractal["theta_func"]();
+    var low = 0;
+    var high = center_finder_max_radius;
+    
+    // Stage 1: Linear sampling to find a boundary transition
+    // Start slightly above 0 to avoid the origin singularity
+    var found = false;
+    var low_status = null;
+    var epsilon = 0.001;
+    
+    for (var i = 0; i <= sample_count; i++) {
+      var r = epsilon + (i / sample_count) * (center_finder_max_radius - epsilon);
+      var p = window.math.complex(r * Math.cos(theta), r * Math.sin(theta));
+      var status = fractal_iteration(p, fractal["formula"], center_finder_num_recurses, fractal["start"]);
+      if (i > 0 && status !== low_status) {
+        low = epsilon + ((i - 1) / sample_count) * (center_finder_max_radius - epsilon);
+        high = r;
+        found = true;
+        break;
+      }
+      low_status = status;
     }
-    low_status = status;
+
+    if (found) {
+      // Stage 2: Binary search on the identified segment
+      var candidate_radius = (low + high) / 2;
+      var candidate_point;
+      for (var i = 0; i < center_finder_iterations; i++) {
+        candidate_point = window.math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
+        if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"]) === low_status) {
+          low = candidate_radius;
+        } else {
+          high = candidate_radius;
+        }
+        candidate_radius = (low + high) / 2;
+      }
+      return candidate_point;
+    }
   }
 
-  // Stage 2: Binary search on the identified segment
-  if (!found) return window.math.complex(0, 0); // fallback
-
-  var candidate_radius = (low + high) / 2;
-  var candidate_point;
-  for (var i = 0; i < center_finder_iterations; i++) {
-    candidate_point = window.math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
-    if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"]) === low_status) {
-      low = candidate_radius;
-    } else {
-      high = candidate_radius;
-    }
-    candidate_radius = (low + high) / 2;
-  }
-  return candidate_point;
+  // Fallback: Pick a random point if no boundary found after all attempts
+  var r_rand = Math.random() * center_finder_max_radius;
+  var theta_rand = Math.random() * 2 * Math.PI;
+  return window.math.complex(r_rand * Math.cos(theta_rand), r_rand * Math.sin(theta_rand));
 }
 
 export default (this_animation) => {
