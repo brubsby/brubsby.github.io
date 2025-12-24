@@ -133,6 +133,23 @@ export default (this_animation) => {
           return { formula: (z, c) => window.math.add(window.math.pow(z, M), c), start: null };
       }
     });
+
+    var multimandel = createFractal({
+      "description" : "multimandel",
+      "setup": function(seed) {
+          var ps = [0, 1, 2, -1];
+          var p = ps[Math.floor(Math.random() * ps.length)];
+          this.p = p;
+          return {
+            formula: (z, c) => {
+              var cp = p === 0 ? 1 : (p === 1 ? c : window.math.pow(c, p));
+              return window.math.add(window.math.multiply(cp, window.math.pow(z, -2)), c);
+            },
+            start: null
+          };
+      }
+    });
+
     var julia = createFractal({
       "boundary_finder_iteration_multiplier" : 0.75,
       "start_func" : () => find_boundary_point(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot),
@@ -149,6 +166,7 @@ export default (this_animation) => {
       .put(celtic, 2)
       .put(tippetts, 2)
       .put(mandelpower, 2)
+      .put(multimandel, 2)
       .put(julia, 4);
 
     window.sub_animation_size = window.fractals.size();
@@ -167,10 +185,13 @@ export default (this_animation) => {
     window.center = find_boundary_point(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, window.fractal);
     
     var desc = window.fractal["description"];
-    if (desc.startsWith("mandelpower")) {
+    if (desc === "mandelpower") {
       var m_display = isInt(window.fractal.M) ? window.fractal.M.toString() : roundFloat(window.fractal.M);
       desc += ` M=${m_display}`;
+    } else if (desc === "multimandel") {
+      desc += ` p=${window.fractal.p}`;
     }
+    
     if (window.fractal["description"] === 'julia') {
       desc += ` c=${roundFloat(seed.re)}${seed.im < 0 ? '' : '+'}${roundFloat(seed.im)}i`;
     }
