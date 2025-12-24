@@ -7,7 +7,6 @@ export default (this_animation) => {
   var acceleration_or_velocity = window.constant_random_boolean;
   var expected_value_new_particles_per_frame = window.constant_random_values[0] * 2;
   if (window.frame_count == 0) {
-    tooltip(`flow fields<br>p=${roundFloat(expected_value_new_particles_per_frame)} a=${acceleration_or_velocity ? 'T' : 'F'}`);
     window.remaining_particles = Math.floor(10000 * expected_value_new_particles_per_frame);
     window.particles = [];
     window.random_edge_point_sampler = new ObjectSampler()
@@ -15,6 +14,16 @@ export default (this_animation) => {
       .put(() => [Math.random() * width, height], width)
       .put(() => [0, Math.random() * height], height)
       .put(() => [width, Math.random() * height], height);
+    
+    var sampler_index;
+    if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < window.random_edge_point_sampler.size()) {
+      sampler_index = window.sub_animation_index;
+    } else {
+      var sampled_func = window.random_edge_point_sampler.sample();
+      sampler_index = window.random_edge_point_sampler.index_of(sampled_func);
+    }
+    window.current_sampler_index = sampler_index;
+    tooltip(`flow fields<br>p=${roundFloat(expected_value_new_particles_per_frame)} a=${acceleration_or_velocity ? 'T' : 'F'}`, sampler_index);
   }
   var simplex_frequency = window.animation_speed_multiplier * -0.0001635 + 0.00237;
   var simplex_amplitude = 1;
@@ -30,7 +39,7 @@ export default (this_animation) => {
   var new_particle_count = 0;
   var new_particle_tries = 0;
   while (window.remaining_particles > 0 && new_particle_count < new_particles_this_frame) {
-    var particle_position = window.random_edge_point_sampler.sample()();
+    var particle_position = window.random_edge_point_sampler.get_index(window.current_sampler_index)();
     var particle_to_center_angle = Math.atan2(center[1] - particle_position[1], center[0] - particle_position[0]);
     var particle_speed = window.constant_random_values[6] * 25;
     var velocity_vector = [particle_speed * Math.cos(particle_to_center_angle), particle_speed * Math.sin(particle_to_center_angle)];

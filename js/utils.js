@@ -476,18 +476,27 @@ export var first_frame_tooltip = function(txt) {
   }
 }
 
-export var tooltip = function(txt) {
+export var tooltip = function(txt, sub_index = null) {
     var tooltip = $("span.tooltip");
     tooltip.empty();
     if (txt) {
-      // assumes window.animations and window.animation exist
       var index = -1;
       if (window.animations && window.animation) {
-          // animations in window will be the sampler
-          // animation will be the descriptor or object
-          // The sampler index_of compares equality.
           index = window.animations.index_of(window.animation);
       }
-      tooltip.append('<a href="?a=' + index + '">' + txt + '</a>');
+      
+      var c_param = getUrlParameter("c");
+      var href = "?a=" + index;
+      
+      // Use provided sub_index, or the global one if it matches this animation
+      var b_val = sub_index;
+      if (b_val === null && !isNaN(window.sub_animation_index)) {
+          b_val = window.sub_animation_index;
+      }
+      
+      if (b_val !== null) href += "&b=" + b_val;
+      if (c_param) href += "&c=" + c_param;
+      
+      tooltip.append('<a href="' + href + '">' + txt + '</a>');
     }
 }

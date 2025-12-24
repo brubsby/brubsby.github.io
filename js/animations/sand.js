@@ -37,11 +37,18 @@ export default (this_animation) => {
       .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.5), "simplex(o=1)"], 1)
       .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.25, 2), "simplex(o=2)"], 0.5)
       .put([(freq, i) => get_simplex_noise_at(i * freq, 1 / (2 * Math.PI), 1.125, 3), "simplex(o=3)"], 0.5);
-    var dropper = window.dropper_movement_funcs.sample();
-    window.dropper_movement_func = dropper[0];
-    tooltip(`sand m=${dropper[1]} f=${roundFloat(dropper_position_frequency)} s=${dropper_direction} p=${roundFloat(expected_value_new_sand_per_frame)} j=${roundFloat(jitter_chance)} r=${roundFloat(dropper_radius)}`)
-  }
-
+            var dropper;
+            var dropper_index;
+            if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < window.dropper_movement_funcs.size()) {
+              dropper_index = window.sub_animation_index;
+              dropper = window.dropper_movement_funcs.get_index(dropper_index);
+            } else {
+              dropper = window.dropper_movement_funcs.sample();
+              dropper_index = window.dropper_movement_funcs.index_of(dropper);
+            }
+            window.dropper_movement_func = dropper[0];
+            tooltip(`sand m=${dropper[1]} f=${roundFloat(dropper_position_frequency)} s=${dropper_direction} p=${roundFloat(expected_value_new_sand_per_frame)} j=${roundFloat(jitter_chance)} r=${roundFloat(dropper_radius)}`, dropper_index)
+          }
   //physics
   for (var i = 0; i < window.active_sand_coords.length; i++) {
     var sand_coord = window.active_sand_coords[i];

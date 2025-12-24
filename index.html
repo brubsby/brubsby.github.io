@@ -206,18 +206,16 @@
     .put("automata.js", 3);
 
   /*----------- Random/Seed init -----------*/
-  var animation_index;
-  var animation_url_param = getUrlParameter("a");
-  var parsed = parseInt(animation_url_param, 10);
-  if (!isNaN(parsed)) animation_index = parsed;
-  if (animation_index === 0 || !!animation_index) {
-    if (animation_index >= window.animations.size()) {
-      Math.seedrandom(animation_index);
-      animation_index = null;
-    }
-  } else if (!!animation_url_param) {
-    Math.seedrandom(animation_url_param);
+  var seed_param = getUrlParameter("c");
+  if (!!seed_param) {
+    Math.seedrandom(seed_param);
   }
+
+  var animation_index_param = getUrlParameter("a");
+  var animation_index = parseInt(animation_index_param, 10);
+
+  var sub_animation_param = getUrlParameter("b");
+  window.sub_animation_index = parseInt(sub_animation_param, 10);
 
   window.constant_random_boolean = Math.random() < 0.5;
   window.constant_random_values = [];
@@ -225,8 +223,12 @@
     window.constant_random_values.push(Math.random());
   }
 
-  var animation_file = animation_index === 0 ? window.animations.get_index(0) :
-    (animation_index ? window.animations.get_index(animation_index) : window.animations.sample());
+  var animation_file;
+  if (!isNaN(animation_index) && animation_index >= 0 && animation_index < window.animations.size()) {
+    animation_file = window.animations.get_index(animation_index);
+  } else {
+    animation_file = window.animations.sample();
+  }
 
   window.animation = animation_file;
 
@@ -235,13 +237,22 @@
   $(document).ready(function() {
     // website name will iterate seeds if an integer one is defined
     var brubsby = $("h1 > a:first").get()[0];
-    var old_value = getUrlParameter("a");
-    if (old_value) {
-      var new_value = old_value;
-      var parsed = parseInt(old_value, 10);
-      if (!isNaN(parsed)) new_value = parsed + 1;
-      brubsby.href = "?a=" + new_value;
+    var a_param = getUrlParameter("a");
+    var b_param = getUrlParameter("b");
+    var c_param = getUrlParameter("c");
+    
+    if (c_param) {
+      var new_c = c_param;
+      var parsed = parseInt(c_param, 10);
+      if (!isNaN(parsed)) new_c = parsed + 1;
+      
+      var params = [];
+      if (a_param) params.push("a=" + a_param);
+      if (b_param) params.push("b=" + b_param);
+      params.push("c=" + new_c);
+      brubsby.href = "?" + params.join("&");
     }
+
 
     var dark_link = document.getElementById("dark");
     var theme_switch = (should_dark_mode_func) => {

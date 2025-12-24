@@ -23,10 +23,14 @@ export default (this_animation) => {
       }
       rulesets.put(ruleset, weight);
     }
-    window.universe = universe_generators.sample()(window.columns);
-    window.rules = rulesets.sample();
-    tooltip(`automata<br>rule ${window.rules["dec"]}`);
-    console.log("Rule " + window.rules["dec"]);
+            window.universe = universe_generators.sample()(window.columns);
+            if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < rulesets.size()) {
+              window.rules = rulesets.get_index(window.sub_animation_index);
+            } else {
+              window.rules = rulesets.sample();
+            }
+            var rules_index = rulesets.index_of(window.rules);
+            tooltip(`automata<br>rule ${window.rules["dec"]}`, rules_index);    console.log("Rule " + window.rules["dec"]);
     window.tile_rules = [".", "o"];
     var RuleLookup = class {
       constructor(wolfram_rule) {

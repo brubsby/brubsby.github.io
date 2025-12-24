@@ -63,11 +63,20 @@ export default (this_animation) => {
       }, "pi"], 1);
     } catch(e) {}
 
-    var textgen_sample = textgen_funcs.sample();
-    window.text_to_print = textgen_sample[0](window.columns*window.rows);
-    var textgen_description = textgen_sample[1];
-    tooltip("textgen<br>" + textgen_description);
-  }
+        var textgen_sample;
+        var textgen_index;
+        if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < textgen_funcs.size()) {
+          textgen_index = window.sub_animation_index;
+          textgen_sample = textgen_funcs.get_index(textgen_index);
+        } else {
+          textgen_sample = textgen_funcs.sample();
+          textgen_index = textgen_funcs.index_of(textgen_sample);
+        }
+
+        text_to_print = textgen_sample[0](window.columns*window.rows);
+        var textgen_description = textgen_sample[1];
+        tooltip("textgen<br>" + textgen_description, textgen_index);
+      }
   setCharAtIndex(window.canvas, window.flat_index_list[0], window.text_to_print[0]);
   window.flat_index_list.shift();
   window.text_to_print = window.text_to_print.slice(1);

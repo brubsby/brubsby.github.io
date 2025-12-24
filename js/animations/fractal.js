@@ -117,7 +117,12 @@ export default (this_animation) => {
       .put(celtic, 2)
       .put(julia, 4);
 
-    window.fractal = window.fractals.sample();
+    if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < window.fractals.size()) {
+      window.fractal = window.fractals.get_index(window.sub_animation_index);
+    } else {
+      window.fractal = window.fractals.sample();
+    }
+    var fractal_index = window.fractals.index_of(window.fractal);
     var seed = window.fractal["start_func"]();
     var config = window.fractal.setup(seed);
     window.fractal.formula = config.formula;
@@ -125,7 +130,7 @@ export default (this_animation) => {
 
     var center_finder_num_recurses = Math.floor(iterations * window.fractal["boundary_finder_iteration_multiplier"]);
     window.center = find_boundary_point(center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, window.fractal);
-    tooltip(`${window.fractal["description"]}<br>${roundFloat(window.center["re"])}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"])}i`);
+    tooltip(`${window.fractal["description"]}<br>${roundFloat(window.center["re"])}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"])}i`, fractal_index);
     
     window.target_framerate = 30;
     window.average_framerate = window.target_framerate;

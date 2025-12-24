@@ -17,11 +17,18 @@ export default (this_animation) => {
       .put([() => ['\u2588', ' '][Math.floor(Math.random()*2)], ".5\u2588_"], 0.25)
       .put([() => '\\', "\\"], 0.5)
       .put([() => '/', "/"], 0.5);
-    var character_generator_sample = character_generators.sample()
-    character_generator = character_generator_sample[0];
-    tooltip(`${character_generator_sample[1]}<br>${isupdown ? "up" : "down"}`);
-  }
-  var y = window.frame_count;
+            var character_generator_sample;
+            var character_generator_index;
+            if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < character_generators.size()) {
+              character_generator_index = window.sub_animation_index;
+              character_generator_sample = character_generators.get_index(character_generator_index);
+            } else {
+              character_generator_sample = character_generators.sample()
+              character_generator_index = character_generators.index_of(character_generator_sample);
+            }
+            character_generator = character_generator_sample[0];
+            tooltip(`${character_generator_sample[1]}<br>${isupdown ? "up" : "down"}`, character_generator_index);
+          }  var y = window.frame_count;
   for (var x = 0; x < window.columns; x++) {
     var index = get_canvas_index(window.columns, x, isupdown ? window.rows - y : y);
     var random_slash = character_generator();
