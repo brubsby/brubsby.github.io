@@ -268,11 +268,11 @@ export default (this_animation) => {
       .put(tippetts, 2)
       .put(cactus, 2)
       .put(marek, 2)
-      .put(lemon, 2)
+      .put(lemon, 0)
       .put(insideout, 2)
       .put(mandelpower, 2)
       .put(multimandel, 2)
-      .put(zubieta, 2)
+      .put(zubieta, 0)
       .put(julia, 4);
 
     window.sub_animation_size = window.fractals.size();
