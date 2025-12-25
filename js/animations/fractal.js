@@ -19,8 +19,8 @@ var fractal_iteration = (point, formula, max_iterations, start=0, threshold=2) =
 }
 
 var find_boundary_point = (center_finder_iterations, center_finder_max_radius, center_finder_num_recurses, fractal) => {
-  var sample_count = 20;
-  var max_attempts = 10;
+  var sample_count = 100;
+  var max_attempts = 20;
   
   for (var attempt = 0; attempt < max_attempts; attempt++) {
     var theta = fractal["theta_func"]();
@@ -28,7 +28,6 @@ var find_boundary_point = (center_finder_iterations, center_finder_max_radius, c
     var high = center_finder_max_radius;
     
     // Stage 1: Linear sampling to find a boundary transition
-    // Start slightly above 0 to avoid the origin singularity
     var found = false;
     var low_status = null;
     var epsilon = 0.001;
@@ -36,7 +35,7 @@ var find_boundary_point = (center_finder_iterations, center_finder_max_radius, c
     for (var i = 0; i <= sample_count; i++) {
       var r = epsilon + (i / sample_count) * (center_finder_max_radius - epsilon);
       var p = window.math.complex(r * Math.cos(theta), r * Math.sin(theta));
-      var status = fractal_iteration(p, fractal["formula"], center_finder_num_recurses, fractal["start"]);
+      var status = fractal_iteration(p, fractal["formula"], center_finder_num_recurses, fractal["start"], fractal.render_threshold);
       if (i > 0 && status !== low_status) {
         low = epsilon + ((i - 1) / sample_count) * (center_finder_max_radius - epsilon);
         high = r;
@@ -52,7 +51,7 @@ var find_boundary_point = (center_finder_iterations, center_finder_max_radius, c
       var candidate_point;
       for (var i = 0; i < center_finder_iterations; i++) {
         candidate_point = window.math.complex(candidate_radius * Math.cos(theta), candidate_radius * Math.sin(theta));
-        if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"]) === low_status) {
+        if (fractal_iteration(candidate_point, fractal["formula"], center_finder_num_recurses, fractal["start"], fractal.render_threshold) === low_status) {
           low = candidate_radius;
         } else {
           high = candidate_radius;
@@ -63,7 +62,6 @@ var find_boundary_point = (center_finder_iterations, center_finder_max_radius, c
     }
   }
 
-  // Fallback: Pick a random point if no boundary found after all attempts
   var r_rand = Math.random() * center_finder_max_radius;
   var theta_rand = Math.random() * 2 * Math.PI;
   return window.math.complex(r_rand * Math.cos(theta_rand), r_rand * Math.sin(theta_rand));
@@ -129,6 +127,13 @@ export default (this_animation) => {
       },
       "description" : "tippetts mandelbrot"
     });
+
+    var zubietaMandel = createFractal({
+      "formula": (z, c) => window.math.add(window.math.pow(z, 2), window.math.divide(c, z)),
+      "start_func": () => window.math.complex(1, 0),
+      "setup": function(seed) { return { formula: this.formula, start: window.math.complex(1, 0) }; }
+    });
+
     var cactus = createFractal({
       "description" : "cactus",
       "formula" : (z, c) => window.math.subtract(window.math.add(window.math.pow(z, 3), window.math.multiply(window.math.subtract(c, 1), z)), c),
@@ -164,6 +169,36 @@ export default (this_animation) => {
       "zoom_speed" : 0.1,
       "threshold" : 100,
       "setup": function(seed) { return { formula: this.formula, start: null, threshold: this.threshold }; }
+    });
+    var insideout = createFractal({
+      "description" : "insideout",
+      "threshold": 10,
+      "setup": function(seed) {
+          var dens = [
+            { d: (r) => 1 + r + Math.pow(r, 7), s: "1+r+r^7" },
+            { d: (r) => 1 + Math.pow(r, 3), s: "1+r^3" },
+            { d: (r) => 1 + r, s: "1+r" },
+            { d: (r) => Math.pow(1 + r * r, 2), s: "(1+r^2)^2" },
+            { d: (r) => 1 + r + r * r, s: "1+r+r^2" }
+          ];
+          var choice = dens[Math.floor(Math.random() * dens.length)];
+          this.d_str = choice.s;
+          var den_func = choice.d;
+          
+          return {
+            formula: (z, c) => {
+              var r = window.math.abs(z);
+              var common_den = den_func(r);
+              var r2 = r * r;
+              var common_factor = (r * (r2 - 1)) / common_den;
+              var f = (1 + 2 * r + r2) * common_factor;
+              var g = (1 - 2 * r + r2) * common_factor;
+              return window.math.add(window.math.pow(z, 2), window.math.complex(f, g));
+            },
+            start: null,
+            threshold: this.threshold
+          };
+      }
     });
     var mandelpower = createFractal({
       "description" : "mandelpower",
@@ -203,7 +238,24 @@ export default (this_animation) => {
       "boundary_finder_iteration_multiplier" : 0.75,
       "start_func" : () => find_boundary_point(center_finder_iterations, center_finder_max_radius, 5000, mandelbrot),
       "description" : "julia",
-      "setup": function(seed) { return { formula: (z) => window.math.add(window.math.pow(z, 2), seed), start: null }; }
+      "is_julia": true,
+      "setup": function(s) { return { formula: (z) => window.math.add(window.math.pow(z, 2), s), start: null }; }
+    });
+
+    var zubieta = createFractal({
+      "description" : "zubieta",
+      "is_julia": true,
+      "max_radius": 4.0,
+      "threshold": 100,
+      "zoom_speed": 0.05,
+      "start_func" : () => find_boundary_point(center_finder_iterations, 4.0, 5000, zubietaMandel),
+      "setup": function(s) {
+          return {
+            formula: (z) => window.math.add(window.math.pow(z, 2), window.math.divide(s, z)),
+            start: null,
+            threshold: this.threshold
+          };
+      }
     });
 
     window.fractals = new ObjectSampler()
@@ -216,9 +268,11 @@ export default (this_animation) => {
       .put(tippetts, 2)
       .put(cactus, 2)
       .put(marek, 2)
-      .put(lemon, 0)
+      .put(lemon, 2)
+      .put(insideout, 2)
       .put(mandelpower, 2)
       .put(multimandel, 2)
+      .put(zubieta, 2)
       .put(julia, 4);
 
     window.sub_animation_size = window.fractals.size();
@@ -228,8 +282,8 @@ export default (this_animation) => {
       window.fractal = window.fractals.sample();
     }
     var fractal_index = window.fractals.index_of(window.fractal);
-    var seed = window.fractal["start_func"]();
-    var config = window.fractal.setup(seed);
+    var fresh_seed = window.fractal["start_func"]();
+    var config = window.fractal.setup(fresh_seed);
     window.fractal.formula = config.formula;
     window.fractal.start = config.start;
     window.fractal.render_threshold = config.threshold || 2;
@@ -246,10 +300,12 @@ export default (this_animation) => {
       desc += ` p=${window.fractal.p}`;
     } else if (desc === "marek") {
       desc += ` r=${roundFloat(window.fractal.r, 4)}`;
+    } else if (desc === "insideout") {
+      desc += ` d=${window.fractal.d_str}`;
     }
     
-    if (window.fractal["description"] === 'julia') {
-      desc += ` c=${roundFloat(seed.re, 4)}${seed.im < 0 ? '' : '+'}${roundFloat(seed.im, 4)}i`;
+    if (window.fractal.is_julia) {
+      desc += ` c=${roundFloat(fresh_seed.re, 4)}${fresh_seed.im < 0 ? '' : '+'}${roundFloat(fresh_seed.im, 4)}i`;
     }
 
     tooltip(`${desc}<br>${roundFloat(window.center["re"], 4)}${window.center['im'] < 0 ? '' : '+'}${roundFloat(window.center["im"], 4)}i`, fractal_index);
