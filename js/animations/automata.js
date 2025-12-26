@@ -6,7 +6,13 @@ export default (this_animation) => {
     //uniform random
     .put(length => Array(length).fill(null).map(_ => Math.random() < 0.5), 2)
     //skewed uniform random
-    .put(length => Array(length).fill(null).map(_ => Math.random() < (window.constant_random_values[0] * 0.8) + 0.1), 1);
+    .put(length => Array(length).fill(null).map(_ => Math.random() < (window.constant_random_values[0] * 0.8) + 0.1), 1)
+    //single cell in middle
+    .put(length => {
+      let arr = Array(length).fill(false);
+      arr[Math.floor(length / 2)] = true;
+      return arr;
+    }, 1);
     var rulesets = new ObjectSampler();
     for (var i = 0; i < 256; i++) {
       var ruleset = {"dec" : i};
@@ -30,7 +36,7 @@ export default (this_animation) => {
               window.rules = rulesets.sample();
             }
             var rules_index = rulesets.index_of(window.rules);
-            tooltip(`automata<br>rule ${window.rules["dec"]}`, rules_index);    console.log("Rule " + window.rules["dec"]);
+            tooltip(`1d automata<br>rule ${window.rules["dec"]}`, rules_index);    console.log("Rule " + window.rules["dec"]);
     window.tile_rules = [".", "o"];
     var RuleLookup = class {
       constructor(wolfram_rule) {
