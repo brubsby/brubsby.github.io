@@ -77,8 +77,27 @@ function get_neighbor_offsets(range, type, include_center) {
 // Helper to parse rule string
 function parse_rule(rule_str) {
     rule_str = rule_str.toUpperCase().replace(/\s/g, '');
+    let suffix = "";
+    if (rule_str.includes(':')) {
+        let parts = rule_str.split(':');
+        rule_str = parts[0];
+        suffix = parts[1];
+    }
+
     let rule = { born: [], survive: [], range: 1, type: 'M', states: 2, include_center: false, name: rule_str };
     
+    // Parse suffix if present
+    if (suffix) {
+        let topo_char = suffix.charAt(0);
+        let dims = suffix.substring(1).split(',').map(x => parseInt(x, 10));
+        if (dims.length >= 2) {
+            rule.width = dims[0];
+            rule.height = dims[1];
+            if (topo_char === 'T') rule.topology = 'toroidal';
+            else if (topo_char === 'P') rule.topology = 'plane';
+        }
+    }
+
     // 1. Check for Kellie Evans' notation: 5 integers separated by commas
     // r,b_min,b_max,s_min,s_max
     if (/^\d+,\d+,\d+,\d+,\d+$/.test(rule_str)) {
@@ -135,7 +154,12 @@ function parse_rule(rule_str) {
                 rule.include_center = (val === '1');
                 m_found = true;
             }
-            else if (current_mode === 'N') rule.type = val || 'M'; // Default to M if just "N"
+            else if (current_mode === 'N') {
+                if (val === 'H') rule.type = '#';
+                else if (val === 'S') rule.type = '*';
+                else if (val === 'P') rule.type = '+';
+                else rule.type = val || 'M'; // Default to M if just "N"
+            }
             else if (current_mode === 'S') parse_ranges(val, rule.survive);
             else if (current_mode === 'B') parse_ranges(val, rule.born);
         }
@@ -307,34 +331,56 @@ export default (this_animation) => {
       window.rules = rulesets.sample();
     }
     
+    // Apply topology/size overrides from rule
+    if (window.rules.topology) {
+        window.is_toroidal = (window.rules.topology === 'toroidal');
+    }
+    if (window.rules.width && window.rules.height) {
+        window.columns = window.rules.width;
+        window.rows = window.rules.height;
+    }
+    
     // Pre-calculate neighbor offsets for the ACTIVE rule
     window.neighbor_offsets = get_neighbor_offsets(window.rules.range, window.rules.type, window.rules.include_center);
     
     // Tooltip Logic
     var rules_index = rulesets.index_of(window.rules);
-    var tor_str = window.is_toroidal ? "toroidal " : "";
+    
+    // Construct suffix: :Tcols,rows or :Pcols,rows
+    var suffix_str = `:${window.is_toroidal ? 'T' : 'P'}${window.columns},${window.rows}`;
     var display_str = "";
+    var link_rule_str = "";
     
     if (window.rules.range === 1 && window.rules.type === 'M') {
         // Standard Life-like format
         var rule_str = `b${window.rules.born.join('')}/s${window.rules.survive.join('')}`;
         var name_str = window.rules.name.toLowerCase();
         var display_name = (name_str === rule_str) ? rule_str : `${rule_str} (${name_str})`;
-        display_str = `${tor_str}${display_name}`;
+        display_str = `${display_name}${suffix_str}`;
+        link_rule_str = rule_str + suffix_str;
     } else {
         // LtL Format
-        // Name usually IS the rule string for random ones
-        display_str = `${tor_str}${window.rules.name}`;
+        display_str = `${window.rules.name}${suffix_str}`;
+        link_rule_str = window.rules.name + suffix_str;
     }
 
-    tooltip(`2d automata<br>${display_str}`, rules_index);
+    tooltip(`2d automata<br>${display_str}`, rules_index, { rule: link_rule_str });
     
     // Universe Initialization
     window.universe = new Array(window.rows * window.columns).fill(false);
     
-    // Random Fill
-    for(let i=0; i<window.universe.length; i++) {
-        window.universe[i] = Math.random() < 0.2; // 20% density
+    // Initial State Generation
+    // If we are debugging a specific generation (1) of a B1 rule, start with a single point
+    // to avoid immediate chaos from random soup.
+    if (window.pause_at_generation === 1 && window.rules.born_set.has(1)) {
+        let cx = Math.floor(window.columns / 2);
+        let cy = Math.floor(window.rows / 2);
+        window.universe[cy * window.columns + cx] = true;
+    } else {
+        // Random Fill
+        for(let i=0; i<window.universe.length; i++) {
+            window.universe[i] = Math.random() < 0.2; // 20% density
+        }
     }
     
     window.tile_rules = [];
@@ -363,6 +409,10 @@ export default (this_animation) => {
       full_text += "\n";
   }
   window.canvas.text(full_text);
+
+  if (typeof window.pause_at_generation !== 'undefined' && window.frame_count === window.pause_at_generation) {
+      return;
+  }
 
   // Calculate next generation
   var next_universe = new Array(window.universe.length).fill(false);

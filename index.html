@@ -231,6 +231,11 @@
     }
   }
 
+  var generation_param = getUrlParameter("generation");
+  if (generation_param) {
+      window.pause_at_generation = parseInt(generation_param, 10);
+  }
+
   window.constant_random_boolean = Math.random() < 0.5;
   window.constant_random_values = [];
   for (var i = 0; i < 20; i++) {
@@ -289,6 +294,7 @@
         var a_param = getUrlParameter("a");
         var b_param = getUrlParameter("b");
         var c_param = getUrlParameter("c");
+        var rule_param = getUrlParameter("rule");
 
         var new_a = a_param;
         var new_b = b_param;
@@ -299,7 +305,9 @@
             return isNaN(p) ? def : p;
         };
 
-        if (typeof c_param !== 'undefined') {
+        if (rule_param) {
+            new_c = getNum(c_param, 0) + 1;
+        } else if (typeof c_param !== 'undefined') {
             new_c = getNum(c_param, 0) + 1;
         } else if (typeof b_param !== 'undefined') {
             var parsed_b = getNum(b_param, 0);
@@ -324,6 +332,15 @@
         if (typeof new_a !== 'undefined' && new_a !== null) params.push("a=" + new_a);
         if (typeof new_b !== 'undefined' && new_b !== null) params.push("b=" + new_b);
         if (typeof new_c !== 'undefined' && new_c !== null) params.push("c=" + new_c);
+        
+        if (rule_param) {
+            params.push("rule=" + encodeURIComponent(rule_param));
+        }
+
+        var generation_param = getUrlParameter("generation");
+        if (generation_param) {
+            params.push("generation=" + generation_param);
+        }
         
         brubsby.href = "?" + params.join("&");
     };

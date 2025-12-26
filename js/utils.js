@@ -479,7 +479,7 @@ export var first_frame_tooltip = function(txt) {
   }
 }
 
-export var tooltip = function(txt, sub_index = null) {
+export var tooltip = function(txt, sub_index = null, extra_url_params = {}) {
     var tooltip = $("span.tooltip");
     tooltip.empty();
     if (txt) {
@@ -497,8 +497,18 @@ export var tooltip = function(txt, sub_index = null) {
           b_val = window.sub_animation_index;
       }
       
-      if (b_val !== null) href += "&b=" + b_val;
+      // If rule is provided, it overrides 'b' (sub_animation)
+      if (!extra_url_params.hasOwnProperty("rule") && b_val !== null) {
+          href += "&b=" + b_val;
+      }
+      
       if (c_param) href += "&c=" + c_param;
+      
+      for (var key in extra_url_params) {
+          if (extra_url_params.hasOwnProperty(key)) {
+              href += "&" + key + "=" + encodeURIComponent(extra_url_params[key]);
+          }
+      }
       
       tooltip.append('<a href="' + href + '">' + txt + '</a>');
     }
