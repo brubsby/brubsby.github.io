@@ -1,4 +1,4 @@
-import { ObjectSampler, tooltip, get_canvas_index, setCharAtIndex, get_coords } from '../utils.js';
+import { ObjectSampler, tooltip, get_canvas_index, setCharAtIndex, get_coords, get_bresenham_line_points, get_bresenham_circle_points } from '../utils.js';
 
 function get_max_neighbors(r, t, include_center) {
     let result = 8;
@@ -239,7 +239,12 @@ export default (this_animation) => {
       .put(named_rule("B378/S235678", "Coagulations"), 3)
       .put(named_rule("B345/S4567", "Assimilation"), 3)
       .put(named_rule("B3/S45678", "Corral"), 3)
-      .put(named_rule("B5678/S45678", "Vote"), 1);
+      .put(named_rule("B5678/S45678", "Vote"), 1)
+      .put(named_rule("R5,C2,M1,S34..58,B34..45,NM", "Bosco's Rule"), 4)
+      .put(named_rule("R10,C2,M1,S123..170,B122..211,NM", "Bugs"), 3)
+      .put(named_rule("R8,C2,M1,S163..223,B74..252,NM", "Globe"), 3)
+      .put(named_rule("R7,C2,M1,S123..170,B75..170,NM", "Major"), 3)
+      .put(named_rule("R5,C2,M1,S25..45,B33..57,NM", "Modern Art"), 3);
 
     // Random standard Moore (Life-like) rule
     let b_bits = Math.floor(Math.random() * 256);
@@ -366,16 +371,136 @@ export default (this_animation) => {
     window.universe = new Array(window.rows * window.columns).fill(false);
     
     // Initial State Generation
-    // If we are debugging a specific generation (1) of a B1 rule, start with a single point
-    // to avoid immediate chaos from random soup.
     if (window.pause_at_generation === 1 && window.rules.born_set.has(1)) {
         let cx = Math.floor(window.columns / 2);
         let cy = Math.floor(window.rows / 2);
         window.universe[cy * window.columns + cx] = true;
+    } else if (window.rules.name === "Life") {
+        // Special Life Patterns
+        var life_sampler = new ObjectSampler()
+            .put("glider", 1)
+            .put("gun", 1);
+            
+        let choice = life_sampler.sample();
+        let cx = Math.floor(window.columns / 2);
+        let cy = Math.floor(window.rows / 2);
+        
+        if (choice === "glider") {
+            // Glider
+            let offsets = [[0, -1], [1, 0], [-1, 1], [0, 1], [1, 1]];
+            for (let off of offsets) {
+                let idx = (cy + off[1]) * window.columns + (cx + off[0]);
+                if (idx >= 0 && idx < window.universe.length) window.universe[idx] = true;
+            }
+        } else {
+            // Gosper Glider Gun (Top-Left aligned relative to center)
+            // 36x9
+            let gun_str = [
+                "........................O...........",
+                "......................O.O...........",
+                "............OO......OO............OO",
+                "...........O...O....OO............OO",
+                "OO........O.....O...OO..............",
+                "OO........O...O.OO....O.O...........",
+                "..........O.....O.......O...........",
+                "...........O...O....................",
+                "............OO......................"
+            ];
+            // Center the gun
+            let start_y = cy - 4;
+            let start_x = cx - 18;
+            for(let i=0; i<gun_str.length; i++) {
+                for(let j=0; j<gun_str[i].length; j++) {
+                    if (gun_str[i][j] === 'O') {
+                        let y = start_y + i;
+                        let x = start_x + j;
+                        if (x >= 0 && x < window.columns && y >= 0 && y < window.rows) {
+                             window.universe[y * window.columns + x] = true;
+                        }
+                    }
+                }
+            }
+        }
     } else {
-        // Random Fill
-        for(let i=0; i<window.universe.length; i++) {
-            window.universe[i] = Math.random() < 0.2; // 20% density
+        // Generic Sampler
+        var init_sampler = new ObjectSampler()
+            .put("20p", 10)
+            .put("50p", 5)
+            .put("80p", 5)
+            .put("rand_p", 10)
+            .put("single", 1)
+            .put("rect", 2)
+            .put("circ", 2)
+            .put("lines", 1);
+            
+        let choice = init_sampler.sample();
+        
+        if (choice === "20p") {
+            for(let i=0; i<window.universe.length; i++) window.universe[i] = Math.random() < 0.2;
+        } else if (choice === "50p") {
+            for(let i=0; i<window.universe.length; i++) window.universe[i] = Math.random() < 0.5;
+        } else if (choice === "80p") {
+            for(let i=0; i<window.universe.length; i++) window.universe[i] = Math.random() < 0.8;
+        } else if (choice === "rand_p") {
+            let p = Math.random();
+            for(let i=0; i<window.universe.length; i++) window.universe[i] = Math.random() < p;
+        } else if (choice === "single") {
+            let cx = Math.floor(window.columns / 2);
+            let cy = Math.floor(window.rows / 2);
+            window.universe[cy * window.columns + cx] = true;
+        } else if (choice === "rect") {
+            // Rectangle fitting in viewport
+            let w = Math.floor(Math.random() * (window.columns - 2)) + 1;
+            let h = Math.floor(Math.random() * (window.rows - 2)) + 1;
+            let x = Math.floor(Math.random() * (window.columns - w));
+            let y = Math.floor(Math.random() * (window.rows - h));
+            let filled = Math.random() < 0.5;
+            
+            for(let j=y; j<y+h; j++) {
+                for(let i=x; i<x+w; i++) {
+                    if (filled || j===y || j===y+h-1 || i===x || i===x+w-1) {
+                         window.universe[j * window.columns + i] = true;
+                    }
+                }
+            }
+        } else if (choice === "circ") {
+            let radius = Math.floor(Math.random() * (Math.min(window.rows, window.columns) / 2 - 2)) + 1;
+            let cx = Math.floor(Math.random() * (window.columns - 2 * radius)) + radius;
+            let cy = Math.floor(Math.random() * (window.rows - 2 * radius)) + radius;
+            let filled = Math.random() < 0.5;
+            
+            if (filled) {
+                let r2 = radius * radius;
+                for(let j=cy-radius; j<=cy+radius; j++) {
+                    for(let i=cx-radius; i<=cx+radius; i++) {
+                        if ((i-cx)**2 + (j-cy)**2 <= r2) {
+                             if (j>=0 && j<window.rows && i>=0 && i<window.columns)
+                                 window.universe[j * window.columns + i] = true;
+                        }
+                    }
+                }
+            } else {
+                let pts = get_bresenham_circle_points(cx, cy, radius);
+                for(let pt of pts) {
+                    let px = pt[0], py = pt[1];
+                     if (py>=0 && py<window.rows && px>=0 && px<window.columns)
+                         window.universe[py * window.columns + px] = true;
+                }
+            }
+        } else if (choice === "lines") {
+            let num_lines = Math.floor(Math.random() * 10) + 1;
+            for(let k=0; k<num_lines; k++) {
+                let x0 = Math.floor(Math.random() * window.columns);
+                let y0 = Math.floor(Math.random() * window.rows);
+                let x1 = Math.floor(Math.random() * window.columns);
+                let y1 = Math.floor(Math.random() * window.rows);
+                let pts = get_bresenham_line_points([[x0,y0], [x1,y1]]);
+                for(let pt of pts) {
+                    let px = pt[0], py = pt[1];
+                     if (py>=0 && py<window.rows && px>=0 && px<window.columns)
+                         window.universe[py * window.columns + px] = true;
+                }
+            }
         }
     }
     
