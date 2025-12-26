@@ -203,51 +203,43 @@ export default (this_animation) => {
   if (window.frame_count == 0) {
     window.is_toroidal = Math.random() < 0.5;
 
-    // Helper to format standard rules
-    // Default to Moore, Range 1 if not specified
-    const prep_rule = (r) => {
-        if (!r.range) r.range = 1;
-        if (!r.type) r.type = 'M';
-        
-        // Convert array to Set for faster lookup if not already
-        r.born_set = new Set(r.born);
-        r.survive_set = new Set(r.survive);
+    const named_rule = (str, name) => {
+        let r = parse_rule(str);
+        r.name = name;
         return r;
     };
 
     // Outer Totalistic Moore Rulesets
     var rulesets = new ObjectSampler()
-      .put(prep_rule({ born: [3], survive: [2, 3], name: "Life" }), 20)
-      // ... (rest of rulesets) ...
-
-      .put(prep_rule({ born: [3, 6], survive: [2, 3], name: "HighLife" }), 4)
-      .put(prep_rule({ born: [3, 6, 7, 8], survive: [3, 4, 6, 7, 8], name: "Day & Night" }), 4)
-      .put(prep_rule({ born: [3, 6], survive: [1, 2, 5], name: "2x2" }), 3)
-      .put(prep_rule({ born: [3, 4], survive: [3, 4], name: "3-4 Life" }), 3)
-      .put(prep_rule({ born: [3, 5, 6, 7, 8], survive: [5, 6, 7, 8], name: "Diamoeba" }), 3)
-      .put(prep_rule({ born: [3], survive: [0, 2, 3], name: "DotLife" }), 4)
-      .put(prep_rule({ born: [3], survive: [2, 3, 8], name: "EightLife" }), 3)
-      .put(prep_rule({ born: [3, 4, 5, 7], survive: [4, 5, 6, 8], name: "Gems" }), 3)
-      .put(prep_rule({ born: [3, 4, 5, 7, 8], survive: [4, 5, 6], name: "Gems Minor" }), 3)
-      .put(prep_rule({ born: [3], survive: [0, 1, 2, 3, 4, 5, 6, 7, 8], name: "Life Without Death" }), 3)
-      .put(prep_rule({ born: [2], survive: [0], name: "Live Free or Die" }), 1)
-      .put(prep_rule({ born: [3, 6], survive: [2, 4, 5], name: "Logarithmic Replicator" }), 3)
-      .put(prep_rule({ born: [3, 4, 5], survive: [5], name: "LongLife" }), 3)
-      .put(prep_rule({ born: [3], survive: [1, 2, 3, 4, 5], name: "Maze" }), 3)
-      .put(prep_rule({ born: [3], survive: [1, 2, 3, 4], name: "Mazectric" }), 3)
-      .put(prep_rule({ born: [3, 6, 8], survive: [2, 4, 5], name: "Move" }), 3)
-      .put(prep_rule({ born: [3, 8], survive: [2, 3], name: "Pedestrian Life" }), 3)
-      .put(prep_rule({ born: [1, 3, 5, 7], survive: [1, 3, 5, 7], name: "Replicator" }), 1)
-      .put(prep_rule({ born: [1, 3, 5, 7], survive: [0, 2, 4, 6, 8], name: "Fredkin" }), 1)
-      .put(prep_rule({ born: [2], survive: [], name: "Seeds" }), 3)
-      .put(prep_rule({ born: [4, 6, 7, 8], survive: [3, 5, 6, 7, 8], name: "Anneal" }), 3)
-      .put(prep_rule({ born: [4, 5, 6, 7, 8], survive: [2, 3, 4, 5], name: "Walled Cities" }), 3)
-      .put(prep_rule({ born: [2, 3, 4], survive: [], name: "Serviettes" }), 3)
-      .put(prep_rule({ born: [3, 6, 7, 8], survive: [2, 3, 5, 6, 7, 8], name: "Stains" }), 3)
-      .put(prep_rule({ born: [3, 7, 8], survive: [2, 3, 5, 6, 7, 8], name: "Coagulations" }), 3)
-      .put(prep_rule({ born: [3, 4, 5], survive: [4, 5, 6, 7], name: "Assimilation" }), 3)
-      .put(prep_rule({ born: [3], survive: [4, 5, 6, 7, 8], name: "Corral" }), 3)
-      .put(prep_rule({ born: [5, 6, 7, 8], survive: [4, 5, 6, 7, 8], name: "Vote" }), 1);
+      .put(named_rule("B3/S23", "Life"), 20)
+      .put(named_rule("B36/S23", "HighLife"), 4)
+      .put(named_rule("B3678/S34678", "Day & Night"), 4)
+      .put(named_rule("B36/S125", "2x2"), 3)
+      .put(named_rule("B34/S34", "3-4 Life"), 3)
+      .put(named_rule("B35678/S5678", "Diamoeba"), 3)
+      .put(named_rule("B3/S023", "DotLife"), 4)
+      .put(named_rule("B3/S238", "EightLife"), 3)
+      .put(named_rule("B3457/S4568", "Gems"), 3)
+      .put(named_rule("B34578/S456", "Gems Minor"), 3)
+      .put(named_rule("B3/S012345678", "Life Without Death"), 3)
+      .put(named_rule("B2/S0", "Live Free or Die"), 1)
+      .put(named_rule("B36/S245", "Logarithmic Replicator"), 3)
+      .put(named_rule("B345/S5", "LongLife"), 3)
+      .put(named_rule("B3/S12345", "Maze"), 3)
+      .put(named_rule("B3/S1234", "Mazectric"), 3)
+      .put(named_rule("B368/S245", "Move"), 3)
+      .put(named_rule("B38/S23", "Pedestrian Life"), 3)
+      .put(named_rule("B1357/S1357", "Replicator"), 1)
+      .put(named_rule("B1357/S02468", "Fredkin"), 1)
+      .put(named_rule("B2/S", "Seeds"), 3)
+      .put(named_rule("B4678/S35678", "Anneal"), 3)
+      .put(named_rule("B45678/S2345", "Walled Cities"), 3)
+      .put(named_rule("B234/S", "Serviettes"), 3)
+      .put(named_rule("B3678/S235678", "Stains"), 3)
+      .put(named_rule("B378/S235678", "Coagulations"), 3)
+      .put(named_rule("B345/S4567", "Assimilation"), 3)
+      .put(named_rule("B3/S45678", "Corral"), 3)
+      .put(named_rule("B5678/S45678", "Vote"), 1);
 
     // Random standard Moore (Life-like) rule
     let b_bits = Math.floor(Math.random() * 256);
@@ -259,18 +251,25 @@ export default (this_animation) => {
       if ((s_bits >> j) & 1) s.push(j);
     }
     let r_name = `b${b.join('')}/s${s.join('')}`;
-    rulesets.put(prep_rule({ born: b, survive: s, name: r_name }), 1);
+    rulesets.put(named_rule(r_name, r_name), 1);
 
     // Random LtL Rule
     // Range 1 to 4
     // Neighborhoods: M, N, 2, C, +, X, *, B, D, #
+    // Using aliases H (#), S (*), P (+) for URL safety
     let ltl_range = Math.floor(Math.random() * 4) + 1;
-    let ltl_types = ['M', 'N', '2', 'C', '+', 'X', '*', 'B', 'D', '#'];
+    let ltl_types = ['M', 'N', '2', 'C', 'P', 'X', 'S', 'H', 'B', 'D'];
     let ltl_type = ltl_types[Math.floor(Math.random() * ltl_types.length)];
     let ltl_include_center = Math.random() < 0.5;
     
     // Calculate max neighbors to determine valid born/survive range
-    let max_n = get_max_neighbors(ltl_range, ltl_type, ltl_include_center);
+    // Map aliases to real types for calculation
+    let real_type = ltl_type;
+    if (ltl_type === 'H') real_type = '#';
+    else if (ltl_type === 'S') real_type = '*';
+    else if (ltl_type === 'P') real_type = '+';
+    
+    let max_n = get_max_neighbors(ltl_range, real_type, ltl_include_center);
     
     // Generate random born/survive ranges
     // For LtL, often defined as ranges e.g. B 30..40
@@ -311,14 +310,7 @@ export default (this_animation) => {
     
     let ltl_name = `R${ltl_range},C2,M${ltl_include_center?1:0},S${format_ranges(s_ltl)},B${format_ranges(b_ltl)},N${ltl_type}`;
     
-    rulesets.put(prep_rule({
-        born: b_ltl,
-        survive: s_ltl,
-        range: ltl_range,
-        type: ltl_type,
-        include_center: ltl_include_center,
-        name: ltl_name
-    }), 2); // Weight 2 for random LtL
+    rulesets.put(parse_rule(ltl_name), 2); // Weight 2 for random LtL
     
     window.sub_animation_size = rulesets.size();
     
@@ -355,7 +347,11 @@ export default (this_animation) => {
         // Standard Life-like format
         var rule_str = `b${window.rules.born.join('')}/s${window.rules.survive.join('')}`;
         var name_str = window.rules.name.toLowerCase();
-        var display_name = (name_str === rule_str) ? rule_str : `${rule_str} (${name_str})`;
+        
+        // If the name is the same as the rule string, or if it looks like an LtL definition (starts with 'r'),
+        // just show the compact rule string.
+        var display_name = (name_str === rule_str || name_str.startsWith('r')) ? rule_str : `${rule_str} (${window.rules.name})`;
+        
         display_str = `${display_name}${suffix_str}`;
         link_rule_str = rule_str + suffix_str;
     } else {
