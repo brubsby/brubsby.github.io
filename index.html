@@ -218,6 +218,19 @@
   var sub_animation_param = getUrlParameter("b");
   window.sub_animation_index = parseInt(sub_animation_param, 10);
 
+  var rule_param = getUrlParameter("rule");
+  if (rule_param) {
+    window.forced_rule_string = rule_param;
+    if (isNaN(animation_index)) {
+       // Force 2d_life.js if rule is present and no specific animation is requested
+       // We find the index for 2d_life.js to be consistent
+       var life_idx = window.animations.index_of("2d_life.js");
+       if (life_idx !== -1) {
+         animation_index = life_idx;
+       }
+    }
+  }
+
   window.constant_random_boolean = Math.random() < 0.5;
   window.constant_random_values = [];
   for (var i = 0; i < 20; i++) {
