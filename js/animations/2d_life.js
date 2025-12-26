@@ -212,39 +212,39 @@ export default (this_animation) => {
     // Outer Totalistic Moore Rulesets
     var rulesets = new ObjectSampler()
       .put(named_rule("B3/S23", "Life"), 20)
-      .put(named_rule("B36/S23", "HighLife"), 4)
-      .put(named_rule("B3678/S34678", "Day & Night"), 4)
-      .put(named_rule("B36/S125", "2x2"), 3)
-      .put(named_rule("B34/S34", "3-4 Life"), 3)
-      .put(named_rule("B35678/S5678", "Diamoeba"), 3)
-      .put(named_rule("B3/S023", "DotLife"), 4)
-      .put(named_rule("B3/S238", "EightLife"), 3)
-      .put(named_rule("B3457/S4568", "Gems"), 3)
-      .put(named_rule("B34578/S456", "Gems Minor"), 3)
-      .put(named_rule("B3/S012345678", "Life Without Death"), 3)
+      .put(named_rule("B36/S23", "HighLife"), 2)
+      .put(named_rule("B3678/S34678", "Day & Night"), 2)
+      .put(named_rule("B36/S125", "2x2"), 2)
+      .put(named_rule("B34/S34", "3-4 Life"), 2)
+      .put(named_rule("B35678/S5678", "Diamoeba"), 2)
+      .put(named_rule("B3/S023", "DotLife"), 3)
+      .put(named_rule("B3/S238", "EightLife"), 2)
+      .put(named_rule("B3457/S4568", "Gems"), 2)
+      .put(named_rule("B34578/S456", "Gems Minor"), 2)
+      .put(named_rule("B3/S012345678", "Life Without Death"), 2)
       .put(named_rule("B2/S0", "Live Free or Die"), 1)
-      .put(named_rule("B36/S245", "Logarithmic Replicator"), 3)
-      .put(named_rule("B345/S5", "LongLife"), 3)
-      .put(named_rule("B3/S12345", "Maze"), 3)
-      .put(named_rule("B3/S1234", "Mazectric"), 3)
-      .put(named_rule("B368/S245", "Move"), 3)
-      .put(named_rule("B38/S23", "Pedestrian Life"), 3)
+      .put(named_rule("B36/S245", "Logarithmic Replicator"), 2)
+      .put(named_rule("B345/S5", "LongLife"), 2)
+      .put(named_rule("B3/S12345", "Maze"), 2)
+      .put(named_rule("B3/S1234", "Mazectric"), 2)
+      .put(named_rule("B368/S245", "Move"), 2)
+      .put(named_rule("B38/S23", "Pedestrian Life"), 2)
       .put(named_rule("B1357/S1357", "Replicator"), 1)
       .put(named_rule("B1357/S02468", "Fredkin"), 1)
-      .put(named_rule("B2/S", "Seeds"), 3)
-      .put(named_rule("B4678/S35678", "Anneal"), 3)
-      .put(named_rule("B45678/S2345", "Walled Cities"), 3)
-      .put(named_rule("B234/S", "Serviettes"), 3)
-      .put(named_rule("B3678/S235678", "Stains"), 3)
-      .put(named_rule("B378/S235678", "Coagulations"), 3)
-      .put(named_rule("B345/S4567", "Assimilation"), 3)
-      .put(named_rule("B3/S45678", "Corral"), 3)
+      .put(named_rule("B2/S", "Seeds"), 2)
+      .put(named_rule("B4678/S35678", "Anneal"), 2)
+      .put(named_rule("B45678/S2345", "Walled Cities"), 2)
+      .put(named_rule("B234/S", "Serviettes"), 2)
+      .put(named_rule("B3678/S235678", "Stains"), 2)
+      .put(named_rule("B378/S235678", "Coagulations"), 2)
+      .put(named_rule("B345/S4567", "Assimilation"), 2)
+      .put(named_rule("B3/S45678", "Corral"), 2)
       .put(named_rule("B5678/S45678", "Vote"), 1)
-      .put(named_rule("R5,C2,M1,S34..58,B34..45,NM", "Bosco's Rule"), 4)
-      .put(named_rule("R10,C2,M1,S123..170,B122..211,NM", "Bugs"), 3)
-      .put(named_rule("R8,C2,M1,S163..223,B74..252,NM", "Globe"), 3)
-      .put(named_rule("R7,C2,M1,S123..170,B75..170,NM", "Major"), 3)
-      .put(named_rule("R5,C2,M1,S25..45,B33..57,NM", "Modern Art"), 3);
+      .put(named_rule("R5,C2,M1,S34..58,B34..45,NM", "Bosco"), 2)
+      .put(named_rule("R10,C2,M1,S123..170,B122..211,NM", "Bugs"), 2)
+      .put(named_rule("R8,C2,M1,S163..223,B74..252,NM", "Globe"), 2)
+      .put(named_rule("R7,C2,M1,S123..170,B75..170,NM", "Major"), 2)
+      .put(named_rule("R5,C2,M1,S25..45,B33..57,NM", "Modern Art"), 2);
 
     // Random standard Moore (Life-like) rule
     let b_bits = Math.floor(Math.random() * 256);
@@ -315,7 +315,7 @@ export default (this_animation) => {
     
     let ltl_name = `R${ltl_range},C2,M${ltl_include_center?1:0},S${format_ranges(s_ltl)},B${format_ranges(b_ltl)},N${ltl_type}`;
     
-    rulesets.put(parse_rule(ltl_name), 2); // Weight 2 for random LtL
+    rulesets.put(parse_rule(ltl_name), 40); // Weight 2 for random LtL
     
     window.sub_animation_size = rulesets.size();
     
@@ -375,52 +375,6 @@ export default (this_animation) => {
         let cx = Math.floor(window.columns / 2);
         let cy = Math.floor(window.rows / 2);
         window.universe[cy * window.columns + cx] = true;
-    } else if (window.rules.name === "Life") {
-        // Special Life Patterns
-        var life_sampler = new ObjectSampler()
-            .put("glider", 1)
-            .put("gun", 1);
-            
-        let choice = life_sampler.sample();
-        let cx = Math.floor(window.columns / 2);
-        let cy = Math.floor(window.rows / 2);
-        
-        if (choice === "glider") {
-            // Glider
-            let offsets = [[0, -1], [1, 0], [-1, 1], [0, 1], [1, 1]];
-            for (let off of offsets) {
-                let idx = (cy + off[1]) * window.columns + (cx + off[0]);
-                if (idx >= 0 && idx < window.universe.length) window.universe[idx] = true;
-            }
-        } else {
-            // Gosper Glider Gun (Top-Left aligned relative to center)
-            // 36x9
-            let gun_str = [
-                "........................O...........",
-                "......................O.O...........",
-                "............OO......OO............OO",
-                "...........O...O....OO............OO",
-                "OO........O.....O...OO..............",
-                "OO........O...O.OO....O.O...........",
-                "..........O.....O.......O...........",
-                "...........O...O....................",
-                "............OO......................"
-            ];
-            // Center the gun
-            let start_y = cy - 4;
-            let start_x = cx - 18;
-            for(let i=0; i<gun_str.length; i++) {
-                for(let j=0; j<gun_str[i].length; j++) {
-                    if (gun_str[i][j] === 'O') {
-                        let y = start_y + i;
-                        let x = start_x + j;
-                        if (x >= 0 && x < window.columns && y >= 0 && y < window.rows) {
-                             window.universe[y * window.columns + x] = true;
-                        }
-                    }
-                }
-            }
-        }
     } else {
         // Generic Sampler
         var init_sampler = new ObjectSampler()
@@ -433,6 +387,29 @@ export default (this_animation) => {
             .put("circ", 2)
             .put("lines", 1);
             
+        let range_substrate_valid = false;
+        let min_rho = 0;
+        let max_rho = 1;
+        
+        if (window.rules.range >= 2) {
+             let max_n = window.neighbor_offsets.length;
+             if (max_n > 0) {
+                 let all_counts = [...window.rules.born, ...window.rules.survive];
+                 if (all_counts.length > 0) {
+                     let min_k = Math.min(...all_counts);
+                     let max_k = Math.max(...all_counts);
+                     min_rho = min_k / max_n;
+                     max_rho = max_k / max_n;
+                     range_substrate_valid = true;
+                     init_sampler.put("range_substrate", 200);
+                 }
+             }
+        }
+            
+        if (window.rules.name === "Life") {
+            init_sampler.put("glider", 1).put("gun", 1);
+        }
+            
         let choice = init_sampler.sample();
         
         if (choice === "20p") {
@@ -444,6 +421,9 @@ export default (this_animation) => {
         } else if (choice === "rand_p") {
             let p = Math.random();
             for(let i=0; i<window.universe.length; i++) window.universe[i] = Math.random() < p;
+        } else if (choice === "range_substrate") {
+            let rho = min_rho + Math.random() * (max_rho - min_rho);
+            for(let i=0; i<window.universe.length; i++) window.universe[i] = Math.random() < rho;
         } else if (choice === "single") {
             let cx = Math.floor(window.columns / 2);
             let cy = Math.floor(window.rows / 2);
@@ -499,6 +479,44 @@ export default (this_animation) => {
                     let px = pt[0], py = pt[1];
                      if (py>=0 && py<window.rows && px>=0 && px<window.columns)
                          window.universe[py * window.columns + px] = true;
+                }
+            }
+        } else if (choice === "glider") {
+            let cx = Math.floor(window.columns / 2);
+            let cy = Math.floor(window.rows / 2);
+            let offsets = [[0, -1], [1, 0], [-1, 1], [0, 1], [1, 1]];
+            for (let off of offsets) {
+                let idx = (cy + off[1]) * window.columns + (cx + off[0]);
+                if (idx >= 0 && idx < window.universe.length) window.universe[idx] = true;
+            }
+        } else if (choice === "gun") {
+            let cx = Math.floor(window.columns / 2);
+            let cy = Math.floor(window.rows / 2);
+            // Gosper Glider Gun (Top-Left aligned relative to center)
+            // 36x9
+            let gun_str = [
+                "........................O...........",
+                "......................O.O...........",
+                "............OO......OO............OO",
+                "...........O...O....OO............OO",
+                "OO........O.....O...OO..............",
+                "OO........O...O.OO....O.O...........",
+                "..........O.....O.......O...........",
+                "...........O...O....................",
+                "............OO......................"
+            ];
+            // Center the gun
+            let start_y = cy - 4;
+            let start_x = cx - 18;
+            for(let i=0; i<gun_str.length; i++) {
+                for(let j=0; j<gun_str[i].length; j++) {
+                    if (gun_str[i][j] === 'O') {
+                        let y = start_y + i;
+                        let x = start_x + j;
+                        if (x >= 0 && x < window.columns && y >= 0 && y < window.rows) {
+                             window.universe[y * window.columns + x] = true;
+                        }
+                    }
                 }
             }
         }
