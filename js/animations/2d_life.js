@@ -20,8 +20,11 @@ function get_neighbor_offsets(range, type) {
                 case 'N': // Von Neumann
                     include = dist_manhattan <= range;
                     break;
-                case 'C': // Circular (approx Euclidean)
-                    include = dist_sq <= range * range; 
+                case '2': // Euclidean
+                    include = dist_sq <= range * range;
+                    break;
+                case 'C': // Circular (approx Euclidean r+0.5)
+                    include = dist_sq <= range * (range + 1); 
                     break;
                 case '+': // Cross
                     include = (dx === 0 || dy === 0) && dist_chebyshev <= range;
@@ -32,9 +35,14 @@ function get_neighbor_offsets(range, type) {
                 case '*': // Star (Cross + Saltire)
                     include = ((dx === 0 || dy === 0) || Math.abs(dx) === Math.abs(dy)) && dist_chebyshev <= range;
                     break;
-                case 'B': // Checkerboard
-                    // Standard checkerboard: parity of x+y. Relative to center (0,0), parity of dx+dy must be even (0)
+                case 'B': // Checkerboard (Odd parity sum relative to center)
+                    include = dist_chebyshev <= range && ((dx + dy) % 2 !== 0);
+                    break;
+                case 'D': // Aligned Checkerboard (Even parity sum relative to center)
                     include = dist_chebyshev <= range && ((dx + dy) % 2 === 0);
+                    break;
+                case '#': // Hash (Hashtag shape)
+                    include = dist_chebyshev <= range && (Math.abs(dx) === 1 || Math.abs(dy) === 1);
                     break;
             }
             
@@ -108,9 +116,9 @@ export default (this_animation) => {
 
     // Random LtL Rule
     // Range 1 to 4
-    // Neighborhoods: M, N, C, +, X, *, B
+    // Neighborhoods: M, N, 2, C, +, X, *, B, D, #
     let ltl_range = Math.floor(Math.random() * 4) + 1;
-    let ltl_types = ['M', 'N', 'C', '+', 'X', '*', 'B'];
+    let ltl_types = ['M', 'N', '2', 'C', '+', 'X', '*', 'B', 'D', '#'];
     let ltl_type = ltl_types[Math.floor(Math.random() * ltl_types.length)];
     
     // Calculate max neighbors to determine valid born/survive range
