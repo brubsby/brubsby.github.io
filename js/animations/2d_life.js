@@ -1,4 +1,4 @@
-import { ObjectSampler, tooltip, get_canvas_index, setCharAtIndex, get_coords, get_bresenham_line_points, get_bresenham_circle_points } from '../utils.js';
+import { ObjectSampler, tooltip, get_canvas_index, setCharAtIndex, get_coords, get_bresenham_line_points, get_bresenham_circle_points, init_simplex_noise, get_simplex_noise_at } from '../utils.js';
 
 function get_max_neighbors(r, t, include_center) {
     let result = 8;
@@ -201,7 +201,25 @@ function parse_rule(rule_str) {
 
 export default (this_animation) => {
   if (window.frame_count == 0) {
-    window.is_toroidal = Math.random() < 0.5;
+    window.is_toroidal = Math.random() < 0.75;
+
+    // Helper to format ranges for name
+    const format_ranges = (arr) => {
+        if (!arr || arr.length === 0) return "";
+        let sorted = [...new Set(arr)].sort((a,b)=>a-b);
+        let parts = [];
+        let start = sorted[0];
+        let prev = start;
+        for(let i=1; i<sorted.length; i++) {
+            if (sorted[i] !== prev + 1) {
+                parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+                start = sorted[i];
+            }
+            prev = sorted[i];
+        }
+        parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+        return parts.join(',');
+    };
 
     const named_rule = (str, name) => {
         let r = parse_rule(str);
@@ -244,7 +262,7 @@ export default (this_animation) => {
       .put(named_rule("R10,C2,M1,S123..170,B122..211,NM", "Bugs"), 2)
       .put(named_rule("R8,C2,M1,S163..223,B74..252,NM", "Globe"), 2)
       .put(named_rule("R7,C2,M1,S123..170,B75..170,NM", "Major"), 2)
-      .put(named_rule("R5,C2,M1,S25..45,B33..57,NM", "Modern Art"), 2);
+      .put(named_rule("R5,C255,M1,S25..45,B33..57,NM", "Modern Art"), 2);
 
     // Random standard Moore (Life-like) rule
     let b_bits = Math.floor(Math.random() * 256);
@@ -295,24 +313,6 @@ export default (this_animation) => {
         for(let j=min; j<=max; j++) s_ltl.push(j);
     }
     
-    // Helper to format ranges for name
-    const format_ranges = (arr) => {
-        if (arr.length === 0) return "";
-        let sorted = [...new Set(arr)].sort((a,b)=>a-b);
-        let parts = [];
-        let start = sorted[0];
-        let prev = start;
-        for(let i=1; i<sorted.length; i++) {
-            if (sorted[i] !== prev + 1) {
-                parts.push(start === prev ? `${start}` : `${start}-${prev}`);
-                start = sorted[i];
-            }
-            prev = sorted[i];
-        }
-        parts.push(start === prev ? `${start}` : `${start}-${prev}`);
-        return parts.join(',');
-    };
-    
     let ltl_name = `R${ltl_range},C2,M${ltl_include_center?1:0},S${format_ranges(s_ltl)},B${format_ranges(b_ltl)},N${ltl_type}`;
     
     rulesets.put(parse_rule(ltl_name), 40); // Weight 2 for random LtL
@@ -342,27 +342,43 @@ export default (this_animation) => {
     
     // Tooltip Logic
     var rules_index = rulesets.index_of(window.rules);
-    
+
     // Construct suffix: :Tcols,rows or :Pcols,rows
     var suffix_str = `:${window.is_toroidal ? 'T' : 'P'}${window.columns},${window.rows}`;
     var display_str = "";
     var link_rule_str = "";
     
-    if (window.rules.range === 1 && window.rules.type === 'M') {
+    if (window.rules.range === 1 && window.rules.type === 'M' && !window.rules.include_center) {
         // Standard Life-like format
-        var rule_str = `b${window.rules.born.join('')}/s${window.rules.survive.join('')}`;
+        var rule_str = `B${window.rules.born.join('')}/S${window.rules.survive.join('')}`;
         var name_str = window.rules.name.toLowerCase();
         
+        var parenthetical = "";
         // If the name is the same as the rule string, or if it looks like an LtL definition (starts with 'r'),
         // just show the compact rule string.
-        var display_name = (name_str === rule_str || name_str.startsWith('r')) ? rule_str : `${rule_str} (${window.rules.name})`;
+        if (name_str !== rule_str && !name_str.startsWith('r')) {
+            parenthetical = ` (${window.rules.name})`;
+        }
         
-        display_str = `${display_name}${suffix_str}`;
+        display_str = `${rule_str}${suffix_str}${parenthetical}`;
         link_rule_str = rule_str + suffix_str;
     } else {
-        // LtL Format
-        display_str = `${window.rules.name}${suffix_str}`;
-        link_rule_str = window.rules.name + suffix_str;
+        // LtL Format - Reconstruct canonical string
+        // Map real types back to aliases if preferred? Or just standard chars.
+        // Standard Golly uses #, +, etc. My aliases H, S, P were for input/URL.
+        // Let's use standard chars for display.
+        let type_char = window.rules.type;
+        // Construct: Rr,Cc,Mm,Ss..s,Bb..b,Nn
+        let s_part = format_ranges(window.rules.survive);
+        let b_part = format_ranges(window.rules.born);
+        let ltl_canon = `R${window.rules.range},C${window.rules.states||2},M${window.rules.include_center?1:0},S${s_part},B${b_part},N${type_char}`;
+        
+        if (window.rules.name && window.rules.name !== ltl_canon && !window.rules.name.toUpperCase().startsWith('R')) {
+             display_str = `${ltl_canon}${suffix_str} (${window.rules.name})`;
+        } else {
+             display_str = `${ltl_canon}${suffix_str}`;
+        }
+        link_rule_str = ltl_canon + suffix_str;
     }
 
     tooltip(`2d automata<br>${display_str}`, rules_index, { rule: link_rule_str });
@@ -385,7 +401,8 @@ export default (this_animation) => {
             .put("single", 1)
             .put("rect", 2)
             .put("circ", 2)
-            .put("lines", 1);
+            .put("lines", 1)
+            .put("simplex", 5);
             
         let range_substrate_valid = false;
         let min_rho = 0;
@@ -424,6 +441,17 @@ export default (this_animation) => {
         } else if (choice === "range_substrate") {
             let rho = min_rho + Math.random() * (max_rho - min_rho);
             for(let i=0; i<window.universe.length; i++) window.universe[i] = Math.random() < rho;
+        } else if (choice === "simplex") {
+            init_simplex_noise();
+            let freq = Math.random() * 0.1 + 0.05;
+            for (var y = 0; y < window.rows; y++) {
+                for (var x = 0; x < window.columns; x++) {
+                    let val = get_simplex_noise_at([x, y], freq, 1);
+                    if (val > 0) {
+                        window.universe[y * window.columns + x] = true;
+                    }
+                }
+            }
         } else if (choice === "single") {
             let cx = Math.floor(window.columns / 2);
             let cy = Math.floor(window.rows / 2);
