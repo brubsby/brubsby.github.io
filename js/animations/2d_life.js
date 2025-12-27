@@ -269,7 +269,7 @@ export default (this_animation) => {
     let s_bits = Math.floor(Math.random() * 256);
     let b = [];
     let s = [];
-    for (let j = 0; j < 8; j++) {
+    for (let j = 1; j < 8; j++) {
       if ((b_bits >> j) & 1) b.push(j);
       if ((s_bits >> j) & 1) s.push(j);
     }
@@ -302,7 +302,7 @@ export default (this_animation) => {
     // Simple random generation: pick a few ranges
     let num_ranges = Math.floor(Math.random() * 2) + 1;
     for(let k=0; k<num_ranges; k++) {
-        let min = Math.floor(Math.random() * max_n);
+        let min = Math.floor(Math.random() * (max_n - 1)) + 1;
         let max = Math.min(max_n, min + Math.floor(Math.random() * (max_n - min) * 0.3)); // 30% width max
         for(let j=min; j<=max; j++) b_ltl.push(j);
     }
@@ -396,8 +396,8 @@ export default (this_animation) => {
         var init_sampler = new ObjectSampler()
             .put("20p", 10)
             .put("50p", 5)
-            .put("80p", 5)
-            .put("rand_p", 10)
+            .put("80p", 3)
+            .put("rand_p", 5)
             .put("single", 1)
             .put("rect", 2)
             .put("circ", 2)
@@ -408,18 +408,17 @@ export default (this_animation) => {
         let min_rho = 0;
         let max_rho = 1;
         
-        if (window.rules.range >= 2) {
-             let max_n = window.neighbor_offsets.length;
-             if (max_n > 0) {
-                 let all_counts = [...window.rules.born, ...window.rules.survive];
-                 if (all_counts.length > 0) {
-                     let min_k = Math.min(...all_counts);
-                     let max_k = Math.max(...all_counts);
-                     min_rho = min_k / max_n;
-                     max_rho = max_k / max_n;
-                     range_substrate_valid = true;
-                     init_sampler.put("range_substrate", 200);
-                 }
+        let max_n = window.neighbor_offsets.length;
+        if (max_n > 0) {
+             let all_counts = [...window.rules.born, ...window.rules.survive];
+             if (all_counts.length > 0) {
+                 let min_k = Math.min(...all_counts);
+                 let max_k = Math.max(...all_counts);
+                 min_rho = min_k / max_n;
+                 max_rho = max_k / max_n;
+                 range_substrate_valid = true;
+                 let weight = (window.rules.range >= 2) ? 200 : 10;
+                 init_sampler.put("range_substrate", weight);
              }
         }
             
