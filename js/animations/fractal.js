@@ -147,7 +147,6 @@ export default (this_animation) => {
         (Math.random() * 2 - 1) * 0.13 +
         Math.PI +
         (Math.floor(Math.random() * 3) * 2 * Math.PI) / 3,
-      boundary_finder_iteration_multiplier: 0.99,
       description: "tricorn",
     });
     var burningShip = createFractal({
@@ -160,7 +159,6 @@ export default (this_animation) => {
           c,
         ),
       theta_func: () => -(Math.random() * 0.69 * Math.PI + Math.PI * 0.32),
-      boundary_finder_iteration_multiplier: 0.95,
       description: "burning ship",
     });
     var cubic = createFractal({
@@ -351,9 +349,6 @@ export default (this_animation) => {
     var zubieta = createFractal({
       description: "zubieta",
       is_julia: true,
-      max_radius: 4.0,
-      threshold: 100,
-      zoom_speed: 0.05,
       start_func: () =>
         find_boundary_point(center_finder_iterations, 4.0, 5000, zubietaMandel),
       setup: function (s) {
@@ -382,6 +377,11 @@ export default (this_animation) => {
       .put(multimandel, 2)
       .put(zubieta, 0)
       .put(julia, 4);
+
+    window.render_strategies = new ObjectSampler()
+      .put("density", 1)
+      .put("digit", 1);
+    window.render_strategy = window.render_strategies.sample();
 
     window.sub_animation_size = window.fractals.size();
     if (
@@ -484,6 +484,7 @@ export default (this_animation) => {
 
   // var density_threshold = Math.floor(iterations / 2);
   var density_chars = ".,-~:;=!*#$@";
+  var strategy = window.render_strategy;
 
   var start_time = performance.now();
   var time_budget = 1000 / window.target_framerate;
@@ -511,13 +512,21 @@ export default (this_animation) => {
         window.fractal.render_threshold,
       );
 
-      if (iters == iterations) {
-        window.char_grid[ry][rx] = "o";
+      if (strategy === "digit") {
+         if (iters == iterations) {
+            window.char_grid[ry][rx] = ".";
+         } else {
+            window.char_grid[ry][rx] = (iters % 10).toString();
+         }
       } else {
-        var val = iters / iterations;
-        var char_idx = Math.floor(val * density_chars.length);
-        window.char_grid[ry][rx] =
-          density_chars[Math.min(char_idx, density_chars.length - 1)];
+          if (iters == iterations) {
+            window.char_grid[ry][rx] = "o";
+          } else {
+            var val = iters / iterations;
+            var char_idx = Math.floor(val * density_chars.length);
+            window.char_grid[ry][rx] =
+              density_chars[Math.min(char_idx, density_chars.length - 1)];
+          }
       }
     }
   }
