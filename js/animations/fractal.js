@@ -29,7 +29,7 @@ var fractal_iteration = (
     value = formula(value, point);
     iterations++;
   }
-  return iterations;
+  return [iterations, window.math.abs(value)];
 };
 
 var find_boundary_point = (
@@ -55,7 +55,7 @@ var find_boundary_point = (
       var r =
         epsilon + (i / sample_count) * (center_finder_max_radius - epsilon);
       var p = window.math.complex(r * Math.cos(theta), r * Math.sin(theta));
-      var iter_count = fractal_iteration(
+      var [iter_count] = fractal_iteration(
         p,
         fractal["formula"],
         center_finder_num_recurses,
@@ -84,7 +84,7 @@ var find_boundary_point = (
           candidate_radius * Math.cos(theta),
           candidate_radius * Math.sin(theta),
         );
-        var iter_count = fractal_iteration(
+        var [iter_count] = fractal_iteration(
           candidate_point,
           fractal["formula"],
           center_finder_num_recurses,
@@ -129,6 +129,7 @@ export default (this_animation) => {
           boundary_finder_iteration_multiplier: 1,
           start_func: () => window.math.complex(0, 0),
           zoom_speed: 0.01,
+          degree: 2,
           setup: function (seed) {
             return { formula: this.formula, start: seed };
           },
@@ -164,10 +165,12 @@ export default (this_animation) => {
     var cubic = createFractal({
       formula: (z, c) => window.math.add(window.math.pow(z, 3), c),
       description: "cubic mandelbrot",
+      degree: 3,
     });
     var quartic = createFractal({
       formula: (z, c) => window.math.add(window.math.pow(z, 4), c),
       description: "quartic mandelbrot",
+      degree: 4,
     });
     var celtic = createFractal({
       formula: (z, c) => {
@@ -208,6 +211,7 @@ export default (this_animation) => {
           ),
           c,
         ),
+      degree: 3,
       setup: function (seed) {
         return { formula: this.formula, start: null };
       },
@@ -304,6 +308,7 @@ export default (this_animation) => {
         return {
           formula: (z, c) => window.math.add(window.math.pow(z, M), c),
           start: null,
+          degree: Math.abs(M),
         };
       },
     });
@@ -399,6 +404,7 @@ export default (this_animation) => {
     window.fractal.formula = config.formula;
     window.fractal.start = config.start;
     window.fractal.render_threshold = config.threshold || 10;
+    window.fractal.degree = config.degree || window.fractal.degree || 2;
 
     var center_finder_num_recurses = Math.floor(
       iterations * window.fractal["boundary_finder_iteration_multiplier"],
@@ -483,7 +489,8 @@ export default (this_animation) => {
   }
 
   // var density_threshold = Math.floor(iterations / 2);
-  var density_chars = "·.∙`-':_,─;^~÷⌐/=°¬\"+()º<>┘═[]»≤≥«%|└\\iªⁿt±┐╛c!l{}¡²¿íï≡?xI┌┴rì≈*ετ7u╘╧fvΓsCJz┬ea1σîo2çü╕πL√4αn∞dÇ3TäæSwëùú⌡YΣ╒╙╜V¢éj╚59ö⌠╝6£èƒ│ßàáûδFPZm╨Gq¥êòó∩■âk0Xb╩&Aô┤╤gΘ░µ╓╖UΩh├Oy½8φpåΦ╡╥H#@ÜñEÖ┼DÄK¼₧$ÅÉ╞RBÿÆMNQW╔╗╪╦▀▌Ñ║╟╢╠╣╫╬▐▄▒▓█";
+  var density_chars =
+    "·.∙`-':_,─;^~÷⌐/=°¬\"+()º<>┘═[]»≤≥«%|└\\iªⁿt±┐╛c!l{}¡²¿íï≡?xI┌┴rì≈*ετ7u╘╧fvΓsCJz┬ea1σîo2çü╕πL√4αn∞dÇ3TäæSwëùú⌡YΣ╒╙╜V¢éj╚59ö⌠╝6£èƒ│ßàáûδFPZm╨Gq¥êòó∩■âk0Xb╩&Aô┤╤gΘ░µ╓╖UΩh├Oy½8φpåΦ╡╥H#@ÜñEÖ┼DÄK¼₧$ÅÉ╞RBÿÆMNQW╔╗╪╦▀▌Ñ║╟╢╠╣╫╬▐▄▒▓█";
   var strategy = window.render_strategy;
 
   var start_time = performance.now();
@@ -497,19 +504,24 @@ export default (this_animation) => {
 
       var current_char = window.char_grid[ry][rx];
       var is_edge = false;
-      var neighbors = [[ry-1, rx], [ry+1, rx], [ry, rx-1], [ry, rx+1]];
-      for(var n=0; n<neighbors.length; n++) {
-         var ny = neighbors[n][0];
-         var nx = neighbors[n][1];
-         if (ny >= 0 && ny < window.rows && nx >= 0 && nx < window.columns) {
-             if (window.char_grid[ny][nx] !== current_char) {
-                 is_edge = true;
-                 break;
-             }
-         }
+      var neighbors = [
+        [ry - 1, rx],
+        [ry + 1, rx],
+        [ry, rx - 1],
+        [ry, rx + 1],
+      ];
+      for (var n = 0; n < neighbors.length; n++) {
+        var ny = neighbors[n][0];
+        var nx = neighbors[n][1];
+        if (ny >= 0 && ny < window.rows && nx >= 0 && nx < window.columns) {
+          if (window.char_grid[ny][nx] !== current_char) {
+            is_edge = true;
+            break;
+          }
+        }
       }
-      
-      if (!is_edge && Math.random() < 0.90) continue;
+
+      if (!is_edge && Math.random() < 0.9) continue;
 
       var p = grid_coords_to_complex(
         ry,
@@ -520,7 +532,7 @@ export default (this_animation) => {
         window.char_width,
         window_corners,
       );
-      var iters = fractal_iteration(
+      var [iters, mag] = fractal_iteration(
         p,
         window.fractal["formula"],
         iterations,
@@ -529,20 +541,28 @@ export default (this_animation) => {
       );
 
       if (strategy === "digit") {
-         if (iters == iterations) {
-            window.char_grid[ry][rx] = ".";
-         } else {
-            window.char_grid[ry][rx] = (iters % 10).toString();
-         }
+        if (iters == iterations) {
+          window.char_grid[ry][rx] = ".";
+        } else {
+          window.char_grid[ry][rx] = (iters % 10).toString();
+        }
       } else {
-          if (iters == iterations) {
-            window.char_grid[ry][rx] = " ";
-          } else {
-            var val = iters / iterations;
-            var char_idx = Math.floor(val * density_chars.length);
-            window.char_grid[ry][rx] =
-              density_chars[Math.min(char_idx, density_chars.length - 1)];
-          }
+        if (iters == iterations) {
+          window.char_grid[ry][rx] = " ";
+        } else {
+          var log_z = Math.log(mag);
+          var nu =
+            Math.log(log_z / Math.log(window.fractal.render_threshold)) /
+            Math.log(window.fractal.degree);
+          var smooth_val = iters + 1 - nu;
+
+          var val = smooth_val / iterations;
+          var char_idx = Math.floor(val * density_chars.length);
+          window.char_grid[ry][rx] =
+            density_chars[
+              Math.max(0, Math.min(char_idx, density_chars.length - 1))
+            ];
+        }
       }
     }
   }
