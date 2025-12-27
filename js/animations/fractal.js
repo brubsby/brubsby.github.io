@@ -483,7 +483,7 @@ export default (this_animation) => {
   }
 
   // var density_threshold = Math.floor(iterations / 2);
-  var density_chars = ".,-~:;=!*#$@";
+  var density_chars = "·.∙`-':_,─;^~÷⌐/=°¬\"+()º<>┘═[]»≤≥«%|└\\iªⁿt±┐╛c!l{}¡²¿íï≡?xI┌┴rì≈*ετ7u╘╧fvΓsCJz┬ea1σîo2çü╕πL√4αn∞dÇ3TäæSwëùú⌡YΣ╒╙╜V¢éj╚59ö⌠╝6£èƒ│ßàáûδFPZm╨Gq¥êòó∩■âk0Xb╩&Aô┤╤gΘ░µ╓╖UΩh├Oy½8φpåΦ╡╥H#@ÜñEÖ┼DÄK¼₧$ÅÉ╞RBÿÆMNQW╔╗╪╦▀▌Ñ║╟╢╠╣╫╬▐▄▒▓█";
   var strategy = window.render_strategy;
 
   var start_time = performance.now();
@@ -494,6 +494,22 @@ export default (this_animation) => {
     for (var i = 0; i < batch_size; i++) {
       var ry = Math.floor(Math.random() * window.rows);
       var rx = Math.floor(Math.random() * window.columns);
+
+      var current_char = window.char_grid[ry][rx];
+      var is_edge = false;
+      var neighbors = [[ry-1, rx], [ry+1, rx], [ry, rx-1], [ry, rx+1]];
+      for(var n=0; n<neighbors.length; n++) {
+         var ny = neighbors[n][0];
+         var nx = neighbors[n][1];
+         if (ny >= 0 && ny < window.rows && nx >= 0 && nx < window.columns) {
+             if (window.char_grid[ny][nx] !== current_char) {
+                 is_edge = true;
+                 break;
+             }
+         }
+      }
+      
+      if (!is_edge && Math.random() < 0.90) continue;
 
       var p = grid_coords_to_complex(
         ry,
@@ -520,7 +536,7 @@ export default (this_animation) => {
          }
       } else {
           if (iters == iterations) {
-            window.char_grid[ry][rx] = "o";
+            window.char_grid[ry][rx] = " ";
           } else {
             var val = iters / iterations;
             var char_idx = Math.floor(val * density_chars.length);
