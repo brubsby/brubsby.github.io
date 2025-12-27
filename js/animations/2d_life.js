@@ -148,7 +148,7 @@ function parse_rule(rule_str) {
             if (current_mode === 'R') rule.range = parseInt(val, 10);
             else if (current_mode === 'C') {
                 rule.states = parseInt(val, 10);
-                if (rule.states === 0) rule.states = 2;
+                if (rule.states < 2) rule.states = 2;
             }
             else if (current_mode === 'M') {
                 rule.include_center = (val === '1');
@@ -221,9 +221,10 @@ export default (this_animation) => {
         return parts.join(',');
     };
 
-    const named_rule = (str, name) => {
+    const named_rule = (str, name, description = "") => {
         let r = parse_rule(str);
         r.name = name;
+        if (description) r.description = description;
         return r;
     };
 
@@ -313,7 +314,12 @@ export default (this_animation) => {
         for(let j=min; j<=max; j++) s_ltl.push(j);
     }
     
-    let ltl_name = `R${ltl_range},C2,M${ltl_include_center?1:0},S${format_ranges(s_ltl)},B${format_ranges(b_ltl)},N${ltl_type}`;
+    let ltl_states = 2;
+    if (Math.random() < 0.1) {
+        ltl_states = Math.floor(Math.random() * 30) + 3;
+    }
+    
+    let ltl_name = `R${ltl_range},C${ltl_states},M${ltl_include_center?1:0},S${format_ranges(s_ltl)},B${format_ranges(b_ltl)},N${ltl_type}`;
     
     rulesets.put(parse_rule(ltl_name), 40); // Weight 2 for random LtL
     
@@ -348,7 +354,7 @@ export default (this_animation) => {
     var display_str = "";
     var link_rule_str = "";
     
-    if (window.rules.range === 1 && window.rules.type === 'M' && !window.rules.include_center) {
+    if (window.rules.range === 1 && window.rules.type === 'M' && !window.rules.include_center && (window.rules.states || 2) === 2) {
         // Standard Life-like format
         var rule_str = `B${window.rules.born.join('')}/S${window.rules.survive.join('')}`;
         var name_str = window.rules.name.toLowerCase();
@@ -356,7 +362,7 @@ export default (this_animation) => {
         var parenthetical = "";
         // If the name is the same as the rule string, or if it looks like an LtL definition (starts with 'r'),
         // just show the compact rule string.
-        if (name_str !== rule_str && !name_str.startsWith('r')) {
+        if (name_str !== rule_str.toLowerCase() && !name_str.startsWith('r')) {
             parenthetical = ` (${window.rules.name})`;
         }
         
@@ -552,11 +558,11 @@ export default (this_animation) => {
     window.tile_rules = [];
     const C = window.rules.states || 2;
     if (C > 2) {
-        // Modulo cycle for C > 2 using requested palette
-        // Easily alterable: just change the string or logic below
+        // Multi-state palette: . for 0, then 1234567890 repeating
+        window.tile_rules = ['.'];
         const palette = "1234567890";
-        for (let i = 0; i < C; i++) {
-            window.tile_rules.push(palette[i % palette.length]);
+        for (let i = 1; i < C; i++) {
+            window.tile_rules.push(palette[(i - 1) % palette.length]);
         }
     } else {
         // Default binary look
@@ -581,7 +587,7 @@ export default (this_animation) => {
   }
 
   // Calculate next generation
-  var next_universe = new Array(window.universe.length).fill(false);
+  var next_universe = new Array(window.universe.length).fill(0);
   
   // Cache globals for loop
   const rows = window.rows;
@@ -591,6 +597,7 @@ export default (this_animation) => {
   const born_set = window.rules.born_set;
   const survive_set = window.rules.survive_set;
   const universe = window.universe;
+  const num_states = window.rules.states || 2;
 
   for (var y = 0; y < rows; y++) {
     for (var x = 0; x < cols; x++) {
@@ -609,22 +616,32 @@ export default (this_animation) => {
             if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
           }
           
-          if (universe[ny * cols + nx]) {
-            neighbors++;
+          let n_idx = ny * cols + nx;
+          // For multi-state (Generations), only state 1 counts as neighbor
+          if (num_states > 2) {
+              if (universe[n_idx] == 1) neighbors++;
+          } else {
+              if (universe[n_idx]) neighbors++;
           }
       }
       
       var idx = y * cols + x;
-      var alive = universe[idx];
+      var state = Number(universe[idx]);
       
-      if (alive) {
+      if (state === 0) {
+        if (born_set.has(neighbors)) {
+          next_universe[idx] = 1;
+        }
+      } else if (state === 1) {
         if (survive_set.has(neighbors)) {
-          next_universe[idx] = true;
+          next_universe[idx] = 1;
+        } else {
+          // Death or Decay
+          next_universe[idx] = (num_states > 2) ? 2 : 0;
         }
       } else {
-        if (born_set.has(neighbors)) {
-          next_universe[idx] = true;
-        }
+        // Refractory / Decay
+        next_universe[idx] = (state + 1) % num_states;
       }
     }
   }
