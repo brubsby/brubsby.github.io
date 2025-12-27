@@ -37,6 +37,7 @@ var find_boundary_point = (
   center_finder_max_radius,
   center_finder_num_recurses,
   fractal,
+  mode = "edge",
 ) => {
   var sample_count = 100;
   var max_attempts = 20;
@@ -98,7 +99,18 @@ var find_boundary_point = (
         }
         candidate_radius = (low + high) / 2;
       }
-      return candidate_point;
+
+      var final_r = candidate_radius;
+      if (mode === "inner") {
+        final_r = Math.random() * candidate_radius;
+      } else if (mode === "dust") {
+        final_r = candidate_radius + Math.random();
+      }
+
+      return window.math.complex(
+        final_r * Math.cos(theta),
+        final_r * Math.sin(theta),
+      );
     }
   }
 
@@ -110,16 +122,84 @@ var find_boundary_point = (
   );
 };
 
+var find_interesting_point = (fractal, iterations) => {
+  var current_center = find_boundary_point(50, 4.0, iterations, fractal);
+  var current_radius = 2.0;
+  var zoom_steps = 60;
+  var samples_per_step = 25;
+  var total_retries = 0;
+
+  for (var step = 0; step < zoom_steps; step++) {
+     var best_step_point = current_center;
+     var max_step_variance = -1;
+
+     // Sample candidates around current center
+     for (var i = 0; i < samples_per_step; i++) {
+        var r_offset = Math.random() * current_radius;
+        var theta = Math.random() * 2 * Math.PI;
+        var candidate = window.math.complex(
+            current_center.re + r_offset * Math.cos(theta),
+            current_center.im + r_offset * Math.sin(theta)
+        );
+
+        // Score this candidate (variance of neighbors)
+        var neighbor_samples = [];
+        var epsilon = current_radius * 0.05;
+        var offsets = [0, epsilon, -epsilon];
+        
+        for (var dx of offsets) {
+          for (var dy of offsets) {
+             var p = window.math.complex(candidate.re + dx, candidate.im + dy);
+             var [iters] = fractal_iteration(p, fractal.formula, iterations, fractal.start, fractal.render_threshold);
+             neighbor_samples.push(iters);
+          }
+        }
+        
+        var mean = neighbor_samples.reduce((a,b)=>a+b) / neighbor_samples.length;
+        var variance = neighbor_samples.reduce((a,b)=>a + Math.pow(b-mean, 2), 0) / neighbor_samples.length;
+        
+        // Penalize "inside" (0 variance, max iters) and "deep space"
+        if (mean >= iterations * 0.99 || mean <= 2) variance = 0;
+
+        if (variance > max_step_variance) {
+           max_step_variance = variance;
+           best_step_point = candidate;
+        }
+     }
+     
+     // Move to best point found in this step
+     if (max_step_variance > 0) {
+        current_center = best_step_point;
+     } else {
+        // If we found nothing interesting, jump to a random spot and restart
+        if (total_retries < 10) {
+            var r = Math.random() * 2.0;
+            var t = Math.random() * 2 * Math.PI;
+            current_center = window.math.complex(r * Math.cos(t), r * Math.sin(t));
+            current_radius = 2.0;
+            step = -1;
+            total_retries++;
+            continue;
+        }
+     }
+     
+     // Zoom in
+     current_radius *= 0.5;
+     if (current_radius < 1e-15) break;
+  }
+  return current_center;
+};
+
 export default (this_animation) => {
   var width = window.columns * window.char_width;
   var height = window.rows * window.char_height;
-  var iterations = Math.floor(300000 / (window.rows * window.columns));
+  var iterations = 41;
   var this_timestamp = new Date().getTime();
   var framerate = 1000 / (this_timestamp - window.last_timestamp);
   window.last_timestamp = this_timestamp;
 
   if (window.frame_count == 0) {
-    var center_finder_iterations = iterations;
+    var center_finder_iterations = 100;
     var center_finder_max_radius = 4;
 
     var createFractal = (props) =>
@@ -128,7 +208,7 @@ export default (this_animation) => {
           theta_func: () => Math.random() * 2 * Math.PI,
           boundary_finder_iteration_multiplier: 1,
           start_func: () => window.math.complex(0, 0),
-          zoom_speed: 0.01,
+          zoom_speed: 0.02,
           degree: 2,
           setup: function (seed) {
             return { formula: this.formula, start: seed };
@@ -332,30 +412,16 @@ export default (this_animation) => {
       },
     });
 
-    var julia = createFractal({
-      boundary_finder_iteration_multiplier: 0.75,
-      start_func: () =>
-        find_boundary_point(
-          center_finder_iterations,
-          center_finder_max_radius,
-          5000,
-          mandelbrot,
-        ),
-      description: "julia",
-      is_julia: true,
-      setup: function (s) {
-        return {
-          formula: (z) => window.math.add(window.math.pow(z, 2), s),
-          start: null,
-        };
-      },
-    });
-
     var zubieta = createFractal({
       description: "zubieta",
       is_julia: true,
       start_func: () =>
-        find_boundary_point(center_finder_iterations, 4.0, 5000, zubietaMandel),
+        find_boundary_point(
+          center_finder_iterations,
+          4.0,
+          iterations,
+          zubietaMandel,
+        ),
       setup: function (s) {
         return {
           formula: (z) =>
@@ -380,8 +446,56 @@ export default (this_animation) => {
       .put(insideout, 2)
       .put(mandelpower, 2)
       .put(multimandel, 2)
-      .put(zubieta, 0)
-      .put(julia, 4);
+      .put(zubieta, 0);
+
+    var addJuliaVariants = (sampler, baseFractal, power, prefix) => {
+      var modes = [
+        {
+          mode: "edge",
+          suffix: "mandelborder",
+          weight: 2,
+          find_iters: iterations,
+        },
+        {
+          mode: "inner",
+          suffix: "innermandel",
+          weight: 1,
+          find_iters: iterations,
+        },
+        { mode: "dust", suffix: "dust", weight: 1, find_iters: 5000 },
+      ];
+
+      modes.forEach((m) => {
+        var name = prefix
+          ? `${prefix} julia (${m.suffix})`
+          : `julia (${m.suffix})`;
+        sampler.put(
+          createFractal({
+            start_func: () =>
+              find_boundary_point(
+                center_finder_iterations,
+                center_finder_max_radius,
+                m.find_iters,
+                baseFractal,
+                m.mode,
+              ),
+            description: name,
+            is_julia: true,
+            degree: power,
+            setup: function (s) {
+              return {
+                formula: (z) => window.math.add(window.math.pow(z, power), s),
+                start: null,
+              };
+            },
+          }),
+          m.weight,
+        );
+      });
+    };
+
+    addJuliaVariants(window.fractals, mandelbrot, 2);
+    addJuliaVariants(window.fractals, cubic, 3, "cubic");
 
     window.render_strategies = new ObjectSampler()
       .put("density", 1)
@@ -411,12 +525,7 @@ export default (this_animation) => {
     );
     var current_max_radius =
       window.fractal.max_radius || center_finder_max_radius;
-    window.center = find_boundary_point(
-      center_finder_iterations,
-      current_max_radius,
-      center_finder_num_recurses,
-      window.fractal,
-    );
+    window.center = find_interesting_point(window.fractal, iterations);
 
     var desc = window.fractal["description"];
     if (desc === "mandelpower") {
