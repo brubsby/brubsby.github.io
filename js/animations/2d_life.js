@@ -1109,23 +1109,43 @@ export default (this_animation) => {
 
       let choice = init_sampler.sample();
 
-      if (choice === "20p") {
-        for (let i = 0; i < window.universe.length; i++)
-          window.universe[i] = Math.random() < 0.2;
-      } else if (choice === "50p") {
-        for (let i = 0; i < window.universe.length; i++)
-          window.universe[i] = Math.random() < 0.5;
-      } else if (choice === "80p") {
-        for (let i = 0; i < window.universe.length; i++)
-          window.universe[i] = Math.random() < 0.8;
-      } else if (choice === "rand_p") {
-        let p = Math.random();
-        for (let i = 0; i < window.universe.length; i++)
-          window.universe[i] = Math.random() < p;
-      } else if (choice === "range_substrate") {
-        let rho = min_rho + Math.random() * (max_rho - min_rho);
-        for (let i = 0; i < window.universe.length; i++)
-          window.universe[i] = Math.random() < rho;
+      let fill_prob = -1;
+      if (choice === "20p") fill_prob = 0.2;
+      else if (choice === "50p") fill_prob = 0.5;
+      else if (choice === "80p") fill_prob = 0.8;
+      else if (choice === "rand_p") fill_prob = Math.random();
+      else if (choice === "range_substrate")
+        fill_prob = min_rho + Math.random() * (max_rho - min_rho);
+
+      if (fill_prob !== -1) {
+        let use_box = Math.random() < 0.75;
+        let min_x = 0,
+          max_x = window.columns;
+        let min_y = 0,
+          max_y = window.rows;
+
+        if (use_box) {
+          // Vary coverage between 50% and 75%
+          let x_pct = 0.5 + Math.random() * 0.25;
+          let y_pct = 0.5 + Math.random() * 0.25;
+
+          let w_margin = (1 - x_pct) / 2;
+          let h_margin = (1 - y_pct) / 2;
+
+          min_x = Math.floor(window.columns * w_margin);
+          max_x = Math.floor(window.columns * (1 - w_margin));
+          min_y = Math.floor(window.rows * h_margin);
+          max_y = Math.floor(window.rows * (1 - h_margin));
+        }
+
+        for (let y = 0; y < window.rows; y++) {
+          for (let x = 0; x < window.columns; x++) {
+            if (x >= min_x && x < max_x && y >= min_y && y < max_y) {
+              window.universe[y * window.columns + x] =
+                Math.random() < fill_prob;
+            }
+          }
+        }
       } else if (choice === "simplex") {
         init_simplex_noise();
         let freq = Math.random() * 0.1 + 0.05;
