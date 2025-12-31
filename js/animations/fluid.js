@@ -87,21 +87,17 @@ var addWallLine = (x0, y0, x1, y1) => {
 };
 
 var generators = [
-  // Column
   {
-    name: "Column",
+    name: "column",
     fn: (w, h) => {
       addWallRect(0, 0, 2, h - 2);
-      var rightWallStartY = Math.max(0, h - 13);
-      var rightWallEndY = h - 2;
-      addWallRect(w - 3, rightWallStartY, 2, rightWallEndY - rightWallStartY);
+      addWallRect(w - 3, 0, 2, h - 2);
       addWallRect(1, h - 3, w - 3, 2);
       addWaterRect(2, 0, Math.floor(w / 3) - 1, h - 4);
     },
   },
-  // Pour-out
   {
-    name: "Pour-out",
+    name: "pour-out",
     fn: (w, h) => {
       var cupW = 13;
       var cupH = 4;
@@ -137,9 +133,8 @@ var generators = [
       addWaterRect(4, 1, tankR - 4 - 1, 9);
     },
   },
-  // Terraces
   {
-    name: "Terraces",
+    name: "tanada",
     fn: (w, h) => {
       var stepW = Math.min(12, Math.max(8, Math.floor(w / 5)));
       var stepH = Math.min(4, Math.max(2, Math.floor((h - 4) / 5)));
@@ -169,9 +164,8 @@ var generators = [
       addWaterRect(2, 2, containerW - 2, containerH - 2);
     },
   },
-  // Hourglass
   {
-    name: "Hourglass",
+    name: "clock",
     fn: (w, h) => {
 	var hourglassW = Math.floor(Math.min(w-1, Math.max(6, h)) / 2) * 2;
 	var hourglassW2 = Math.ceil(hourglassW / 2);	
@@ -225,7 +219,7 @@ var init_fluid = () => {
     selected_example_index = window.sub_animation_index;
   }
 
-  tooltip(`fluid: ${generators[selected_example_index].name}`, selected_example_index);
+  tooltip(`fluid<br>${generators[selected_example_index].name.toLowerCase()}`, selected_example_index);
   window.sub_animation_size = generators.length;
 
   var sim_width = window.columns;
