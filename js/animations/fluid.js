@@ -1,4 +1,4 @@
-import { tooltip } from "../utils.js";
+import { tooltip, get_bresenham_line_points } from "../utils.js";
 
 var gravity = 1;
 var pressure = 4;
@@ -26,8 +26,12 @@ var particle_next = new Int16Array(MAX_PARTICLES);
 var grid_cols = 0;
 var grid_rows = 0;
 
-var add_wall = (cx, cy) => {
-  if (window.fluid_particles.length > 1500) return; // Hard safety limit
+var addWall = (cx, cy) => {
+  if (window.fluid_particles.length >= MAX_PARTICLES) return;
+  var key = cx + "," + cy;
+  if (window.fluid_wall_cache.has(key)) return;
+  window.fluid_wall_cache.add(key);
+
   var p1 = new Particle();
   var p2 = new Particle();
   p1.wallflag = 1;
@@ -40,7 +44,7 @@ var add_wall = (cx, cy) => {
   window.fluid_particles.push(p2);
 };
 
-var add_water = (cx, cy) => {
+var addWater = (cx, cy) => {
   if (window.fluid_particles.length >= MAX_PARTICLES) return;
   var p1 = new Particle();
   var p2 = new Particle();
@@ -52,19 +56,33 @@ var add_water = (cx, cy) => {
   window.fluid_particles.push(p2);
 };
 
-var addWalls = (x, y, w, h) => {
+var addWallRect = (x, y, w, h) => {
   for (var i = x; i < x + w; i++) {
     for (var j = y; j < y + h; j++) {
-      add_wall(i, j);
+      addWall(i, j);
     }
   }
 };
 
-var addWater = (x, y, w, h) => {
+var addWaterRect = (x, y, w, h) => {
   for (var i = x; i < x + w; i++) {
     for (var j = y; j < y + h; j++) {
-      add_water(i, j);
+      addWater(i, j);
     }
+  }
+};
+
+var addWaterLine = (x0, y0, x1, y1) => {
+  var points = get_bresenham_line_points([[x0, y0], [x1, y1]]);
+  for (var i = 0; i < points.length; i++) {
+    addWater(points[i][0], points[i][1]);
+  }
+};
+
+var addWallLine = (x0, y0, x1, y1) => {
+  var points = get_bresenham_line_points([[x0, y0], [x1, y1]]);
+  for (var i = 0; i < points.length; i++) {
+    addWall(points[i][0], points[i][1]);
   }
 };
 
@@ -73,12 +91,12 @@ var generators = [
   {
     name: "Column",
     fn: (w, h) => {
-      addWalls(0, 0, 2, h - 2);
+      addWallRect(0, 0, 2, h - 2);
       var rightWallStartY = Math.max(0, h - 13);
       var rightWallEndY = h - 2;
-      addWalls(w - 3, rightWallStartY, 2, rightWallEndY - rightWallStartY);
-      addWalls(1, h - 3, w - 3, 2);
-      addWater(2, 0, Math.floor(w / 3) - 1, h - 4);
+      addWallRect(w - 3, rightWallStartY, 2, rightWallEndY - rightWallStartY);
+      addWallRect(1, h - 3, w - 3, 2);
+      addWaterRect(2, 0, Math.floor(w / 3) - 1, h - 4);
     },
   },
   // Pour-out
@@ -107,16 +125,16 @@ var generators = [
       }
       cupX = Math.max(cupX, tankW + 5);
 
-      addWalls(0, 0, 3, tankH - 2);
-      addWalls(1, tankH - 3, tankW, 2);
-      addWalls(tankW, tankH - 4, 2, 2);
-      addWalls(tankW + 1, tankH - 5, 2, 2);
-      addWalls(tankR, 0, 3, tankH - 6);
-      addWalls(tankR, tankH - 6, 2, 1);
-      addWalls(cupX, cupY, 2, 3);
-      addWalls(cupX + 1, cupY + cupH - 1, cupW - 2, 1);
-      addWalls(cupX + cupW - 2, cupY, 2, 3);
-      addWater(4, 1, tankR - 4 - 1, 9);
+      addWallRect(0, 0, 3, tankH - 2);
+      addWallRect(1, tankH - 3, tankW, 2);
+      addWallRect(tankW, tankH - 4, 2, 2);
+      addWallRect(tankW + 1, tankH - 5, 2, 2);
+      addWallRect(tankR, 0, 3, tankH - 6);
+      addWallRect(tankR, tankH - 6, 2, 1);
+      addWallRect(cupX, cupY, 2, 3);
+      addWallRect(cupX + 1, cupY + cupH - 1, cupW - 2, 1);
+      addWallRect(cupX + cupW - 2, cupY, 2, 3);
+      addWaterRect(4, 1, tankR - 4 - 1, 9);
     },
   },
   // Terraces
@@ -132,91 +150,72 @@ var generators = [
         Math.floor((w - containerW - 2) / stepW),
       );
 
-      addWalls(0, 0, 2, containerH);
-      addWalls(0, containerH, containerW, 1);
+      addWallRect(0, 0, 2, containerH);
+      addWallRect(0, containerH, containerW, 1);
 
       for (var i = 0; i < steps; i++) {
         var x = i * stepW + containerW;
         var y = i * stepH + containerH;
         var floorW = Math.min(stepW, w - x);
-        if (floorW > 0) addWalls(x, y + stepH, floorW, 1);
-        addWalls(x, y - 2, 2, stepH + 2);
+        if (floorW > 0) addWallRect(x, y + stepH, floorW, 1);
+        addWallRect(x, y - 2, 2, stepH + 2);
       }
-      addWalls(
+      addWallRect(
         steps * stepW + containerW,
         steps * stepH + containerH - 2,
         2,
         3,
       );
-      addWater(2, 2, containerW - 2, containerH - 2);
+      addWaterRect(2, 2, containerW - 2, containerH - 2);
     },
   },
-  // Funnel
+  // Hourglass
   {
-    name: "Funnel",
+    name: "Hourglass",
     fn: (w, h) => {
-      var midX = Math.floor(w / 2);
-      var bottomY = h - 5;
-      var prevLeft = midX - 2 - bottomY;
-      var prevRight = midX + 2 + bottomY;
-
-      for (var y = 0; y < bottomY; y++) {
-        var ratio = y / bottomY;
-        var currLeft = Math.floor((midX - 2) * ratio);
-        var currRight = w - 1 - currLeft;
-
-        var startL = Math.min(prevLeft, currLeft);
-        var endL = Math.max(prevLeft, currLeft);
-        if (y === 0) {
-          startL = currLeft;
-          endL = currLeft;
-        }
-        for (var cx = startL; cx <= endL; cx++) {
-          add_wall(cx, y);
-          add_wall(cx - 1, y);
-        }
-
-        var startR = Math.min(prevRight, currRight);
-        var endR = Math.max(prevRight, currRight);
-        if (y === 0) {
-          startR = currRight;
-          endR = currRight;
-        }
-        for (var cx = startR; cx <= endR; cx++) {
-          add_wall(cx, y);
-          add_wall(cx + 1, y);
-        }
-
-        prevLeft = currLeft;
-        prevRight = currRight;
-      }
-
-      for (var y = bottomY; y < h; y++) {
-        add_wall(midX - 2, y);
-        add_wall(midX - 3, y);
-        add_wall(midX + 2, y);
-        add_wall(midX + 3, y);
-      }
-
-      for (var x = 5; x < w - 5; x++) {
-        for (var y = 0; y < Math.floor(h / 4); y++) {
-          if (Math.abs(x - midX) < w / 3) add_water(x, y);
-        }
-      }
+	var hourglassW = Math.floor(Math.min(w-1, Math.max(6, h)) / 2) * 2;
+	var hourglassW2 = Math.ceil(hourglassW / 2);	
+	var hourglassH = Math.floor((h - 2) / 4) * 4;
+	var hourglassX0 = Math.floor((w - hourglassW)/2);
+	var hourglassY0 = 0;
+	var hourglassX1 = hourglassX0 + hourglassW;
+	var hourglassY1 = hourglassY0 + hourglassH;
+	var segmentH = Math.floor(hourglassH / 4);
+	addWallRect(hourglassX0, hourglassY0, hourglassW, 1);
+	addWallRect(hourglassX0, hourglassY1, hourglassW, 1);
+	addWallRect(hourglassX0, hourglassY0, 2, segmentH);
+	addWallRect(hourglassX1 - 2, hourglassY0, 2, segmentH);
+	addWallRect(hourglassX0, hourglassY1 - segmentH, 2, segmentH);
+	addWallRect(hourglassX1 - 2, hourglassY1 - segmentH , 2, segmentH);
+	for( var k = 0; k < 4; k++) {
+	    let x0 = hourglassX0 + k;
+	    let x2 = hourglassX0 + hourglassW2 - 5 + k;
+	    let x1 = Math.floor((x0 + x2) / 2) - 1;
+            let x3 = hourglassX1 - hourglassW2 + 4 - k;
+	    let x5 = hourglassX1 - k - 1;
+	    let x4 = Math.ceil((x3 + x5) / 2) + 1;
+	    let y0 = hourglassY0 + segmentH;
+	    let y1 = hourglassY0 + Math.floor(segmentH * 1.6);
+	    let y2 = hourglassY0 + segmentH * 2;
+	    let y3 = hourglassY1 - Math.floor(segmentH * 1.6);
+	    let y4 = hourglassY1 - segmentH;
+	    addWallLine(x0, y0, x1, y1);
+	    addWallLine(x1, y1, x2, y2);
+	    addWallLine(x5, y0, x4, y1);
+	    addWallLine(x4, y1, x3, y2);
+	    addWallLine(x0, y4, x1, y3);
+	    addWallLine(x1, y3, x2, y2);
+	    addWallLine(x5, y4, x4, y3);
+	    addWallLine(x4, y3, x3, y2);
+	}
+	addWaterRect(hourglassX0 + 2, hourglassY0 + 1, hourglassW - 3, segmentH);
     },
-  },
-  {
-    name: "Empty",
-    fn: (w, h) => {
-      for (var x = 0; x < w - 1; x++) {
-        add_wall(x, 5);
-      }
-    },
-  },
+  }
 ];
 
 var init_fluid = () => {
   window.fluid_particles = [];
+  window.fluid_wall_cache = new Set();
   var selected_example_index = Math.floor(Math.random() * generators.length);
   if (
     !isNaN(window.sub_animation_index) &&
