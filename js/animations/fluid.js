@@ -170,8 +170,8 @@ var generators = [
 	var hourglassW = Math.floor(Math.min(w-1, Math.max(6, h)) / 2) * 2;
 	var hourglassW2 = Math.ceil(hourglassW / 2);	
 	var hourglassH = Math.floor((h - 2) / 4) * 4;
-	var hourglassX0 = Math.floor((w - hourglassW)/2);
-	var hourglassY0 = 0;
+	var hourglassX0 = Math.floor((w - hourglassW) / 2);
+	var hourglassY0 = Math.floor((h - hourglassH - 2) / 2);
 	var hourglassX1 = hourglassX0 + hourglassW;
 	var hourglassY1 = hourglassY0 + hourglassH;
 	var segmentH = Math.floor(hourglassH / 4);
@@ -420,7 +420,7 @@ export default (this_animation) => {
 
   // Output to string
   var text = "";
-  var chars = " '`-.|//,\\|\\_\\/#";
+  var chars = ".'`-.|//,\\|\\_\\/#";
   for (var i = 0; i < window.fluid_screen_buffer.length; i++) {
     if (i > 0 && i % window.columns === 0) {
       text += "\n";
