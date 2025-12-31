@@ -259,7 +259,7 @@
 
   /*----------- on doc ready -----------*/
 
-  $(document).ready(function() {
+  $(window).on('load', function() {
     var dark_link = document.getElementById("dark");
     var theme_switch = (should_dark_mode_func) => {
       if (should_dark_mode_func()) {
