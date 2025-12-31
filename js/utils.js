@@ -453,9 +453,9 @@ export var init_poob_details = () => {
       "#&&%((#(%#%#%&&%%###%%##%%%%#############%####%#%%%#%#%%###%%%%%&%%&%%%%%###%#(##&%%%%%#%%#%#(((#***",
       "%%%#(((#%%%#&%&&#%%#%%%%%%%%#((#####%%##%%#######%%####%%%####%%%%%#######(/(#%%%##(((##(######*****"
     ]);
-    window.window.poob_detail_dims = [];
+    window.poob_detail_dims = [];
     for (var i = 0; i < window.poob_detail.length; i++) {
-      window.window.poob_detail_dims.push([window.poob_detail[i][0].length, window.poob_detail[i].length]);
+      window.poob_detail_dims.push([window.poob_detail[i][0].length, window.poob_detail[i].length]);
     }
   }
 
@@ -513,6 +513,9 @@ export var init_browser_info = () => {
   info["scrPixelDepth"] = screen.pixelDepth;
   window.browser_info = JSON.stringify(info);
 }
+
+export var density_chars =
+    "·.∙`-':_,─;^~÷⌐/=°¬\"+()º<>┘═[]»≤≥«%|└\\iªⁿt±┐╛c!l{}¡²¿íï≡?xI┌┴rì≈*ετ7u╘╧fvΓsCJz┬ea1σîo2çü╕πL√4αn∞dÇ3TäæSwëùú⌡YΣ╒╙╜V¢éj╚59ö⌠╝6£èƒ│ßàáûδFPZm╨Gq¥êòó∩■âk0Xb╩&Aô┤╤gΘ░µ╓╖UΩh├Oy½8φpåΦ╡╥H#@ÜñEÖ┼DÄK¼₧$ÅÉ╞RBÿÆMNQW╔╗╪╦▀▌Ñ║╟╢╠╣╫╬▐▄▒▓█";
 
 export var reset_canvas = function() {
     window.canvas = $(".ascii");

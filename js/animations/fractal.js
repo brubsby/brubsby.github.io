@@ -1,4 +1,4 @@
-import { ObjectSampler, tooltip, roundFloat, isInt } from "../utils.js";
+import { ObjectSampler, tooltip, roundFloat, isInt, density_chars } from "../utils.js";
 
 var grid_coords_to_complex = (
   y,
@@ -598,8 +598,6 @@ export default (this_animation) => {
   }
 
   // var density_threshold = Math.floor(iterations / 2);
-  var density_chars =
-    "·.∙`-':_,─;^~÷⌐/=°¬\"+()º<>┘═[]»≤≥«%|└\\iªⁿt±┐╛c!l{}¡²¿íï≡?xI┌┴rì≈*ετ7u╘╧fvΓsCJz┬ea1σîo2çü╕πL√4αn∞dÇ3TäæSwëùú⌡YΣ╒╙╜V¢éj╚59ö⌠╝6£èƒ│ßàáûδFPZm╨Gq¥êòó∩■âk0Xb╩&Aô┤╤gΘ░µ╓╖UΩh├Oy½8φpåΦ╡╥H#@ÜñEÖ┼DÄK¼₧$ÅÉ╞RBÿÆMNQW╔╗╪╦▀▌Ñ║╟╢╠╣╫╬▐▄▒▓█";
   var strategy = window.render_strategy;
 
   var start_time = performance.now();
