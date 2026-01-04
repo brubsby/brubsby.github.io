@@ -1,4 +1,4 @@
-import { tooltip } from '../utils.js';
+import { tooltip, ObjectSampler } from '../utils.js';
 
 export default function dla(this_animation) {
   if (window.frame_count === 0) {
@@ -6,15 +6,50 @@ export default function dla(this_animation) {
     for (let r = 0; r < window.rows; r++) {
       window.grid[r] = new Uint8Array(window.columns);
     }
-    // Seed in the center
-    const midR = Math.floor(window.rows / 2);
-    const midC = Math.floor(window.columns / 2);
-    window.grid[midR][midC] = 1;
-    window.cluster_count = 1;
+
+    window.dla_modes = new ObjectSampler()
+      .put("dot", 1)
+      .put("line", 1);
+    
+    window.sub_animation_size = window.dla_modes.size();
+    let mode;
+    let mode_index;
+    if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < window.dla_modes.size()) {
+      mode_index = window.sub_animation_index;
+      mode = window.dla_modes.get_index(mode_index);
+    } else {
+      mode = window.dla_modes.sample();
+      mode_index = window.dla_modes.index_of(mode);
+    }
+    window.dla_mode = mode;
+
+    window.cluster_count = 0;
+    if (window.dla_mode === "dot") {
+      // Seed in the center
+      const midR = Math.floor(window.rows / 2);
+      const midC = Math.floor(window.columns / 2);
+      window.grid[midR][midC] = 1;
+      window.cluster_count = 1;
+      tooltip("dla s=dot", mode_index);
+    } else if (window.dla_mode === "line") {
+      // Seed an entire edge
+      const edge = Math.floor(Math.random() * 4);
+      window.initial_edge = edge;
+      if (edge === 0) { // Top
+        for (let c = 0; c < window.columns; c++) { window.grid[0][c] = 1; window.cluster_count++; }
+      } else if (edge === 1) { // Bottom
+        for (let c = 0; c < window.columns; c++) { window.grid[window.rows - 1][c] = 1; window.cluster_count++; }
+      } else if (edge === 2) { // Left
+        for (let r = 0; r < window.rows; r++) { window.grid[r][0] = 1; window.cluster_count++; }
+      } else { // Right
+        for (let r = 0; r < window.rows; r++) { window.grid[r][window.columns - 1] = 1; window.cluster_count++; }
+      }
+      const edgeNames = ["top", "bottom", "left", "right"];
+      tooltip(`dla s=line e=${edgeNames[edge]}`, mode_index);
+    }
     
     // Active particles for DLA
     window.particles = [];
-    tooltip("dla");
   }
 
   const MAX_PARTICLES = Math.min(200, Math.floor(window.columns * window.rows / 20));
