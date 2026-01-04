@@ -23,6 +23,8 @@ export default function dla(this_animation) {
     }
     window.dla_mode = mode;
     window.dla_toroidal = Math.random() < 0.5;
+    window.dla_particle_visible = Math.random() < 0.5;
+    window.dla_spawn_mode = Math.random() < 0.5 ? 0 : 1; // 0 for circle, 1 for random (dot mode only)
 
     window.cluster_count = 0;
     if (window.dla_mode === "dot") {
@@ -31,7 +33,7 @@ export default function dla(this_animation) {
       const midC = Math.floor(window.columns / 2);
       window.grid[midR][midC] = 1;
       window.cluster_count = 1;
-      tooltip(`dla s=dot t=${window.dla_toroidal ? 1 : 0}`, mode_index);
+      tooltip(`dla<br>m=0 s=${window.dla_spawn_mode} t=${window.dla_toroidal ? 1 : 0} p=${window.dla_particle_visible ? 1 : 0}`, mode_index);
     } else if (window.dla_mode === "line") {
       // Seed an entire edge
       const edge = Math.floor(Math.random() * 4);
@@ -45,16 +47,15 @@ export default function dla(this_animation) {
       } else { // Right
         for (let r = 0; r < window.rows; r++) { window.grid[r][window.columns - 1] = 1; window.cluster_count++; }
       }
-      const edgeNames = ["top", "bottom", "left", "right"];
-      tooltip(`dla s=line e=${edgeNames[edge]} t=${window.dla_toroidal ? 1 : 0}`, mode_index);
+      tooltip(`dla<br>m=1 e=${edge} t=${window.dla_toroidal ? 1 : 0} p=${window.dla_particle_visible ? 1 : 0}`, mode_index);
     }
     
     // Active particles for DLA
     window.particles = [];
   }
 
-  const MAX_PARTICLES = Math.min(200, Math.floor(window.columns * window.rows / 20));
-  const STEPS_PER_FRAME = 1 * window.animation_speed_multiplier;
+  const MAX_PARTICLES = window.dla_particle_visible ? Math.min(200, Math.floor(window.columns * window.rows / 20)) : 1;
+  const STEPS_PER_FRAME = window.dla_particle_visible ? 1 * window.animation_speed_multiplier : 100 * window.animation_speed_multiplier;
 
   // Add particles if needed
   let stopSpawning = false;
@@ -74,9 +75,33 @@ export default function dla(this_animation) {
   while (window.particles.length < MAX_PARTICLES && window.cluster_count < window.rows * window.columns * 0.2 && !stopSpawning) {
     let r, c;
     if (window.dla_mode === "dot") {
-      // Spawn anywhere for dot mode to improve distribution
-      r = Math.floor(Math.random() * window.rows);
-      c = Math.floor(Math.random() * window.columns);
+      if (window.dla_spawn_mode === 0) { // Circle spawn
+        const theta = Math.random() * 2 * Math.PI;
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
+        
+        const midR = (window.rows - 1) / 2;
+        const midC = (window.columns - 1) / 2;
+        
+        const t_top = (0 - midR) / sinT;
+        const t_bottom = (window.rows - 1 - midR) / sinT;
+        const t_left = (0 - midC) / cosT;
+        const t_right = (window.columns - 1 - midC) / cosT;
+        
+        const t_candidates = [];
+        if (t_top > 0) t_candidates.push(t_top);
+        if (t_bottom > 0) t_candidates.push(t_bottom);
+        if (t_left > 0) t_candidates.push(t_left);
+        if (t_right > 0) t_candidates.push(t_right);
+        
+        const t = Math.min(...t_candidates);
+        
+        r = Math.max(0, Math.min(window.rows - 1, Math.round(midR + t * sinT)));
+        c = Math.max(0, Math.min(window.columns - 1, Math.round(midC + t * cosT)));
+      } else { // Random grid spawn
+        r = Math.floor(Math.random() * window.rows);
+        c = Math.floor(Math.random() * window.columns);
+      }
     } else {
       // For line mode (toroidal or not), spawn ONLY across from the initial edge
       const opposite = [1, 0, 3, 2][window.initial_edge];
@@ -95,6 +120,7 @@ export default function dla(this_animation) {
   }
 
   // Move particles
+  let clusterChanged = false;
   for (let s = 0; s < STEPS_PER_FRAME; s++) {
     for (let pIdx = window.particles.length - 1; pIdx >= 0; pIdx--) {
       const p = window.particles[pIdx];
@@ -145,6 +171,7 @@ export default function dla(this_animation) {
           if (!window.grid[nextR][nextC]) {
             window.grid[nextR][nextC] = 1;
             window.cluster_count++;
+            clusterChanged = true;
           }
           window.particles.splice(pIdx, 1);
         } else {
@@ -156,32 +183,45 @@ export default function dla(this_animation) {
         window.particles.splice(pIdx, 1);
       }
     }
-    if (window.particles.length === 0) break;
+    if (window.particles.length === 0) {
+      if (!window.dla_particle_visible && !stopSpawning) {
+        // For p=0, if we're not visible and we need to spawn more, do it immediately to keep simulation moving
+        // But we need to break out to check stopSpawning logic again soon
+        break; 
+      }
+      if (window.particles.length === 0) break;
+    }
+    // For p=0, if a cluster changed, we want to render it, so we stop the steps early
+    if (!window.dla_particle_visible && clusterChanged) break;
   }
 
   // Render
-  let text = "";
-  // Create a quick lookup for particle positions
-  const particleMap = new Uint8Array(window.rows * window.columns);
-  for (const p of window.particles) {
-    particleMap[p.r * window.columns + p.c] = 1;
-  }
-
-  for (let r = 0; r < window.rows; r++) {
-    for (let c = 0; c < window.columns; c++) {
-      if (window.grid[r][c] || particleMap[r * window.columns + c]) {
-        text += "o";
-      } else {
-        text += ".";
+  if (window.dla_particle_visible || clusterChanged || window.frame_count === 0) {
+    let text = "";
+    // Create a quick lookup for particle positions
+    const particleMap = new Uint8Array(window.rows * window.columns);
+    if (window.dla_particle_visible) {
+      for (const p of window.particles) {
+        particleMap[p.r * window.columns + p.c] = 1;
       }
     }
-    text += "\n";
-  }
 
-  window.canvas.text(text);
-  window.frame_count++;
+    for (let r = 0; r < window.rows; r++) {
+      for (let c = 0; c < window.columns; c++) {
+        if (window.grid[r][c] || particleMap[r * window.columns + c]) {
+          text += "o";
+        } else {
+          text += ".";
+        }
+      }
+      text += "\n";
+    }
+
+    window.canvas.text(text);
+    window.frame_count++;
+  }
   
-  if (window.particles.length > 0) {
-    setTimeout(() => this_animation(this_animation), 20);
+  if (window.particles.length > 0 || !stopSpawning) {
+    setTimeout(() => this_animation(this_animation), window.dla_particle_visible ? 20 : 0);
   }
 }
