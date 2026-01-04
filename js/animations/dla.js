@@ -57,43 +57,32 @@ export default function dla(this_animation) {
   const STEPS_PER_FRAME = 1 * window.animation_speed_multiplier;
 
   // Add particles if needed
-  let reachedOpposite = false;
+  let stopSpawning = false;
   if (window.dla_mode === "line") {
     const opposite = [1, 0, 3, 2][window.initial_edge];
-    if (opposite === 0) { for (let c = 0; c < window.columns; c++) if (window.grid[0][c]) { reachedOpposite = true; break; } }
-    else if (opposite === 1) { for (let c = 0; c < window.columns; c++) if (window.grid[window.rows - 1][c]) { reachedOpposite = true; break; } }
-    else if (opposite === 2) { for (let r = 0; r < window.rows; r++) if (window.grid[r][0]) { reachedOpposite = true; break; } }
-    else if (opposite === 3) { for (let r = 0; r < window.rows; r++) if (window.grid[r][window.columns - 1]) { reachedOpposite = true; break; } }
+    if (opposite === 0) { for (let c = 0; c < window.columns; c++) if (window.grid[0][c]) { stopSpawning = true; break; } }
+    else if (opposite === 1) { for (let c = 0; c < window.columns; c++) if (window.grid[window.rows - 1][c]) { stopSpawning = true; break; } }
+    else if (opposite === 2) { for (let r = 0; r < window.rows; r++) if (window.grid[r][0]) { stopSpawning = true; break; } }
+    else if (opposite === 3) { for (let r = 0; r < window.rows; r++) if (window.grid[r][window.columns - 1]) { stopSpawning = true; break; } }
+  } else if (window.dla_mode === "dot") {
+    for (let c = 0; c < window.columns; c++) if (window.grid[0][c] || window.grid[window.rows - 1][c]) { stopSpawning = true; break; }
+    if (!stopSpawning) {
+      for (let r = 0; r < window.rows; r++) if (window.grid[r][0] || window.grid[r][window.columns - 1]) { stopSpawning = true; break; }
+    }
   }
 
-  while (window.particles.length < MAX_PARTICLES && window.cluster_count < window.rows * window.columns * 0.2 && !reachedOpposite) {
+  while (window.particles.length < MAX_PARTICLES && window.cluster_count < window.rows * window.columns * 0.2 && !stopSpawning) {
     let r, c;
-    if (window.dla_mode === "line") {
+    if (window.dla_mode === "dot") {
+      // Spawn anywhere for dot mode to improve distribution
+      r = Math.floor(Math.random() * window.rows);
+      c = Math.floor(Math.random() * window.columns);
+    } else {
       // For line mode (toroidal or not), spawn ONLY across from the initial edge
       const opposite = [1, 0, 3, 2][window.initial_edge];
       if (opposite === 0) { r = 0; c = Math.floor(Math.random() * window.columns); }
       else if (opposite === 1) { r = window.rows - 1; c = Math.floor(Math.random() * window.columns); }
       else if (opposite === 2) { c = 0; r = Math.floor(Math.random() * window.rows); }
-      else { c = window.columns - 1; r = Math.floor(Math.random() * window.rows); }
-    } else if (window.dla_toroidal && window.dla_mode === "dot") {
-      // Spawn anywhere for toroidal dot mode to improve distribution
-      r = Math.floor(Math.random() * window.rows);
-      c = Math.floor(Math.random() * window.columns);
-    } else {
-      // Spawn on edges
-      const spawnEdges = [];
-      if (window.dla_mode === "dot") {
-        spawnEdges.push(0, 1, 2, 3);
-      } else {
-        // For non-toroidal line mode, spawn on any edge except the initial one
-        for (let e = 0; e < 4; e++) {
-          if (e !== window.initial_edge) spawnEdges.push(e);
-        }
-      }
-      const edge = spawnEdges[Math.floor(Math.random() * spawnEdges.length)];
-      if (edge === 0) { r = 0; c = Math.floor(Math.random() * window.columns); }
-      else if (edge === 1) { r = window.rows - 1; c = Math.floor(Math.random() * window.columns); }
-      else if (edge === 2) { c = 0; r = Math.floor(Math.random() * window.rows); }
       else { c = window.columns - 1; r = Math.floor(Math.random() * window.rows); }
     }
 
