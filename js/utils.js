@@ -94,6 +94,99 @@ export class Particle {
   }
 }
 
+export class Vec3 {
+  constructor(x, y, z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+
+  dot(v) {
+    return this.x * v.x + this.y * v.y + this.z * v.z;
+  }
+
+  sub(v) {
+    return new Vec3(this.x - v.x, this.y - v.y, this.z - v.z);
+  }
+
+  cross(v) {
+    return new Vec3(
+      this.y * v.z - this.z * v.y,
+      this.z * v.x - this.x * v.z,
+      this.x * v.y - this.y * v.x
+    );
+  }
+
+  length() {
+    return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+  }
+
+  normalize() {
+    const len = this.length();
+    if (len > 0) {
+      this.x /= len;
+      this.y /= len;
+      this.z /= len;
+    }
+    return this;
+  }
+
+  reflect(n) {
+    const d = this.dot(n);
+    return new Vec3(
+      this.x - 2 * d * n.x,
+      this.y - 2 * d * n.y,
+      this.z - 2 * d * n.z
+    );
+  }
+}
+
+export class Mat4 {
+  constructor() {
+    this.m = new Float32Array(16);
+    this.identity();
+  }
+
+  identity() {
+    this.m.fill(0);
+    this.m[0] = this.m[5] = this.m[10] = this.m[15] = 1;
+  }
+
+  static rotationX(angle) {
+    const mat = new Mat4();
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    mat.m[5] = c; mat.m[6] = s;
+    mat.m[9] = -s; mat.m[10] = c;
+    return mat;
+  }
+
+  static rotationY(angle) {
+    const mat = new Mat4();
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    mat.m[0] = c; mat.m[2] = -s;
+    mat.m[8] = s; mat.m[10] = c;
+    return mat;
+  }
+
+  static rotationZ(angle) {
+    const mat = new Mat4();
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    mat.m[0] = c; mat.m[1] = s;
+    mat.m[4] = -s; mat.m[5] = c;
+    return mat;
+  }
+
+  multiplyVec3(v) {
+    const x = v.x * this.m[0] + v.y * this.m[4] + v.z * this.m[8] + this.m[12];
+    const y = v.x * this.m[1] + v.y * this.m[5] + v.z * this.m[9] + this.m[13];
+    const z = v.x * this.m[2] + v.y * this.m[6] + v.z * this.m[10] + this.m[14];
+    return new Vec3(x, y, z);
+  }
+}
+
 /*----------- Helper Functions -----------*/
 export var init_flat_index_list = (rows, columns, sort_func=null) => {
     if (!window.flat_index_list) {

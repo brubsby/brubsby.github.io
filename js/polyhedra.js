@@ -1,4 +1,4 @@
-import { Vec3 } from './ascii_rasterizer.js';
+import { Vec3 } from './utils.js';
 
 // Add missing methods to Vec3 if they don't exist
 if (!Vec3.prototype.add) {

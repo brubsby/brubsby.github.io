@@ -1,5 +1,5 @@
-import { Rasterizer, Mat4, Vec3 } from '../ascii_rasterizer.js';
-import { tooltip, ObjectSampler } from '../utils.js';
+import { Rasterizer } from '../ascii_rasterizer.js';
+import { tooltip, ObjectSampler, Mat4, Vec3 } from '../utils.js';
 import { Generator, Wythoff } from '../polyhedra.js';
 
 let rasterizer = null;
