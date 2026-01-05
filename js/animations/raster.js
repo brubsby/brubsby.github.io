@@ -41,7 +41,7 @@ groups.forEach(group => {
     
     if (!seenSymbols.has(symbol)) {
       seenSymbols.add(symbol);
-      SHAPES[`${group.name} ${pat.suffix}`] = symbol;
+      SHAPES[`${pat.suffix} ${group.name}`] = symbol;
     }
   });
 });
@@ -70,18 +70,21 @@ export default (this_animation) => {
   const symbol = SHAPES[shapeName];
   const geoType = Wythoff.toTriangles(Generator.fromString(symbol));
 
-  tooltip(`raster<br>${shapeName}<br>${symbol}`);
+  tooltip(`raster<br>${shapeName.toLowerCase()}<br>${symbol}`);
   
   // Create rotation matrices
   const rotX = Mat4.rotationX(angleX);
   const rotY = Mat4.rotationY(angleY);
   const rotZ = Mat4.rotationZ(angleZ);
 
+  const hoverY = Math.sin(window.frame_count * 0.03) * 0.15;
+
   // Transform vertices
   const transformedVertices = geoType.vertices.map(v => {
     let tv = rotX.multiplyVec3(v);
     tv = rotY.multiplyVec3(tv);
     tv = rotZ.multiplyVec3(tv);
+    tv.y += hoverY;
     return tv;
   });
 

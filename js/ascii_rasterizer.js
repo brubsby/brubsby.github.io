@@ -130,7 +130,9 @@ export class Rasterizer {
     }
 
     // Projection
-    const K1 = this.width * 1.0; // Scaling factor
+    const aspect = 0.5;
+    const effectiveMinDim = Math.min(this.width, this.height / aspect);
+    const K1 = effectiveMinDim * 0.75; // Scaling factor
     const K2 = 5; // Distance factor
     
     const project = (p) => {
