@@ -3,7 +3,6 @@ import { tooltip } from "../utils.js";
 export default (this_animation) => {
   const ASPECT_RATIO = window.char_height / window.char_width;
   const PARTICLE_DENSITY = 0.05 + window.constant_random_values[0] * 0.15; // 0.05 - 0.2
-  const MAX_SPEED = 0.8;
   const RADIUS = 0.75; // Collision radius in column-width units
   const COLLISION_DIST_SQ = (2 * RADIUS) * (2 * RADIUS);
 
@@ -16,11 +15,11 @@ export default (this_animation) => {
       window.particles.push({
         x: Math.random() * window.columns,
         y: Math.random() * window.rows,
-        vx: (Math.random() - 0.5) * 2 * MAX_SPEED,
-        vy: (Math.random() - 0.5) * 2 * MAX_SPEED / ASPECT_RATIO,
+        vx: (Math.random() - 0.5) * 1.6,
+        vy: (Math.random() - 0.5) * 1.6 / ASPECT_RATIO,
       });
     }
-    tooltip(`gas<br> n=${particle_count}`, 0);
+    tooltip(`gas<br>n=${particle_count}`, 0);
   }
 
   const particles = window.particles;
