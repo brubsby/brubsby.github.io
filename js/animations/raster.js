@@ -8,26 +8,43 @@ let angleY = 0;
 let angleZ = 0;
 let shape_sampler = null;
 
-const SHAPES = {
-  "tetrahedron": Generator.tetrahedron,
-  "cube": Generator.cube,
-  "octahedron": Generator.octahedron,
-  "dodecahedron": Generator.dodecahedron,
-  "icosahedron": Generator.icosahedron,
-  "truncated tetrahedron": Generator.truncatedTetrahedron,
-  "truncated cube": Generator.truncatedCube,
-  "truncated octahedron": Generator.truncatedOctahedron,
-  "truncated dodecahedron": Generator.truncatedDodecahedron,
-  "truncated icosahedron": Generator.truncatedIcosahedron,
-  "cuboctahedron": Generator.cuboctahedron,
-  "icosidodecahedron": Generator.icosidodecahedron,
-  "rhombicuboctahedron": Generator.rhombicuboctahedron,
-  "rhombicosidodecahedron": Generator.rhombicosidodecahedron,
-  "truncated cuboctahedron": Generator.truncatedCuboctahedron,
-  "truncated icosidodecahedron": Generator.truncatedIcosidodecahedron,
-  "snub cube": Generator.snubCube,
-  "snub dodecahedron": Generator.snubDodecahedron
-};
+const SHAPES = {};
+const groups = [
+  { name: "Tetrahedral", p: 3, q: 3 },
+  { name: "Octahedral", p: 4, q: 3 },
+  { name: "Icosahedral", p: 5, q: 3 }
+];
+
+const patterns = [
+  { suffix: "Parent", gen: (p, q) => `${q} | ${p} 2` },
+  { suffix: "Truncated", gen: (p, q) => `2 ${q} | ${p}` },
+  { suffix: "Rectified", gen: (p, q) => `2 | ${p} ${q}` },
+  { suffix: "Bitruncated", gen: (p, q) => `2 ${p} | ${q}` },
+  { suffix: "Birectified", gen: (p, q) => `${p} | ${q} 2` },
+  { suffix: "Cantellated", gen: (p, q) => `${p} ${q} | 2` },
+  { suffix: "Omnitruncated", gen: (p, q) => `${p} ${q} 2 |` },
+  { suffix: "Snub", gen: (p, q) => `| ${p} ${q} 2` }
+];
+
+const seenSymbols = new Set();
+
+groups.forEach(group => {
+  patterns.forEach(pat => {
+    const symbol = pat.gen(group.p, group.q);
+    // Normalize symbol for deduplication check (mostly for Tetrahedral self-duality)
+    // We treat "3 | 3 2" and "3 | 2 3" as potentially distinct in string but geometrically similar?
+    // Actually, user's formulas are specific.
+    // For Tetra (3,3):
+    // Parent: 3 | 3 2
+    // Birectified: 3 | 3 2
+    // These strings are identical.
+    
+    if (!seenSymbols.has(symbol)) {
+      seenSymbols.add(symbol);
+      SHAPES[`${group.name} ${pat.suffix}`] = symbol;
+    }
+  });
+});
 
 export default (this_animation) => {
   if (!rasterizer || rasterizer.width !== window.columns || rasterizer.height !== window.rows) {
@@ -50,9 +67,10 @@ export default (this_animation) => {
   }
 
   const shapeName = shapeKeys[window.sub_animation_index % shapeKeys.length];
-  const geoType = Wythoff.toTriangles(SHAPES[shapeName]());
+  const symbol = SHAPES[shapeName];
+  const geoType = Wythoff.toTriangles(Generator.fromString(symbol));
 
-  tooltip(`raster<br>${shapeName}`);
+  tooltip(`raster<br>${shapeName}<br>${symbol}`);
   
   // Create rotation matrices
   const rotX = Mat4.rotationX(angleX);

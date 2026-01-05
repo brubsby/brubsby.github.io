@@ -21,79 +21,53 @@ export class Wythoff {
 }
 
 export class Generator {
-    static tetrahedron() {
-        return Generator.generateWythoff(3, 3, 2, [true, false, false]);
+    static fromString(symbol) {
+        const parts = symbol.trim().split(/\s+/);
+        let p, q, r, type;
+        
+        // Find pipe index
+        const pipeIndex = parts.indexOf('|');
+        const nums = parts.filter(x => x !== '|').map(x => parseInt(x));
+        
+        if (pipeIndex === 0) { // | p q r (Snub)
+            type = 0;
+            p = nums[0]; q = nums[1]; r = nums[2];
+        } else if (pipeIndex === 1) { // p | q r
+            type = 1;
+            p = nums[0]; q = nums[1]; r = nums[2];
+        } else if (pipeIndex === 2) { // p q | r
+            type = 2;
+            p = nums[0]; q = nums[1]; r = nums[2];
+        } else if (pipeIndex === 3 || pipeIndex === -1) { // p q r | (Omnitruncated) - assuming end if missing
+             type = 3;
+             p = nums[0]; q = nums[1]; r = nums[2];
+        }
+
+        return Generator.generateWythoff(p, q, r, type);
     }
 
-    static cube() {
-        return Generator.generateWythoff(4, 3, 2, [true, false, false]);
-    }
+    static generateWythoff(p, q, r, type) {
+        let active;
+        let snub = false;
 
-    static octahedron() {
-        return Generator.generateWythoff(4, 3, 2, [false, false, true]);
-    }
+        switch (type) {
+            case 0: // | p q r (Snub)
+                active = [true, true, true];
+                snub = true;
+                break;
+            case 1: // p | q r (Regular)
+                active = [false, false, true];
+                break;
+            case 2: // p q | r (Truncated)
+                active = [true, false, true];
+                break;
+            case 3: // p q r | (Omnitruncated)
+                active = [true, true, true];
+                break;
+            default:
+                throw new Error("Invalid Wythoff type: " + type);
+        }
 
-    static dodecahedron() {
-        return Generator.generateWythoff(5, 3, 2, [true, false, false]);
-    }
-
-    static icosahedron() {
-        return Generator.generateWythoff(5, 3, 2, [false, false, true]);
-    }
-
-    static truncatedTetrahedron() {
-        return Generator.generateWythoff(3, 3, 2, [true, true, false]);
-    }
-
-    static truncatedCube() {
-        return Generator.generateWythoff(4, 3, 2, [true, true, false]);
-    }
-
-    static truncatedOctahedron() {
-        return Generator.generateWythoff(4, 3, 2, [false, true, true]);
-    }
-
-    static truncatedDodecahedron() {
-        return Generator.generateWythoff(5, 3, 2, [true, true, false]);
-    }
-
-    static truncatedIcosahedron() {
-        return Generator.generateWythoff(5, 3, 2, [false, true, true]);
-    }
-
-    static cuboctahedron() {
-        return Generator.generateWythoff(4, 3, 2, [false, true, false]);
-    }
-
-    static icosidodecahedron() {
-        return Generator.generateWythoff(5, 3, 2, [false, true, false]);
-    }
-
-    static rhombicuboctahedron() {
-        return Generator.generateWythoff(4, 3, 2, [true, false, true]);
-    }
-
-    static rhombicosidodecahedron() {
-        return Generator.generateWythoff(5, 3, 2, [true, false, true]);
-    }
-
-    static truncatedCuboctahedron() {
-        return Generator.generateWythoff(4, 3, 2, [true, true, true]);
-    }
-
-    static truncatedIcosidodecahedron() {
-        return Generator.generateWythoff(5, 3, 2, [true, true, true]);
-    }
-
-    static snubCube() {
-        return Generator.generateWythoff(4, 3, 2, [true, true, true], true);
-    }
-
-    static snubDodecahedron() {
-        return Generator.generateWythoff(5, 3, 2, [true, true, true], true);
-    }
-
-    static generateWythoff(p, q, r, active, snub = false) {
         const cp = Math.cos(Math.PI / p);
         const cq = Math.cos(Math.PI / q);
         const cr = Math.cos(Math.PI / r);
