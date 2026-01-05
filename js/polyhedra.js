@@ -85,7 +85,15 @@ export class Generator {
         return Generator.generateWythoff(5, 3, 2, [true, true, true]);
     }
 
-    static generateWythoff(p, q, r, active) {
+    static snubCube() {
+        return Generator.generateWythoff(4, 3, 2, [true, true, true], true);
+    }
+
+    static snubDodecahedron() {
+        return Generator.generateWythoff(5, 3, 2, [true, true, true], true);
+    }
+
+    static generateWythoff(p, q, r, active, snub = false) {
         const cp = Math.cos(Math.PI / p);
         const cq = Math.cos(Math.PI / q);
         const cr = Math.cos(Math.PI / r);
@@ -134,20 +142,20 @@ export class Generator {
 
         const reflections = vertices.map(v => mirrors.map(n => getVIndex(v.reflect(n))));
 
-        const faces = [];
+        let faces = [];
         const faceSet = new Set();
         const pairs = [[0, 1], [1, 2], [2, 0]];
 
-        function orderFace(faceIndices) {
+        function orderFace(faceIndices, verts = vertices) {
             let cx=0, cy=0, cz=0;
             for(const idx of faceIndices) {
-                const v = vertices[idx];
+                const v = verts[idx];
                 cx += v.x; cy += v.y; cz += v.z;
             }
             cx /= faceIndices.length; cy /= faceIndices.length; cz /= faceIndices.length;
             const center = new Vec3(cx, cy, cz);
             
-            const v0 = vertices[faceIndices[0]].sub(center).normalize();
+            const v0 = verts[faceIndices[0]].sub(center).normalize();
             const normal = center.normalize();
             const v1 = new Vec3(
                 normal.y * v0.z - normal.z * v0.y,
@@ -156,20 +164,20 @@ export class Generator {
             ).normalize();
             
             const ordered = [...faceIndices].sort((a, b) => {
-                const va = vertices[a].sub(center);
-                const vb = vertices[b].sub(center);
+                const va = verts[a].sub(center);
+                const vb = verts[b].sub(center);
                 return Math.atan2(va.dot(v1), va.dot(v0)) - Math.atan2(vb.dot(v1), vb.dot(v0));
             });
 
             // Ensure CCW from outside
-            const e1 = vertices[ordered[1]].sub(vertices[ordered[0]]);
-            const e2 = vertices[ordered[2]].sub(vertices[ordered[0]]);
+            const e1 = verts[ordered[1]].sub(verts[ordered[0]]);
+            const e2 = verts[ordered[2]].sub(verts[ordered[0]]);
             const n = new Vec3(
                 e1.y * e2.z - e1.z * e2.y,
                 e1.z * e2.x - e1.x * e2.z,
                 e1.x * e2.y - e1.y * e2.x
             );
-            if (n.dot(vertices[ordered[0]]) < 0) {
+            if (n.dot(verts[ordered[0]]) < 0) {
                 ordered.reverse();
             }
             return ordered;
@@ -215,6 +223,85 @@ export class Generator {
                     }
                 }
             }
+        }
+
+        if (snub) {
+            // Calculate parity of vertices
+            const parity = new Int8Array(vertices.length).fill(-1);
+            const q = [0];
+            parity[0] = 0;
+            let qHead = 0;
+            let isBipartite = true;
+            
+            while(qHead < q.length) {
+                const u = q[qHead++];
+                const p = parity[u];
+                for (const neighbor of reflections[u]) {
+                    if (parity[neighbor] === -1) {
+                        parity[neighbor] = 1 - p;
+                        q.push(neighbor);
+                    } else if (parity[neighbor] === p) {
+                        isBipartite = false;
+                    }
+                }
+            }
+
+            if (!isBipartite) {
+                console.warn("Cannot generate snub form: Parent polyhedron is not bipartite (contains odd cycles). Returning original form.");
+                return { vertices, faces };
+            }
+
+            // Build adjacency of original mesh to find neighbors of removed vertices
+            const adj = new Array(vertices.length).fill().map(() => new Set());
+            for (const face of faces) {
+                for (let i = 0; i < face.length; i++) {
+                    const a = face[i];
+                    const b = face[(i + 1) % face.length];
+                    adj[a].add(b);
+                    adj[b].add(a);
+                }
+            }
+
+            const newVertices = [];
+            const oldToNew = new Int32Array(vertices.length).fill(-1);
+            
+            // Keep even vertices
+            for (let i = 0; i < vertices.length; i++) {
+                if (parity[i] === 0) {
+                    oldToNew[i] = newVertices.length;
+                    newVertices.push(vertices[i]);
+                }
+            }
+
+            const newFaces = [];
+            
+            // Transform existing faces
+            for (const face of faces) {
+                const newFace = [];
+                for (const idx of face) {
+                    if (parity[idx] === 0) {
+                        newFace.push(oldToNew[idx]);
+                    }
+                }
+                if (newFace.length >= 3) {
+                    newFaces.push(newFace);
+                }
+            }
+
+            // Create new faces from gaps (odd vertices)
+            for (let i = 0; i < vertices.length; i++) {
+                if (parity[i] === 1) {
+                    const neighbors = Array.from(adj[i]);
+                    // Neighbors of an odd vertex must be even (in bipartite graph)
+                    const newFace = neighbors.map(idx => oldToNew[idx]);
+                    // We must order them to ensure correct face normal
+                    if (newFace.length >= 3) {
+                        newFaces.push(orderFace(newFace, newVertices));
+                    }
+                }
+            }
+
+            return { vertices: newVertices, faces: newFaces };
         }
 
         return { vertices, faces };

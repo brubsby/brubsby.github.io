@@ -24,7 +24,9 @@ const SHAPES = {
   "rhombicuboctahedron": Generator.rhombicuboctahedron,
   "rhombicosidodecahedron": Generator.rhombicosidodecahedron,
   "truncated cuboctahedron": Generator.truncatedCuboctahedron,
-  "truncated icosidodecahedron": Generator.truncatedIcosidodecahedron
+  "truncated icosidodecahedron": Generator.truncatedIcosidodecahedron,
+  "snub cube": Generator.snubCube,
+  "snub dodecahedron": Generator.snubDodecahedron
 };
 
 export default (this_animation) => {
