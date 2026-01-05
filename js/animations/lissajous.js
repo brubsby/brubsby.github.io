@@ -43,7 +43,7 @@ export default (this_animation) => {
 
   const { is_rational, a, b, delta, period } = window.lissajous;
   const steps_per_frame = 100;
-  const dt = 0.001;
+  const dt = is_rational ? 0.0001 : 0.001;
 
   if (!window.lissajous.is_complete) {
     for (let i = 0; i < steps_per_frame; i++) {
@@ -84,16 +84,11 @@ export default (this_animation) => {
       text += "\n";
     }
   } else {
-    const max = window.lissajous.max_density;
     for (let r = 0; r < window.rows; r++) {
       for (let c = 0; c < window.columns; c++) {
         const d = window.grid[r][c];
-        if (d === 0) {
-          text += " ";
-        } else {
-          const char_idx = Math.floor((d / max) * (density_chars.length - 1));
-          text += density_chars[char_idx];
-        }
+        const char_idx = Math.min(d, density_chars.length - 1);
+        text += density_chars[char_idx];
       }
       text += "\n";
     }
