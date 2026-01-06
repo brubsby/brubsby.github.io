@@ -426,6 +426,18 @@ export var is_grid_offset_true = (grid, coord, offset) => {
   return grid[new_coord[0]][new_coord[1]];
 }
 
+export var sq_dist = (p1, p2) => {
+  const dx = p1[0] - p2[0];
+  const dy = p1[1] - p2[1];
+  return dx * dx + dy * dy;
+}
+
+export var find_n_nearest = (p, points, n, dist_func = sq_dist) => {
+  const distances = points.map((pt, idx) => ({ idx, dist: dist_func(p, pt) }));
+  distances.sort((a, b) => a.dist - b.dist);
+  return distances.slice(0, n);
+}
+
 
 /*----------- Data Init -----------*/
 
