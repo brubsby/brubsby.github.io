@@ -2,22 +2,24 @@ import { tooltip, density_chars, sq_dist, find_n_nearest, get_bresenham_line_poi
 
 export default (this_animation) => {
   if (window.frame_count === 0) {
-    window.sub_animation_size = 4;
+    window.sub_animation_size = 16;
     let mode_idx;
-    if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < 4) {
+    if (!isNaN(window.sub_animation_index) && window.sub_animation_index >= 0 && window.sub_animation_index < 16) {
       mode_idx = window.sub_animation_index;
     } else {
-      mode_idx = Math.floor(Math.random() * 4);
+      mode_idx = Math.floor(Math.random() * 16);
     }
 
-    const settings = [
-      { start_all: true,  moving: false, show_seeds: true,  style: 'area' },
-      { start_all: false, moving: true,  show_seeds: false, style: 'area' },
-      { start_all: true,  moving: true,  show_seeds: true,  style: 'edge' },
-      { start_all: false, moving: false, show_seeds: false, style: 'edge' }
-    ];
-
-    const s = settings[mode_idx];
+    // Independent bitmask for settings
+    // Bit 0: start_all (1: true, 0: false)
+    // Bit 1: moving (1: true, 0: false)
+    // Bit 2: show_seeds (1: true, 0: false)
+    // Bit 3: style (1: 'edge', 0: 'area')
+    
+    const start_all = (mode_idx & 1) !== 0;
+    const moving = (mode_idx & 2) !== 0;
+    const show_seeds = (mode_idx & 4) !== 0;
+    const style = (mode_idx & 8) !== 0 ? 'edge' : 'area';
 
     // Seed variables
     const num_seeds = 10 + Math.floor(Math.random() * 15);
@@ -25,7 +27,7 @@ export default (this_animation) => {
     
     // Choose character set for area mode
     let char_mode = 'rand';
-    if (s.style === 'area') {
+    if (style === 'area') {
       const char_rand = Math.random();
       if (char_rand < 0.33) char_mode = 'alnum';
       else if (char_rand < 0.66) char_mode = 'rand';
@@ -47,7 +49,7 @@ export default (this_animation) => {
       seeds.push({
         pos: [Math.random() * window.columns, Math.random() * window.rows],
         vel: [(Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4],
-        active: s.start_all,
+        active: start_all,
         char: char
       });
     }
@@ -56,13 +58,16 @@ export default (this_animation) => {
       mode_idx,
       seeds,
       char_mode,
-      ...s,
+      start_all,
+      moving,
+      show_seeds,
+      style,
       max_seeds: num_seeds,
-      active_count: s.start_all ? num_seeds : 0
+      active_count: start_all ? num_seeds : 0
     };
 
-    const char_suffix = s.style === 'area' ? ` c=${char_mode}` : '';
-    const tt = `voronoi<br>m=${mode_idx} s=${s.start_all?'all':'grad'} v=${s.moving?'mov':'stat'} d=${s.show_seeds?'on':'off'} r=${s.style}${char_suffix}`;
+    const char_suffix = style === 'area' ? ` c=${char_mode}` : '';
+    const tt = `voronoi<br>m=${mode_idx} s=${start_all?'all':'grad'} v=${moving?'mov':'stat'} d=${show_seeds?'on':'off'} r=${style}${char_suffix}`;
     tooltip(tt, mode_idx);
   }
 
@@ -132,8 +137,6 @@ export default (this_animation) => {
             if (k === i || k === j) continue;
             const s3 = active_seeds[k].pos;
             
-            // Plane: dist(p, s1) <= dist(p, s3)
-            // (M + tV) . (S3 - S1) <= (S3^2 - S1^2) / 2
             const d31x = s3[0] - s1[0];
             const d31y = s3[1] - s1[1];
             const B = (s3[0]*s3[0] + s3[1]*s3[1] - s1[0]*s1[0] - s1[1]*s1[1]) / 2 - (mx * d31x + my * d31y);
