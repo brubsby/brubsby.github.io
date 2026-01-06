@@ -691,5 +691,5 @@ export default (this_animation) => {
   if (window.frame_count > 10 && is_uniform) return;
 
   window.frame_count++;
-  setTimeout(this_animation.bind(null, this_animation), 0);
+  setTimeout(() => requestAnimationFrame(this_animation.bind(null, this_animation)), 0);
 };

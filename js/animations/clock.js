@@ -43,5 +43,5 @@ export default (this_animation) => {
     }
   }
   tooltip(`clock<br>${current_time.getHours().toString().padStart(2,'0')}:${current_time.getMinutes().toString().padStart(2,'0')}`);
-  setTimeout(this_animation.bind(null, this_animation), 333);
+  setTimeout(() => requestAnimationFrame(this_animation.bind(null, this_animation)), 333);
 }

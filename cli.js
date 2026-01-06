@@ -30,6 +30,14 @@ for (let i = 0; i < args.length; i++) {
 
 // --- Mocks & Polyfills ---
 
+const nativeSetTimeout = global.setTimeout;
+global.setTimeout = (cb, delay, ...args) => {
+    if (global.cliConfig.targetFrame !== null) {
+        return setImmediate(cb, ...args);
+    }
+    return nativeSetTimeout(cb, delay, ...args);
+};
+
 global.window = {
   innerWidth: (global.cliConfig.width || process.stdout.columns || 80),
   innerHeight: (global.cliConfig.height || process.stdout.rows || 24),

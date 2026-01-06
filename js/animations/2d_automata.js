@@ -1375,5 +1375,5 @@ export default (this_animation) => {
   window.universe = next_universe;
 
   window.frame_count++;
-  setTimeout(this_animation.bind(null, this_animation), 100);
+  setTimeout(() => requestAnimationFrame(this_animation.bind(null, this_animation)), 100);
 };

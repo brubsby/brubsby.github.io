@@ -65,5 +65,5 @@ export default (this_animation) => {
   window.universe = next_state;
   if (window.frame_count >= window.rows) return;
   window.frame_count++;
-  setTimeout(this_animation.bind(null, this_animation), 50);
+  setTimeout(() => requestAnimationFrame(this_animation.bind(null, this_animation)), 50);
 }

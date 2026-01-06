@@ -206,5 +206,5 @@ export default (this_animation) => {
 
   window.canvas.text(text);
   window.frame_count++;
-  setTimeout(this_animation.bind(null, this_animation), 30);
+  setTimeout(() => requestAnimationFrame(this_animation.bind(null, this_animation)), 30);
 };

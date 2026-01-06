@@ -222,6 +222,6 @@ export default function dla(this_animation) {
   }
   
   if (window.particles.length > 0 || !stopSpawning) {
-    setTimeout(() => this_animation(this_animation), window.dla_particle_visible ? 20 : 0);
+    setTimeout(() => requestAnimationFrame(() => this_animation(this_animation)), window.dla_particle_visible ? 20 : 0);
   }
 }

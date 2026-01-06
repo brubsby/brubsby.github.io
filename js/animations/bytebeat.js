@@ -246,5 +246,5 @@ export default (this_animation) => {
     window.canvas.text(text);
 
     window.frame_count++;
-    setTimeout(this_animation.bind(null, this_animation), 20); // 20 FPS
+    setTimeout(() => requestAnimationFrame(this_animation.bind(null, this_animation)), 20); // 20 FPS
 }

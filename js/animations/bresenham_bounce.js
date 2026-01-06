@@ -96,5 +96,5 @@ export default (this_animation) => {
     window.line_points[i][1] = Math.floor(window.position_pixels[i][1] / window.half_char_height);
   }
   window.frame_count++;
-  setTimeout(this_animation.bind(null, this_animation), 25);
+  setTimeout(() => requestAnimationFrame(this_animation.bind(null, this_animation)), 25);
 }
