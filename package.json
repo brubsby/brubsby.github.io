@@ -1,0 +1,12 @@
+{
+  "name": "brubsby-cli",
+  "version": "1.0.0",
+  "description": "CLI for brubsby.github.io animations",
+  "main": "cli.js",
+  "type": "module",
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "author": "brubsby",
+  "license": "MIT"
+}
