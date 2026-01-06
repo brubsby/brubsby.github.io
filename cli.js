@@ -127,6 +127,7 @@ global.window = {
 });
 
 // Polyfill requestAnimationFrame
+let lastTime = 0;
 global.requestAnimationFrame = (callback) => {
     // Render the current frame (Interactive Mode)
     if (global.cliConfig.targetFrame === null) {
@@ -144,8 +145,11 @@ global.requestAnimationFrame = (callback) => {
         }
         setImmediate(() => callback(Date.now()));
     } else {
-        // Interactive Mode: Throttle to ~30fps
-        setTimeout(() => callback(Date.now()), 1000 / 30);
+        // Interactive Mode: Target 60fps (approx 16ms)
+        const currTime = Date.now();
+        const timeToCall = Math.max(0, 16 - (currTime - lastTime));
+        lastTime = currTime + timeToCall;
+        setTimeout(() => callback(currTime + timeToCall), timeToCall);
     }
 };
 
