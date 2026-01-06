@@ -2,11 +2,37 @@
 
 import { animations } from './js/animations_list.js';
 
+// --- Argument Parsing ---
+
+const args = process.argv.slice(2);
+let animationName = null;
+global.cliConfig = { targetFrame: null, width: null, height: null };
+
+for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--frame' || args[i] === '-f') {
+        global.cliConfig.targetFrame = parseInt(args[i+1]);
+        i++;
+    } else if (args[i] === '--width' || args[i] === '-w') {
+        global.cliConfig.width = parseInt(args[i+1]);
+        i++;
+    } else if (args[i] === '--height') {
+        global.cliConfig.height = parseInt(args[i+1]);
+        i++;
+    } else if (args[i] === '--help' || args[i] === '-h') {
+        console.log("Usage: node cli.js [animation_name] [--frame <N>] [--width <N>] [--height <N>]");
+        console.log("Available animations:");
+        animations.objects.forEach(o => console.log(`  ${o.obj}`));
+        process.exit(0);
+    } else if (!args[i].startsWith('-')) {
+        animationName = args[i];
+    }
+}
+
 // --- Mocks & Polyfills ---
 
 global.window = {
-  innerWidth: process.stdout.columns,
-  innerHeight: process.stdout.rows,
+  innerWidth: (global.cliConfig.width || process.stdout.columns || 80),
+  innerHeight: (global.cliConfig.height || process.stdout.rows || 24),
   location: { search: "" },
   document: {
       cookie: "",
@@ -24,10 +50,10 @@ global.window = {
       cookieEnabled: false
   },
   screen: {
-      width: process.stdout.columns,
-      height: process.stdout.rows,
-      availWidth: process.stdout.columns,
-      availHeight: process.stdout.rows,
+      width: (global.cliConfig.width || process.stdout.columns || 80),
+      height: (global.cliConfig.height || process.stdout.rows || 24),
+      availWidth: (global.cliConfig.width || process.stdout.columns || 80),
+      availHeight: (global.cliConfig.height || process.stdout.rows || 24),
       colorDepth: 24,
       pixelDepth: 24
   },
@@ -94,49 +120,69 @@ global.window = {
 
 // Polyfill requestAnimationFrame
 global.requestAnimationFrame = (callback) => {
-    // Throttle to ~30fps or so to avoid flickering and high CPU
-    setTimeout(() => callback(Date.now()), 1000 / 30);
+    // Render the current frame (Interactive Mode)
+    if (global.cliConfig.targetFrame === null) {
+        if (window.canvas && window.canvas._content) {
+            process.stdout.write('\x1b[H');
+            process.stdout.write(window.canvas._content);
+        }
+    }
+
+    // Frame Capture Mode
+    if (global.cliConfig.targetFrame !== null) {
+        if (window.frame_count > global.cliConfig.targetFrame) {
+             process.stdout.write(window.canvas._content || "");
+             process.exit(0);
+        }
+        setImmediate(() => callback(Date.now()));
+    } else {
+        // Interactive Mode: Throttle to ~30fps
+        setTimeout(() => callback(Date.now()), 1000 / 30);
+    }
 };
 
 // jQuery Mock
-const jqMock = {
-    width: () => process.stdout.columns * (window.char_width || 1),
-    height: () => process.stdout.rows * (window.char_height || 1),
-    empty: () => { 
-        if (window.canvas) window.canvas._content = ""; 
-    },
-    append: (str) => { 
-        if (window.canvas) window.canvas._content += str; 
-    },
-    text: (str) => {
-        if (str === undefined) return window.canvas ? window.canvas._content : "";
-        if (window.canvas) {
-            window.canvas._content = str;
-            // ANSI Clear Screen and Home Cursor
-            process.stdout.write('\x1b[2J\x1b[H');
-            process.stdout.write(str);
-        }
-    },
-    children: [ { text: "DARK" } ],
-    on: (evt, cb) => {
-        if (evt === 'load') {
-            // Execute load immediately
-            setTimeout(cb, 0);
-        }
-    }
+const createJqObj = (selector) => {
+    const obj = {
+        _content: "", 
+        width: () => (global.cliConfig.width || process.stdout.columns || 80) * (window.char_width || 1),
+        height: () => {
+            const rows = global.cliConfig.height || ((process.stdout.rows || 24) - 1);
+            return rows * (window.char_height || 1);
+        },
+        empty: () => { obj._content = ""; },
+        append: (str) => { obj._content += str; },
+        text: (str) => {
+            if (str === undefined) return obj._content;
+            obj._content = str;
+        },
+        children: [ { text: "DARK" } ], 
+        on: (evt, cb) => {
+            if (evt === 'load') setTimeout(cb, 0);
+        },
+        get: () => [ { href: "" } ] 
+    };
+    return obj;
 };
-// Allow property access on jqMock to return itself for chaining/properties
+
 const jqProxy = new Proxy(function(selector) {
-    return jqMock;
+    return createJqObj(selector);
 }, {
     get: function(target, prop) {
-        if (prop in jqMock) return jqMock[prop];
-        return jqMock;
+        if (prop === 'on') return createJqObj(null).on; 
+        return createJqObj(null)[prop]; 
     }
 });
 
 global.$ = jqProxy;
 global.jQuery = jqProxy;
+
+// Enhance document mock
+window.document.getElementById = (id) => ({
+    children: [ { text: "DARK" } ],
+    onclick: () => {},
+    onkeydown: () => {}
+});
 
 
 // Import utils to trigger their side-effects (like attaching to window)
@@ -148,38 +194,29 @@ global.SimplexNoise = window.SimplexNoise;
 
 // --- CLI Logic ---
 
+const restore = () => {
+    // Restore main screen buffer and show cursor (only if we entered it)
+    if (global.cliConfig.targetFrame === null) {
+        process.stdout.write('\x1b[?1049l\x1b[?25h');
+    }
+};
+
 const cleanup = () => {
-    // Restore main screen buffer and show cursor
-    process.stdout.write('\x1b[?1049l\x1b[?25h');
     process.exit(0);
 };
 
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
-
-const args = process.argv.slice(2);
-let animationName = args[0];
-
-// Handle Help
-if (args.includes('--help') || args.includes('-h')) {
-    console.log("Usage: node cli.js [animation_name]");
-    console.log("Available animations:");
-    // We can iterate the animations sampler
-    // The sampler structure is opaque but we can peek or just list known files
-    // The ObjectsSampler.objects is an array of {obj: "name", ...}
-    animations.objects.forEach(o => console.log(`  ${o.obj}`));
-    process.exit(0);
-}
+process.on('exit', restore);
 
 // Select Animation
 if (!animationName) {
     animationName = animations.sample();
-    console.log(`No animation specified. Randomly selected: ${animationName}`);
-    // Give user a moment to see the name
-    await new Promise(r => setTimeout(r, 1500));
+    if (global.cliConfig.targetFrame === null) {
+        console.log(`No animation specified. Randomly selected: ${animationName}`);
+        await new Promise(r => setTimeout(r, 1500));
+    }
 } else {
-    // Check if valid
-    // simple linear search since we don't have direct keys access in public API easily without iterating
     const valid = animations.objects.some(o => o.obj === animationName);
     if (!valid) {
         console.error(`Animation '${animationName}' not found.`);
@@ -189,12 +226,13 @@ if (!animationName) {
     }
 }
 
-// Set up URL params mock if needed by utils.getUrlParameter
-// We can pass params like name=val via args if we want, but for now simple name selection
+// Set up URL params mock
 global.window.location.search = `?a=${animations.index_of(animationName)}`;
 
-// Switch to alternate screen buffer and hide cursor
-process.stdout.write('\x1b[?1049h\x1b[?25l');
+// Switch to alternate screen buffer and hide cursor (if not capturing frame)
+if (global.cliConfig.targetFrame === null) {
+    process.stdout.write('\x1b[?1049h\x1b[?25l');
+}
 
 // Load and Run
 try {
@@ -202,19 +240,10 @@ try {
     const module = await import(modulePath);
     const animationFunc = module.default;
 
-    // Initialize Canvas Mock State
     window.canvas = { _content: "" };
-    // Bind jQuery text/etc methods to this state? 
-    // The jQuery mock writes to window.canvas._content if it exists.
     
-    // Call reset_canvas from utils (it's imported so it should be available? 
-    // actually utils exports functions, it doesn't just attach to window unless we explicitly do so.
-    // index.html does `import { reset_canvas } ...`.
-    // The animation files assume `reset_canvas` has been called.
-    
-    // We need to import `reset_canvas` here and call it.
     const utils = await import('./js/utils.js');
-    utils.reset_canvas(); // This sets window.rows/cols/etc.
+    utils.reset_canvas();
 
     // Run
     animationFunc(animationFunc);
