@@ -22,11 +22,18 @@ export class Rasterizer {
   }
 
   drawTriangle(p1, p2, p3, normal) {
-    // Basic backface culling
-    if (normal.z > 0) return;
+    // Basic backface culling - DISABLED for double-sided rendering
+    // if (normal.z > 0) return;
 
     // Lighting - add a bit of ambient light so silhouettes are visible
-    let luminance = normal.dot(this.lightDir);
+    // For double-sided rendering, if we are seeing the backface (normal.z > 0), 
+    // we flip the normal for lighting purposes.
+    let lightingNormal = normal;
+    if (normal.z > 0) {
+      lightingNormal = normal.mul(-1);
+    }
+
+    let luminance = lightingNormal.dot(this.lightDir);
     if (luminance < 0.01) luminance = 0.01;
 
     let charIdx = Math.floor(luminance * (this.chars.length - 1));

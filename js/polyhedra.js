@@ -304,6 +304,8 @@ class Schwarz {
             return [s0.sub(s1).length() - s1.sub(s2).length(), s1.sub(s2).length() - s2.sub(s0).length()];
         }
 
+        const solutions = [];
+
         for (const seed of seeds) {
             let a = seed[0], b = seed[1];
             let converged = false;
@@ -326,9 +328,42 @@ class Schwarz {
             const c = 1 - a - b;
             // Check for non-degenerate solution (all barycentric coords non-zero)
             if (converged && Math.abs(a) > 1e-4 && Math.abs(b) > 1e-4 && Math.abs(c) > 1e-4) {
-                return [a, b, c];
+                // Check if this solution is already found
+                let found = false;
+                for (const sol of solutions) {
+                    if (Math.abs(sol[0] - a) < 1e-4 && Math.abs(sol[1] - b) < 1e-4) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    solutions.push([a, b, c]);
+                }
             }
         }
+
+        if (solutions.length > 0) {
+            // Find solution with maximum edge length for snub triangle
+            // This is a heuristic to prefer "Great" / spiky variants when multiple solutions exist
+            let bestSol = solutions[0];
+            let maxEdgeLen = -1;
+
+            for (const sol of solutions) {
+                const s = p.mul(sol[0]).add(q.mul(sol[1])).add(r.mul(sol[2])).normalize();
+                // Calculate reflection points
+                const n01 = p.cross(q).normalize(), n12 = q.cross(r).normalize();
+                const s0 = s.sub(n01.mul(2 * s.dot(n01)));
+                const s1 = s.sub(n12.mul(2 * s.dot(n12)));
+                const edgeLen = s0.sub(s1).length();
+                
+                if (edgeLen > maxEdgeLen) {
+                    maxEdgeLen = edgeLen;
+                    bestSol = sol;
+                }
+            }
+            return bestSol;
+        }
+
         // Fallback to default if no good solution found
         return [0.33, 0.33, 0.34];
     }
