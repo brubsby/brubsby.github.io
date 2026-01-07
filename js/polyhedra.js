@@ -316,9 +316,17 @@ class Schwarz {
                     converged = true;
                     break;
                 }
-                const resA = f(a + eps, b), resB = f(a, b + eps);
-                const da1 = (resA[0] - res[0]) / eps, da2 = (resA[1] - res[1]) / eps;
-                const db1 = (resB[0] - res[0]) / eps, db2 = (resB[1] - res[1]) / eps;
+                // Central difference for Jacobian
+                const resA_plus = f(a + eps, b);
+                const resA_minus = f(a - eps, b);
+                const resB_plus = f(a, b + eps);
+                const resB_minus = f(a, b - eps);
+
+                const da1 = (resA_plus[0] - resA_minus[0]) / (2 * eps);
+                const da2 = (resA_plus[1] - resA_minus[1]) / (2 * eps);
+                const db1 = (resB_plus[0] - resB_minus[0]) / (2 * eps);
+                const db2 = (resB_plus[1] - resB_minus[1]) / (2 * eps);
+                
                 const det = da1 * db2 - da2 * db1;
                 if (Math.abs(det) < 1e-12) break;
                 a -= (res[0] * db2 - res[1] * db1) / det;
@@ -343,10 +351,20 @@ class Schwarz {
         }
 
         if (solutions.length > 0) {
-            // Find solution with maximum edge length for snub triangle
-            // This is a heuristic to prefer "Great" / spiky variants when multiple solutions exist
+            // Heuristic to select correct solution based on parameters
+            // U74 (Great Retrosnub) | 2 3/2 5/3 (1 integer) -> Max Edge
+            // U69 (Great Inverted Snub) | 5/3 2 3 (2 integers) -> Min Edge
+            
+            let integerCount = 0;
+            for (const ang of this.angles) {
+                if (Math.abs(ang - Math.round(ang)) < 1e-5) integerCount++;
+            }
+            
+            const preferMax = integerCount < 2;
+
             let bestSol = solutions[0];
-            let maxEdgeLen = -1;
+            let bestEdgeLen = -1; // For max
+            let minEdgeLen = 99999; // For min
 
             for (const sol of solutions) {
                 const s = p.mul(sol[0]).add(q.mul(sol[1])).add(r.mul(sol[2])).normalize();
@@ -356,9 +374,16 @@ class Schwarz {
                 const s1 = s.sub(n12.mul(2 * s.dot(n12)));
                 const edgeLen = s0.sub(s1).length();
                 
-                if (edgeLen > maxEdgeLen) {
-                    maxEdgeLen = edgeLen;
-                    bestSol = sol;
+                if (preferMax) {
+                    if (edgeLen > bestEdgeLen) {
+                        bestEdgeLen = edgeLen;
+                        bestSol = sol;
+                    }
+                } else {
+                    if (edgeLen < minEdgeLen) {
+                        minEdgeLen = edgeLen;
+                        bestSol = sol;
+                    }
                 }
             }
             return bestSol;
