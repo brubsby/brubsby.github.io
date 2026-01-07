@@ -117,7 +117,7 @@ const star_polyhedra = {
   "Great dirhombicosidodecahedron": "| 3/2 5/3 3 5/2"
 };
 
-//Object.assign(SHAPES, star_polyhedra);
+Object.assign(SHAPES, star_polyhedra);
 
 export default (this_animation) => {
   if (!rasterizer || rasterizer.width !== window.columns || rasterizer.height !== window.rows) {

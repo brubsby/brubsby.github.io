@@ -1,102 +1,88 @@
 import { Vec3 } from './utils.js';
 
-// Add missing methods to Vec3 if they don't exist
-if (!Vec3.prototype.add) {
-    Vec3.prototype.add = function(v) { return new Vec3(this.x + v.x, this.y + v.y, this.z + v.z); };
-}
-if (!Vec3.prototype.mul) {
-    Vec3.prototype.mul = function(s) { return new Vec3(this.x * s, this.y * s, this.z * s); };
-}
+// Ensure Vec3 has all necessary methods
+if (!Vec3.prototype.add) Vec3.prototype.add = function(v) { return new Vec3(this.x + v.x, this.y + v.y, this.z + v.z); };
+if (!Vec3.prototype.mul) Vec3.prototype.mul = function(s) { return new Vec3(this.x * s, this.y * s, this.z * s); };
+if (!Vec3.prototype.div) Vec3.prototype.div = function(s) { return new Vec3(this.x / s, this.y / s, this.z / s); };
 
 export class Wythoff {
     static toTriangles(poly) {
-        const newFaces = [];
+        const triFaces = [];
+        const vertices = [...poly.vertices];
         for (const face of poly.faces) {
-            for (let i = 1; i < face.length - 1; i++) {
-                newFaces.push([face[0], face[i], face[i + 1]]);
+            if (face.length < 3) continue;
+            // Calculate face centroid
+            let center = new Vec3(0, 0, 0);
+            for (const idx of face) {
+                center = center.add(vertices[idx]);
+            }
+            center = center.div(face.length);
+            const centerIdx = vertices.length;
+            vertices.push(center);
+
+            // Triangle fan from centroid
+            for (let i = 0; i < face.length; i++) {
+                triFaces.push([centerIdx, face[i], face[(i + 1) % face.length]]);
             }
         }
-        return { vertices: poly.vertices, faces: newFaces };
+        return { vertices: vertices, faces: triFaces };
     }
 }
 
 export class Generator {
     static fromString(symbol) {
         const parts = symbol.trim().split(/\s+/);
-        let p, q, r, type;
-        
-        // Find pipe index
-        const pipeIndex = parts.indexOf('|');
-        const nums = parts.filter(x => x !== '|').map(x => parseInt(x));
-        
-        if (pipeIndex === 0) { // | p q r (Snub)
-            type = 0;
-            p = nums[0]; q = nums[1]; r = nums[2];
-        } else if (pipeIndex === 1) { // p | q r
-            type = 1;
-            p = nums[0]; q = nums[1]; r = nums[2];
-        } else if (pipeIndex === 2) { // p q | r
-            type = 2;
-            p = nums[0]; q = nums[1]; r = nums[2];
-        } else if (pipeIndex === 3 || pipeIndex === -1) { // p q r | (Omnitruncated) - assuming end if missing
-             type = 3;
-             p = nums[0]; q = nums[1]; r = nums[2];
+        function parseNum(s) {
+            if (s.includes('/')) {
+                const [a, b] = s.split('/').map(Number);
+                return a / b;
+            }
+            return Number(s);
         }
-
+        const pipeIndex = parts.indexOf('|');
+        const nums = parts.filter(x => x !== '|').map(parseNum);
+        let p, q, r, type;
+        if (pipeIndex === 0) { type = 0; p = nums[0]; q = nums[1]; r = nums[2]; }
+        else if (pipeIndex === 1) { type = 1; p = nums[0]; q = nums[1]; r = nums[2]; }
+        else if (pipeIndex === 2) { type = 2; p = nums[0]; q = nums[1]; r = nums[2]; }
+        else if (pipeIndex === 3) { type = 3; p = nums[0]; q = nums[1]; r = nums[2]; }
+        else { type = 3; p = nums[0]; q = nums[1]; r = nums[2]; } // Default
         return Generator.generateWythoff(p, q, r, type);
     }
 
     static generateWythoff(p, q, r, type) {
-        let active;
+        const schwarz = new Schwarz(p, q, r);
+        let active = [false, false, false];
         let snub = false;
-
         switch (type) {
-            case 0: // | p q r (Snub)
-                active = [true, true, true];
-                snub = true;
-                break;
-            case 1: // p | q r (Regular)
-                active = [false, false, true];
-                break;
-            case 2: // p q | r (Truncated)
-                active = [true, false, true];
-                break;
-            case 3: // p q r | (Omnitruncated)
-                active = [true, true, true];
-                break;
-            default:
-                throw new Error("Invalid Wythoff type: " + type);
+            case 0: active = [true, true, true]; snub = true; break; // | p q r
+            case 1: active = [true, false, false]; break; // p | q r
+            case 2: active = [true, true, false]; break; // p q | r
+            case 3: active = [true, true, true]; break; // p q r |
         }
 
-        const cp = Math.cos(Math.PI / p);
-        const cq = Math.cos(Math.PI / q);
-        const cr = Math.cos(Math.PI / r);
-
-        const n1 = new Vec3(1, 0, 0);
-        const n2 = new Vec3(-cp, Math.sin(Math.PI / p), 0);
-        
-        const n3x = -cr;
-        const n3y = (-cq + cr * cp) / Math.sin(Math.PI / p);
-        const n3z_sq = 1 - n3x * n3x - n3y * n3y;
-        const n3z = Math.sqrt(Math.max(0, n3z_sq));
-        const n3 = new Vec3(n3x, n3y, n3z);
-
-        const mirrors = [n1, n2, n3];
-
-        const h = active.map(a => a ? -1 : 0);
-        const Px = h[0];
-        const Py = (h[1] - n2.x * Px) / n2.y;
-        const Pz = n3.z !== 0 ? (h[2] - n3.x * Px - n3.y * Py) / n3.z : 0;
-        let P = new Vec3(Px, Py, Pz).normalize();
+        let bary;
+        if (snub) {
+            bary = schwarz.snubBary;
+            // Normalize snub barycentric coordinates to project to unit sphere
+            const s = schwarz.points[0].mul(bary[0])
+                .add(schwarz.points[1].mul(bary[1]))
+                .add(schwarz.points[2].mul(bary[2]));
+            const len = s.length();
+            bary = [bary[0] / len, bary[1] / len, bary[2] / len];
+        } else if (type === 1) {
+            bary = [1, 0, 0];
+        } else if (type === 2) {
+            bary = schwarz.tri2bary([1, 1, 0]);
+        } else {
+            bary = schwarz.tri2bary([1, 1, 1]);
+        }
 
         const vertices = [];
         const vMap = new Map();
-
         function getVIndex(v) {
-            const precision = 100000;
-            const key = Math.round(v.x * precision) + "," + 
-                        Math.round(v.y * precision) + "," + 
-                        Math.round(v.z * precision);
+            const precision = 1000000;
+            const key = Math.round(v.x * precision) + "," + Math.round(v.y * precision) + "," + Math.round(v.z * precision);
             if (vMap.has(key)) return vMap.get(key);
             const idx = vertices.length;
             vertices.push(v);
@@ -104,180 +90,246 @@ export class Generator {
             return idx;
         }
 
-        getVIndex(P);
-        let head = 0;
-        while (head < vertices.length) {
-            const v = vertices[head++];
-            for (const n of mirrors) {
-                const nv = v.reflect(n);
-                getVIndex(nv);
-            }
-        }
+        const faces = [];
+        const regions = schwarz.regions;
+        const regionPoints = regions.map(reg => {
+            if (snub && reg.p === 1) return null; // Only parity 0 regions have vertices in Snub
+            const v0 = schwarz.points[reg.v[0]];
+            const v1 = schwarz.points[reg.v[1]];
+            const v2 = schwarz.points[reg.v[2]];
+            return v0.mul(bary[0]).add(v1.mul(bary[1])).add(v2.mul(bary[2]));
+        });
 
-        const reflections = vertices.map(v => mirrors.map(n => getVIndex(v.reflect(n))));
-
-        let faces = [];
-        const faceSet = new Set();
-        const pairs = [[0, 1], [1, 2], [2, 0]];
-
-        function orderFace(faceIndices, verts = vertices) {
-            let cx=0, cy=0, cz=0;
-            for(const idx of faceIndices) {
-                const v = verts[idx];
-                cx += v.x; cy += v.y; cz += v.z;
-            }
-            cx /= faceIndices.length; cy /= faceIndices.length; cz /= faceIndices.length;
-            const center = new Vec3(cx, cy, cz);
+        for (let t = 0; t < 3; t++) {
+            const n = schwarz.angles[t];
+            const onM1 = Math.abs(bary[(t + 1) % 3]) < 1e-6;
+            const onM2 = Math.abs(bary[(t + 2) % 3]) < 1e-6;
             
-            const v0 = verts[faceIndices[0]].sub(center).normalize();
-            const normal = center.normalize();
-            const v1 = new Vec3(
-                normal.y * v0.z - normal.z * v0.y,
-                normal.z * v0.x - normal.x * v0.z,
-                normal.x * v0.y - normal.y * v0.x
-            ).normalize();
-            
-            const ordered = [...faceIndices].sort((a, b) => {
-                const va = verts[a].sub(center);
-                const vb = verts[b].sub(center);
-                return Math.atan2(va.dot(v1), va.dot(v0)) - Math.atan2(vb.dot(v1), vb.dot(v0));
-            });
+            let orbitSize;
+            if (onM1 && onM2) orbitSize = 1;
+            else if (onM1 || onM2) orbitSize = n;
+            else orbitSize = 2 * n;
 
-            // Ensure CCW from outside
-            const e1 = verts[ordered[1]].sub(verts[ordered[0]]);
-            const e2 = verts[ordered[2]].sub(verts[ordered[0]]);
-            const n = new Vec3(
-                e1.y * e2.z - e1.z * e2.y,
-                e1.z * e2.x - e1.x * e2.z,
-                e1.x * e2.y - e1.y * e2.x
-            );
-            if (n.dot(verts[ordered[0]]) < 0) {
-                ordered.reverse();
-            }
-            return ordered;
-        }
+            if (snub) orbitSize /= 2;
+            // if (orbitSize <= 2.001) continue; // Incorrectly filters star polygons
 
-        for (const [m1, m2] of pairs) {
-            const orbit = new Set([0]); // Start with P
-            const queue = [0];
-            let qHead = 0;
-            while (qHead < queue.length) {
-                const v = queue[qHead++];
-                for (const m of [m1, m2]) {
-                    const nv = reflections[v][m];
-                    if (!orbit.has(nv)) {
-                        orbit.add(nv);
-                        queue.push(nv);
+            const faceTypeRegions = schwarz.faceRegions[t];
+            for (let i = 0; i < faceTypeRegions.length; i++) {
+                const fRegs = faceTypeRegions[i];
+                if (!fRegs) continue;
+                
+                const inc = snub ? 2 : 1;
+                const pIndices = [];
+                let start = 0;
+                if (snub && !regionPoints[fRegs[0]]) start = 1;
+                for (let j = start; j < fRegs.length; j += inc) {
+                    const p = regionPoints[fRegs[j]];
+                    if (!p) continue;
+                    const idx = getVIndex(p);
+                    if (pIndices.length === 0 || idx !== pIndices[pIndices.length - 1]) {
+                        pIndices.push(idx);
                     }
                 }
-            }
-            
-            if (orbit.size < 3) continue;
-
-            const baseFace = Array.from(orbit);
-            const faceQueue = [baseFace];
-            const typeSeen = new Set();
-            typeSeen.add([...baseFace].sort((a, b) => a - b).join(","));
-            
-            let fHead = 0;
-            while(fHead < faceQueue.length) {
-                const f = faceQueue[fHead++];
-                const key = [...f].sort((a, b) => a - b).join(",");
-                if (!faceSet.has(key)) {
-                    faceSet.add(key);
-                    faces.push(orderFace(f));
+                if (pIndices.length > 1 && pIndices[0] === pIndices[pIndices.length - 1]) {
+                    pIndices.pop();
                 }
                 
-                for (let m = 0; m < 3; m++) {
-                    const rf = f.map(vIdx => reflections[vIdx][m]);
-                    const rKey = [...rf].sort((a, b) => a - b).join(",");
-                    if (!typeSeen.has(rKey)) {
-                        typeSeen.add(rKey);
-                        faceQueue.push(rf);
-                    }
+                if (pIndices.length < 3) continue;
+
+                const p0 = vertices[pIndices[0]];
+                const p1 = vertices[pIndices[1]];
+                const p2 = vertices[pIndices[2]];
+                const faceCenter = schwarz.points[i];
+                const normal = p1.sub(p0).cross(p2.sub(p0));
+                
+                if (normal.dot(faceCenter) < 0) {
+                    pIndices.reverse();
                 }
+                faces.push(pIndices);
             }
         }
-
+        
         if (snub) {
-            // Calculate parity of vertices
-            const parity = new Int8Array(vertices.length).fill(-1);
-            const q = [0];
-            parity[0] = 0;
-            let qHead = 0;
-            let isBipartite = true;
-            
-            while(qHead < q.length) {
-                const u = q[qHead++];
-                const p = parity[u];
-                for (const neighbor of reflections[u]) {
-                    if (parity[neighbor] === -1) {
-                        parity[neighbor] = 1 - p;
-                        q.push(neighbor);
-                    } else if (parity[neighbor] === p) {
-                        isBipartite = false;
+            for (let i = 0; i < regions.length; i++) {
+                if (regions[i].p === 1) {
+                    const adj = schwarz.adjacent[i];
+                    const p0 = regionPoints[adj[0]], p1 = regionPoints[adj[1]], p2 = regionPoints[adj[2]];
+                    // In Snub, adjacents are parity 0, so they have points
+                    if (!p0 || !p1 || !p2) continue;
+                    const v0 = getVIndex(p0), v1 = getVIndex(p1), v2 = getVIndex(p2);
+                    if (v0 !== v1 && v1 !== v2 && v2 !== v0) {
+                        const n = p1.sub(p0).cross(p2.sub(p0));
+                        if (n.dot(p0) >= 0) faces.push([v0, v1, v2]);
+                        else faces.push([v0, v2, v1]);
                     }
                 }
             }
-
-            if (!isBipartite) {
-                console.warn("Cannot generate snub form: Parent polyhedron is not bipartite (contains odd cycles). Returning original form.");
-                return { vertices, faces };
-            }
-
-            // Build adjacency of original mesh to find neighbors of removed vertices
-            const adj = new Array(vertices.length).fill().map(() => new Set());
-            for (const face of faces) {
-                for (let i = 0; i < face.length; i++) {
-                    const a = face[i];
-                    const b = face[(i + 1) % face.length];
-                    adj[a].add(b);
-                    adj[b].add(a);
-                }
-            }
-
-            const newVertices = [];
-            const oldToNew = new Int32Array(vertices.length).fill(-1);
-            
-            // Keep even vertices
-            for (let i = 0; i < vertices.length; i++) {
-                if (parity[i] === 0) {
-                    oldToNew[i] = newVertices.length;
-                    newVertices.push(vertices[i]);
-                }
-            }
-
-            const newFaces = [];
-            
-            // Transform existing faces
-            for (const face of faces) {
-                const newFace = [];
-                for (const idx of face) {
-                    if (parity[idx] === 0) {
-                        newFace.push(oldToNew[idx]);
-                    }
-                }
-                if (newFace.length >= 3) {
-                    newFaces.push(newFace);
-                }
-            }
-
-            // Create new faces from gaps (odd vertices)
-            for (let i = 0; i < vertices.length; i++) {
-                if (parity[i] === 1) {
-                    const neighbors = Array.from(adj[i]);
-                    // Neighbors of an odd vertex must be even (in bipartite graph)
-                    const newFace = neighbors.map(idx => oldToNew[idx]);
-                    // We must order them to ensure correct face normal
-                    if (newFace.length >= 3) {
-                        newFaces.push(orderFace(newFace, newVertices));
-                    }
-                }
-            }
-
-            return { vertices: newVertices, faces: newFaces };
         }
 
         return { vertices, faces };
+    }
+}
+
+class Schwarz {
+    constructor(p, q, r) {
+        this.angles = [p, q, r];
+        const A = Math.PI / p, B = Math.PI / q, C = Math.PI / r;
+        const ca = (Math.cos(A) + Math.cos(B) * Math.cos(C)) / (Math.sin(B) * Math.sin(C));
+        const cb = (Math.cos(B) + Math.cos(C) * Math.cos(A)) / (Math.sin(C) * Math.sin(A));
+        const cc = (Math.cos(C) + Math.cos(A) * Math.cos(B)) / (Math.sin(A) * Math.sin(B));
+        const a = Math.acos(ca), b = Math.acos(cb), c = Math.acos(cc);
+
+        const v0 = new Vec3(0, 0, 1);
+        const v1 = new Vec3(0, Math.sin(c), Math.cos(c));
+        const ry = (Math.cos(a) - v1.z * Math.cos(b)) / v1.y;
+        const rz = Math.cos(b);
+        const t = 1 - ry * ry - rz * rz;
+        const v2 = new Vec3(Math.sqrt(Math.max(0, t)), ry, rz);
+        
+        this.points = [v0, v1, v2];
+        this.regions = [{ v: [0, 1, 2], p: 0 }];
+        this.adjacent = [];
+        this.faceRegions = [[], [], []];
+
+        this.B = [
+            this.getBary(v0, v1, v2, this.reflect(v1, v2, v0)),
+            this.getBary(v0, v1, v2, this.reflect(v2, v0, v1)),
+            this.getBary(v0, v1, v2, this.reflect(v0, v1, v2))
+        ];
+
+        const regionMap = new Map();
+        function regKey(v, p) { return v.join(",") + "," + p; }
+        regionMap.set(regKey([0, 1, 2], 0), 0);
+
+        for (let i = 0; i < this.regions.length; i++) {
+            if (this.regions.length > 2000) break;
+            const reg = this.regions[i];
+            const v = reg.v.map(idx => this.points[idx]);
+            this.adjacent[i] = [];
+
+            for (let m = 0; m < 3; m++) {
+                const rvIdx = this.getPoint(this.applyBary(this.B[m], v[0], v[1], v[2]));
+                const nextV = [reg.v[0], reg.v[1], reg.v[2]];
+                nextV[m] = rvIdx;
+                const nextP = 1 - reg.p;
+                const key = regKey(nextV, nextP);
+                if (regionMap.has(key)) {
+                    this.adjacent[i][m] = regionMap.get(key);
+                } else {
+                    const nextIdx = this.regions.length;
+                    this.regions.push({ v: nextV, p: nextP });
+                    regionMap.set(key, nextIdx);
+                    this.adjacent[i][m] = nextIdx;
+                }
+            }
+            for (let t = 0; t < 3; t++) {
+                if (!this.faceRegions[t][reg.v[t]]) this.faceRegions[t][reg.v[t]] = [];
+                this.faceRegions[t][reg.v[t]].push(i);
+            }
+        }
+        
+        for (let t = 0; t < 3; t++) {
+            const m1 = (t + 1) % 3, m2 = (t + 2) % 3;
+            for (let i = 0; i < this.faceRegions[t].length; i++) {
+                const fRegs = this.faceRegions[t][i];
+                if (!fRegs || fRegs.length < 2) continue;
+                const sorted = [fRegs[0]];
+                const seen = new Set([fRegs[0]]);
+                while (sorted.length < fRegs.length) {
+                    const curr = sorted[sorted.length - 1];
+                    let found = false;
+                    for (const m of [m1, m2]) {
+                        const next = this.adjacent[curr][m];
+                        if (fRegs.includes(next) && !seen.has(next)) {
+                            sorted.push(next);
+                            seen.add(next);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) break;
+                }
+                this.faceRegions[t][i] = sorted;
+            }
+        }
+        this.snubBary = this.calculateSnubBary();
+    }
+
+    getPoint(p) {
+        const eps = 1e-4;
+        for (let i = 0; i < this.points.length; i++) {
+            if (this.points[i].sub(p).length() < eps) return i;
+        }
+        this.points.push(p);
+        return this.points.length - 1;
+    }
+
+    getBary(p1, p2, p3, s) {
+        const P = p2.cross(p3), Q = p3.cross(p1), R = p1.cross(p2);
+        const k = p1.dot(P);
+        return [s.dot(P) / k, s.dot(Q) / k, s.dot(R) / k];
+    }
+
+    applyBary(b, p1, p2, p3) {
+        return p1.mul(b[0]).add(p2.mul(b[1])).add(p3.mul(b[2]));
+    }
+
+    reflect(p1, p2, s) {
+        const n = p1.cross(p2).normalize();
+        return s.sub(n.mul(2 * s.dot(n)));
+    }
+
+    tri2bary(h) {
+        const p = this.points[0], q = this.points[1], r = this.points[2];
+        const P = q.cross(r), Q = r.cross(p), R = p.cross(q);
+        const bary = [P.length() * h[0], Q.length() * h[1], R.length() * h[2]];
+        const s = p.mul(bary[0]).add(q.mul(bary[1])).add(r.mul(bary[2]));
+        const len = s.length();
+        return [bary[0] / len, bary[1] / len, bary[2] / len];
+    }
+
+    calculateSnubBary() {
+        const p = this.points[0], q = this.points[1], r = this.points[2];
+        const seeds = [
+            [0.33, 0.33],
+            [0.1, 0.1], [0.1, 0.8], [0.8, 0.1],
+            [0.5, 0.2], [0.2, 0.5],
+            [0.4, 0.4], [0.2, 0.2], [0.6, 0.2]
+        ];
+
+        function f(a, b) {
+            const s = p.mul(a).add(q.mul(b)).add(r.mul(1 - a - b)).normalize();
+            const n01 = p.cross(q).normalize(), n12 = q.cross(r).normalize(), n20 = r.cross(p).normalize();
+            const s0 = s.sub(n01.mul(2 * s.dot(n01))), s1 = s.sub(n12.mul(2 * s.dot(n12))), s2 = s.sub(n20.mul(2 * s.dot(n20)));
+            return [s0.sub(s1).length() - s1.sub(s2).length(), s1.sub(s2).length() - s2.sub(s0).length()];
+        }
+
+        for (const seed of seeds) {
+            let a = seed[0], b = seed[1];
+            let converged = false;
+            for (let i = 0; i < 20; i++) {
+                const eps = 1e-6;
+                const res = f(a, b);
+                if (Math.abs(res[0]) < 1e-9 && Math.abs(res[1]) < 1e-9) {
+                    converged = true;
+                    break;
+                }
+                const resA = f(a + eps, b), resB = f(a, b + eps);
+                const da1 = (resA[0] - res[0]) / eps, da2 = (resA[1] - res[1]) / eps;
+                const db1 = (resB[0] - res[0]) / eps, db2 = (resB[1] - res[1]) / eps;
+                const det = da1 * db2 - da2 * db1;
+                if (Math.abs(det) < 1e-12) break;
+                a -= (res[0] * db2 - res[1] * db1) / det;
+                b -= (da1 * res[1] - da2 * res[0]) / det;
+            }
+            
+            const c = 1 - a - b;
+            // Check for non-degenerate solution (all barycentric coords non-zero)
+            if (converged && Math.abs(a) > 1e-4 && Math.abs(b) > 1e-4 && Math.abs(c) > 1e-4) {
+                return [a, b, c];
+            }
+        }
+        // Fallback to default if no good solution found
+        return [0.33, 0.33, 0.34];
     }
 }
