@@ -228,7 +228,7 @@ function parse_rule(rule_str) {
   return rule;
 }
 
-export default (this_animation) => {
+export default async (this_animation) => {
   if (window.frame_count == 0) {
     window.is_toroidal = Math.random() < 0.75;
 
@@ -1147,7 +1147,7 @@ export default (this_animation) => {
           }
         }
       } else if (choice === "simplex") {
-        init_simplex_noise();
+        await init_simplex_noise();
         let freq = Math.random() * 0.1 + 0.05;
         for (var y = 0; y < window.rows; y++) {
           for (var x = 0; x < window.columns; x++) {

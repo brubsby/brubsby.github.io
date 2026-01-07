@@ -33,7 +33,9 @@ for (let i = 0; i < args.length; i++) {
 const nativeSetTimeout = global.setTimeout;
 global.setTimeout = (cb, delay, ...args) => {
     if (global.cliConfig.targetFrame !== null) {
-        return setImmediate(cb, ...args);
+        const imm = setImmediate(cb, ...args);
+        imm.refresh = () => {};
+        return imm;
     }
     return nativeSetTimeout(cb, delay, ...args);
 };
@@ -201,8 +203,8 @@ window.document.getElementById = (id) => ({
 import './js/utils.js';
 
 // Load SimplexNoise (Side-effect: attaches to window.SimplexNoise because we defined window)
-await import('./js/simplex-noise.js');
-global.SimplexNoise = window.SimplexNoise;
+// await import('./js/simplex-noise.js');
+// global.SimplexNoise = window.SimplexNoise;
 
 // --- CLI Logic ---
 

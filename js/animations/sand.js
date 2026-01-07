@@ -1,6 +1,6 @@
 import { get_random_int_with_expected_float_average, init_simplex_noise, ObjectSampler, get_simplex_noise_at, roundFloat, tooltip, is_grid_offset_in_bounds, is_grid_offset_true, get_coord_offset, mark_grid } from '../utils.js';
 
-export default (this_animation) => {
+export default async (this_animation) => {
   var width = window.columns * window.char_width;
   var height = window.rows * window.char_height;
   var expected_value_new_sand_per_frame = window.constant_random_values[0] * 3;
@@ -11,7 +11,7 @@ export default (this_animation) => {
   var dropper_position_frequency =  Math.min(window.constant_random_values[4],
     window.constant_random_values[5], window.constant_random_values[6]) * 0.125 + 0.001;
   var dropper_direction = window.constant_random_boolean ? 1 : -1;
-  init_simplex_noise();
+  await init_simplex_noise();
   if (window.frame_count == 0) {
     window.active_sand_coords = [];
     window.grid = [];

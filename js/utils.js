@@ -188,6 +188,39 @@ export class Mat4 {
 }
 
 /*----------- Helper Functions -----------*/
+
+export var loadGlobalLibrary = async (url, globalName) => {
+    if (typeof window !== 'undefined' && window[globalName]) return;
+    
+    // Check for Node.js environment
+    if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+        if (global[globalName]) return;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+        const code = await res.text();
+        const vm = await import('node:vm');
+        vm.runInThisContext(code);
+        if (global.window && !global.window[globalName] && global[globalName]) {
+            global.window[globalName] = global[globalName];
+        }
+        if (global[globalName] && !global.window[globalName]) {
+             global.window[globalName] = global[globalName];
+        }
+        return;
+    }
+
+    // Browser environment
+    if (typeof window !== 'undefined' && !window[globalName]) {
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+};
+
 export var init_flat_index_list = (rows, columns, sort_func=null) => {
     if (!window.flat_index_list) {
       window.flat_index_list = [];
@@ -200,11 +233,20 @@ export var init_flat_index_list = (rows, columns, sort_func=null) => {
       }
     }
 };
-export var init_simplex_noise = () => {
+
+export var init_simplex_noise = async () => {
     if (!window.simplex_noise) {
-      window.simplex_noise = new SimplexNoise(Math.random().toString());
+      await loadGlobalLibrary('https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js', 'SimplexNoise');
+      window.simplex_noise = new window.SimplexNoise(Math.random().toString());
     }
 };
+
+export var init_math = async () => {
+    if (!window.math) {
+        await loadGlobalLibrary('https://cdnjs.cloudflare.com/ajax/libs/mathjs/6.2.2/math.min.js', 'math');
+    }
+}
+
 export var init_mapgen_tiles = () => {
     if (!window.mapgen_tiles) {
       // drop ttf into fontdrop.info for codepoints

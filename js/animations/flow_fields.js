@@ -1,11 +1,12 @@
 import { tooltip, ObjectSampler, roundFloat, Particle, init_simplex_noise, get_simplex_noise_at, simplex_value_to_vector, get_random_int_with_expected_float_average, get_canvas_index } from '../utils.js';
 
-export default (this_animation) => {
+export default async (this_animation) => {
   var width = window.columns * window.char_width;
   var height = window.rows * window.char_height;
   var center = [width/2, height/2];
   var acceleration_or_velocity = window.constant_random_boolean;
   var expected_value_new_particles_per_frame = window.constant_random_values[0] * 2;
+  await init_simplex_noise();
   if (window.frame_count == 0) {
     window.remaining_particles = Math.floor(10000 * expected_value_new_particles_per_frame);
     window.particles = [];
@@ -36,7 +37,6 @@ export default (this_animation) => {
   var max_new_particle_tries = 100;
   var speed_limit = window.constant_random_values[4] * 20 + 25;
   var jitter_magnitude = acceleration_or_velocity ? window.constant_random_values[5] : window.constant_random_values[5] * 25 + 12;
-  init_simplex_noise();
   var new_particle_count = 0;
   var new_particle_tries = 0;
   while (window.remaining_particles > 0 && new_particle_count < new_particles_this_frame) {

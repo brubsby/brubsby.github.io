@@ -1,4 +1,4 @@
-import { ObjectSampler, tooltip, roundFloat, isInt, density_chars } from "../utils.js";
+import { ObjectSampler, tooltip, roundFloat, isInt, density_chars, init_math } from "../utils.js";
 
 var grid_coords_to_complex = (
   y,
@@ -190,7 +190,8 @@ var find_interesting_point = (fractal, iterations) => {
   return current_center;
 };
 
-export default (this_animation) => {
+export default async (this_animation) => {
+  await init_math();
   var width = window.columns * window.char_width;
   var height = window.rows * window.char_height;
   var iterations = 41;
