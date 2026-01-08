@@ -3,6 +3,7 @@ import { ObjectSampler } from './utils.js';
 export const animations = new ObjectSampler()
     .put("null.js", 0)
     .put("sfc.js", 2)
+    .put("saw.js", 2)
     .put("rndfill.js", 1)
     .put("eratosthenes.js", 2)
     .put("knightstour.js", 2)
