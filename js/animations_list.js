@@ -1,5 +1,7 @@
 import { ObjectSampler } from './utils.js';
 
+// New animations are registered here and only here, and animations.html looks here to find them.
+
 export const animations_data = [
     { file: "null.js", weight: 0, description: "the blank canvas" },
     { file: "sfc.js", weight: 2, description: "space filling curves" },
@@ -36,7 +38,8 @@ export const animations_data = [
     { file: "physarum.js", weight: 3, description: "slime mold simulation" },
     { file: "raster.js", weight: 3, description: "ascii rasterized uniform polyhedra" },
     { file: "reacdiff.js", weight: 3, description: "grey-scott reaction-diffusion" },
-    { file: "fire.js", weight: 3, description: "doom-style fire" }
+    { file: "fire.js", weight: 3, description: "doom-style fire" },
+    { file: "percolation.js", weight: 2, description: "fluid seeping through a porous random grid" }
 ];
 
 export const animations = new ObjectSampler();
@@ -77,6 +80,14 @@ for (let i = 0; i < animations_data.length; i++) {
 	* plasma effect
 	* better mapgen
 	* better simplex 
+	* forest fire model
+	* brian's brain (can probably add to 2d_automata)
+	* inverted pendulum
+	* fourier epicycles
+	* maurer rose
+	* rain simulation
+	* tunnel effect
+	* nagel-schreckenberg traffic
 */
 
 /* things that seem like I'd want to do them but I don't (maybe I just need to make them more interesting somehow):
@@ -96,4 +107,7 @@ for (let i = 0; i < animations_data.length; i++) {
 	* matrix rain
 	* quine relay
 	* defragmenter
+	* poincare disk
+	* chaos game
+	* traveling salesman problem
 */
