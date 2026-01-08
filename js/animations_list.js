@@ -1,39 +1,99 @@
 import { ObjectSampler } from './utils.js';
 
-export const animations = new ObjectSampler()
-    .put("null.js", 0)
-    .put("sfc.js", 2)
-    .put("saw.js", 2)
-    .put("rndfill.js", 1)
-    .put("eratosthenes.js", 2)
-    .put("knightstour.js", 2)
-    .put("textgen.js", 3)
-    .put("tenprint.js", 3)
-    .put("circ.js", 1)
-    .put("tris.js", 1)
-    .put("heart.js", 0.1)
-    .put("simplex_growth.js", 1.25)
-    .put("mapgen.js", 2)
-    .put("dvdball.js", 1)
-    .put("dog.js", 0.75)
-    .put("bresenham_bounce.js", 1.5)
-    .put("flow_fields.js", 3)
-    .put("clock.js", 1)
-    .put("sand.js", 4)
-    .put("fractal.js", 4)
-    .put("1d_automata.js", 2)
-    .put("2d_automata.js", 6)
-    .put("langtons_ant.js", 3)
-    .put("cyclic_ca.js", 1)
-    .put("boids.js", 3)
-    .put("gas.js", 3)
-    .put("voronoi.js", 3)
-    .put("worley.js", 3)
-    .put("lissajous.js", 3)
-    .put("fluid.js", 3)
-    .put("bytebeat.js", 3)
-    .put("dla.js", 2)
-    .put("physarum.js", 3)
-    .put("raster.js", 3)
-    .put("reacdiff.js", 3)
-    .put("fire.js", 3);
+export const animations_data = [
+    { file: "null.js", weight: 0, description: "the blank canvas" },
+    { file: "sfc.js", weight: 2, description: "space filling curves" },
+    { file: "saw.js", weight: 2, description: "self-avoiding walk" },
+    { file: "rndfill.js", weight: 1, description: "random fill" },
+    { file: "eratosthenes.js", weight: 2, description: "sieve of eratosthenes" },
+    { file: "knightstour.js", weight: 2, description: "knight's tour algorithm" },
+    { file: "textgen.js", weight: 3, description: "text being written" },
+    { file: "tenprint.js", weight: 3, description: "10 PRINT CHR$(205.5+RND(1)); : GOTO 10" },
+    { file: "circ.js", weight: 1, description: "a simple circle" },
+    { file: "tris.js", weight: 1, description: "two simple triangles" },
+    { file: "heart.js", weight: 0.1, description: "<3 (for my wife)" },
+    { file: "simplex_growth.js", weight: 1.25, description: "simplex noise" },
+    { file: "mapgen.js", weight: 2, description: "ascii map generation" },
+    { file: "dvdball.js", weight: 1, description: "dvd logo type beat" },
+    { file: "dog.js", weight: 0.75, description: "my dog :)" },
+    { file: "bresenham_bounce.js", weight: 1.5, description: "bresenham lines bouncing around" },
+    { file: "flow_fields.js", weight: 3, description: "particles in simplex flow fields" },
+    { file: "clock.js", weight: 1, description: "functional ascii clock" },
+    { file: "sand.js", weight: 4, description: "falling sand" },
+    { file: "fractal.js", weight: 4, description: "ascii based escape time fractal rendering engine" }, // includes mandelbrot, julia, and many more 
+    { file: "1d_automata.js", weight: 2, description: "elementary cellular automata" },
+    { file: "2d_automata.js", weight: 6, description: "very large subset of all isotropic cellular automata" },
+    { file: "langtons_ant.js", weight: 3, description: "langton's ant" },
+    { file: "cyclic_ca.js", weight: 1, description: "cyclic cellular automata" },
+    { file: "boids.js", weight: 3, description: "my boids" },
+    { file: "gas.js", weight: 3, description: "ideal gas simulation" },
+    { file: "voronoi.js", weight: 3, description: "voronoi diagrams" },
+    { file: "worley.js", weight: 3, description: "worley noise" },
+    { file: "lissajous.js", weight: 3, description: "lissajous curves" },
+    { file: "fluid.js", weight: 3, description: "most complex ascii fluid" },
+    { file: "bytebeat.js", weight: 3, description: "bytebeat screensaver from o_c" },
+    { file: "dla.js", weight: 2, description: "diffusion-limited aggregation" },
+    { file: "physarum.js", weight: 3, description: "slime mold simulation" },
+    { file: "raster.js", weight: 3, description: "ascii rasterized uniform polyhedra" },
+    { file: "reacdiff.js", weight: 3, description: "grey-scott reaction-diffusion" },
+    { file: "fire.js", weight: 3, description: "doom-style fire" }
+];
+
+export const animations = new ObjectSampler();
+for (let i = 0; i < animations_data.length; i++) {
+    animations.put(animations_data[i].file, animations_data[i].weight);
+}
+
+
+/* here's some more ideas I'll probably get around to:
+	* pathfinding algorithms (a*, etc.)
+	* lattice boltzman method
+	* moire patterns
+	* n-body gravity visualization
+	* double pendulum
+	* add turmites to langton
+	* add more ants to langton
+	* abelian sand pile (figure out how to do perfect rectangular grids)
+	* lots of strange attractors (with lissajous style animation)
+	* phyllotaxis
+	* waveform collapse
+	* biham–middleton–levine traffic model
+	* metaballs
+	* marching squares
+	* ising model
+	* add a database of game of life patterns to spawn in with
+	* wilmot's warehouse simulation
+	* maze generation
+	* water ripples
+	* auto playing tetris
+	* verlet integration (cloth/rope)
+	* wa-tor world (might be a subset of cyclic automata?)
+	* galton board
+	* spinning donut
+	* more triangle based meshes for raster.js
+	* chladni plates
+	* ant colony
+	* toothpick sequence
+	* plasma effect
+	* better mapgen
+	* better simplex 
+*/
+
+/* things that seem like I'd want to do them but I don't (maybe I just need to make them more interesting somehow):
+	* barnsley fern
+	* henon map
+	* dragon curve
+	* poisson disk sampling
+	* wireworld
+	* schotter homage
+	* starfield
+	* sorting algorithm
+	* ulam's spiral
+	* tessaract
+	* markov chain
+	* lindenmayer systems
+	* soft body tetris
+	* matrix rain
+	* quine relay
+	* defragmenter
+*/
