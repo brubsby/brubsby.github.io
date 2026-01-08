@@ -35,4 +35,5 @@ export const animations = new ObjectSampler()
     .put("dla.js", 2)
     .put("physarum.js", 3)
     .put("raster.js", 3)
-    .put("reacdiff.js", 3);
+    .put("reacdiff.js", 3)
+    .put("fire.js", 3);
