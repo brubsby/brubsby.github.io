@@ -468,6 +468,16 @@ export var is_grid_offset_true = (grid, coord, offset) => {
   return grid[new_coord[0]][new_coord[1]];
 }
 
+export var smoothstep = (edge0, edge1, x) => {
+  x = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return x * x * (3 - 2 * x);
+}
+
+export var smootherstep = (edge0, edge1, x) => {
+  x = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
 export var sq_dist = (p1, p2) => {
   const dx = p1[0] - p2[0];
   const dy = p1[1] - p2[1];

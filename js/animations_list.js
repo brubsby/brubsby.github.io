@@ -41,7 +41,8 @@ export const animations_data = [
     { file: "fire.js", weight: 3, description: "doom-style fire" },
     { file: "percolation.js", weight: 2, description: "fluid seeping through a porous random grid" },
     { file: "adhesion.js", weight: 3, description: "differential adhesion cell sorting" },
-    { file: "moire.js", weight: 2, description: "ascii moire patterns" }
+    { file: "moire.js", weight: 2, description: "ascii moire patterns" },
+    { file: "rain.js", weight: 2, description: "rain" }
 ];
 
 export const animations = new ObjectSampler();
@@ -51,6 +52,7 @@ for (let i = 0; i < animations_data.length; i++) {
 
 
 /* here's some more ideas I'll probably get around to:
+	* snow
 	* pathfinding algorithms (a*, etc.)
 	* lattice boltzman method
 	* n-body gravity visualization
@@ -86,7 +88,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* inverted pendulum
 	* fourier epicycles
 	* maurer rose
-	* rain simulation
 	* tunnel effect
 	* nagel-schreckenberg traffic
 	* xylem
@@ -111,6 +112,7 @@ for (let i = 0; i < animations_data.length; i++) {
 	* lenia (continuous life)
 	* daisyworld
 	* canopy shyness
+	* hopf fibration
 */
 
 /* things that seem like I'd want to do them but I don't (maybe I just need to make them more interesting somehow):
