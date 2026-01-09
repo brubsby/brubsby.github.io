@@ -53,89 +53,88 @@ for (let i = 0; i < animations_data.length; i++) {
 
 
 /* here's some more ideas I'll probably get around to:
-	* snow
-	* pathfinding algorithms (a*, etc.)
-	* lattice boltzman method
-	* n-body gravity visualization
-	* double pendulum
-	* add turmites to langton
-	* add more ants to langton
-	* abelian sand pile (figure out how to do perfect rectangular grids)
-	* lots of strange attractors (with lissajous style animation)
-	* phyllotaxis
-	* waveform collapse
-	* biham–middleton–levine traffic model
-	* metaballs
-	* marching squares
-	* ising model
-	* add a database of game of life patterns to spawn in with
-	* wilmot's warehouse simulation
-	* maze generation (wilson's algorithm)
-	* water ripples
-	* auto playing tetris
-	* verlet integration (cloth/rope)
-	* wa-tor world (might be a subset of cyclic automata?)
-	* galton board
-	* spinning donut
-	* more triangle based meshes for raster.js
-	* chladni plates
-	* ant colony
-	* toothpick sequence
-	* plasma effect
-	* better mapgen
-	* better simplex 
-	* forest fire model
-	* brian's brain (can probably add to 2d_automata)
-	* inverted pendulum
-	* fourier epicycles
-	* maurer rose
-	* tunnel effect
-	* nagel-schreckenberg traffic
 	* xylem
 	* hyphae
-	* coupled map lattice
-	* turing machine / busy beaver
 	* sundial
-	* schelling's model of segregation
-	* differential line growth
-	* lennard-jones molecular dynamics
-	* ulam-warburton automaton
-	* spirograph
-	* belousov-zhabotinsky (bz) reaction
 	* rotozoom
-	* inverse kinematics
-	* stigmergic termites
-	* eden growth model (lichen/tumor growth)
-	* run and tumble chemotaxis
-	* sir/seir epidemic model
-	* cellular potts model
-	* kuramoto model (fireflies)
-	* lenia (continuous life)
+	* metaballs
+	* ant colony
 	* daisyworld
+	* spirograph
+	* ising model
+	* maurer rose
+	* phyllotaxis
+	* galton board
+	* better mapgen
+	* plasma effect
+	* tunnel effect
+	* water ripples
 	* canopy shyness
+	* chladni plates
 	* hopf fibration
+	* spinning donut
+	* better simplex 
+	* double pendulum
+	* marching squares
+	* forest fire model
+	* fourier epicycles
+	* inverted pendulum
+	* waveform collapse
+	* inverse kinematics
+	* toothpick sequence
+	* auto playing tetris
+	* coupled map lattice
+	* stigmergic termites
+	* cellular potts model
+	* add turmites to langton
+	* lattice boltzman method
+	* lenia (continuous life)
+	* sir/seir epidemic model
+	* add more ants to langton
+	* differential line growth
+	* ulam-warburton automaton
+	* run and tumble chemotaxis
+	* kuramoto model (fireflies)
+	* nagel-schreckenberg traffic
+	* n-body gravity visualization
+	* turing machine / busy beaver
+	* wilmot's warehouse simulation
+	* verlet integration (cloth/rope)
+	* lennard-jones molecular dynamics
+	* schelling's model of segregation
+	* pathfinding algorithms (a*, etc.)
+	* belousov-zhabotinsky (bz) reaction
+	* biham–middleton–levine traffic model
+	* maze generation (wilson's algorithm)
+	* eden growth model (lichen/tumor growth)
+	* more triangle based meshes for raster.js
+	* brian's brain (can probably add to 2d_automata)
+	* wa-tor world (might be a subset of cyclic automata?)
+	* add a database of game of life patterns to spawn in with
+	* lots of strange attractors (with lissajous style animation)
+	* abelian sand pile (figure out how to do perfect rectangular grids)
 */
 
 /* things that seem like I'd want to do them but I don't (maybe I just need to make them more interesting somehow):
-	* barnsley fern
 	* henon map
-	* dragon curve
-	* poisson disk sampling
-	* wireworld
-	* schotter homage
 	* starfield
-	* sorting algorithm
-	* ulam's spiral
 	* tessaract
-	* markov chain
-	* lindenmayer systems
-	* soft body tetris
+	* wireworld
+	* chaos game
 	* matrix rain
 	* quine relay
 	* defragmenter
+	* dragon curve
+	* markov chain
+	* barnsley fern
 	* poincare disk
-	* chaos game
-	* traveling salesman problem
+	* ulam's spiral
 	* penrose tiling
+	* schotter homage
+	* soft body tetris
 	* voronoi stipling
+	* sorting algorithm
+	* lindenmayer systems
+	* poisson disk sampling
+	* traveling salesman problem
 */
