@@ -913,7 +913,15 @@ export default async (this_animation) => {
       .put(named_rule("R4,C0,M1,S41..81,B41..81,NM", "Majority", "a stable rule by David Griffeath."), 2)
       .put(named_rule("R7,C0,M1,S113..225,B113..225,NM", "Majorly", "an expanding rule by David Griffeath."), 2)
       .put(named_rule("R10,C255,M1,S2..3,B3..3,NM", "ModernArt", "a chaotic rule by Charles A. Rockafellor."), 2)
-      .put(named_rule("R7,C0,M1,S100..200,B75..170,NM", "Waffle", "an expanding rule by Kellie Evans."), 2);
+      .put(named_rule("R7,C0,M1,S100..200,B75..170,NM", "Waffle", "an expanding rule by Kellie Evans."), 2)
+      .put(
+        named_rule(
+          "R1,C3,S,B2,NM",
+          "Brian's Brain",
+          "A 3-state cellular automaton by Brian Silverman. Off cells turn On if they have exactly 2 On neighbors. On cells always transition to a Dying state, and Dying cells transition to Off.",
+        ),
+        4,
+      );
 
     // Random standard Moore (Life-like) rule
     let b_bits = Math.floor(Math.random() * 256);
