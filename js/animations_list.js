@@ -24,7 +24,7 @@ export const animations_data = [
     { file: "sand.js", weight: 4, description: "falling sand" },
     { file: "fractal.js", weight: 4, description: "ascii based escape time fractal rendering engine" }, // includes mandelbrot, julia, and many more 
     { file: "1d_automata.js", weight: 2, description: "elementary cellular automata" },
-    { file: "2d_automata.js", weight: 6, description: "very large subset of all isotropic cellular automata" },
+    { file: "2d_automata.js", weight: 6, description: "practically every isotropic cellular automata" },
     { file: "langtons_ant.js", weight: 3, description: "langton's ant" },
     { file: "cyclic_ca.js", weight: 1, description: "cyclic cellular automata" },
     { file: "boids.js", weight: 3, description: "my boids" },
@@ -36,10 +36,11 @@ export const animations_data = [
     { file: "bytebeat.js", weight: 3, description: "bytebeat screensaver from o_c" },
     { file: "dla.js", weight: 2, description: "diffusion-limited aggregation" },
     { file: "physarum.js", weight: 3, description: "slime mold simulation" },
-    { file: "raster.js", weight: 3, description: "ascii rasterized uniform polyhedra" },
+    { file: "raster.js", weight: 3, description: "ascii rasterized uniform polyhedra via wythoff construction" },
     { file: "reacdiff.js", weight: 3, description: "grey-scott reaction-diffusion" },
     { file: "fire.js", weight: 3, description: "doom-style fire" },
-    { file: "percolation.js", weight: 2, description: "fluid seeping through a porous random grid" }
+    { file: "percolation.js", weight: 2, description: "fluid seeping through a porous random grid" },
+    { file: "adhesion.js", weight: 3, description: "differential adhesion cell sorting" }
 ];
 
 export const animations = new ObjectSampler();
@@ -66,7 +67,7 @@ for (let i = 0; i < animations_data.length; i++) {
 	* ising model
 	* add a database of game of life patterns to spawn in with
 	* wilmot's warehouse simulation
-	* maze generation
+	* maze generation (wilson's algorithm)
 	* water ripples
 	* auto playing tetris
 	* verlet integration (cloth/rope)
@@ -88,6 +89,28 @@ for (let i = 0; i < animations_data.length; i++) {
 	* rain simulation
 	* tunnel effect
 	* nagel-schreckenberg traffic
+	* xylem
+	* hyphae
+	* coupled map lattice
+	* turing machine / busy beaver
+	* sundial
+	* schelling's model of segregation
+	* differential line growth
+	* lennard-jones molecular dynamics
+	* ulam-warburton automaton
+	* spirograph
+	* belousov-zhabotinsky (bz) reaction
+	* rotozoom
+	* inverse kinematics
+	* stigmergic termites
+	* eden growth model (lichen/tumor growth)
+	* run and tumble chemotaxis
+	* sir/seir epidemic model
+	* cellular potts model
+	* kuramoto model (fireflies)
+	* lenia (continuous life)
+	* daisyworld
+	* canopy shyness
 */
 
 /* things that seem like I'd want to do them but I don't (maybe I just need to make them more interesting somehow):
@@ -110,4 +133,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* poincare disk
 	* chaos game
 	* traveling salesman problem
+	* penrose tiling
+	* voronoi stipling
 */
