@@ -24,7 +24,7 @@ export const animations_data = [
     { file: "sand.js", weight: 4, description: "falling sand" },
     { file: "fractal.js", weight: 4, description: "ascii based escape time fractal rendering engine" }, // includes mandelbrot, julia, and many more 
     { file: "1d_automata.js", weight: 2, description: "elementary cellular automata" },
-    { file: "2d_automata.js", weight: 6, description: "practically every isotropic cellular automata" },
+    { file: "2d_automata.js", weight: 6, description: "practically every isotropic cellular automata" }, // includes many named variants, e.g. brian's brain
     { file: "langtons_ant.js", weight: 3, description: "langton's ant" },
     { file: "cyclic_ca.js", weight: 1, description: "cyclic cellular automata" },
     { file: "boids.js", weight: 3, description: "my boids" },
@@ -39,6 +39,7 @@ export const animations_data = [
     { file: "raster.js", weight: 3, description: "ascii rasterized uniform polyhedra via wythoff construction" },
     { file: "reacdiff.js", weight: 3, description: "grey-scott reaction-diffusion" },
     { file: "fire.js", weight: 3, description: "doom-style fire" },
+    { file: "plasma.js", weight: 3, description: "classic plasma effect" },
     { file: "percolation.js", weight: 2, description: "fluid seeping through a porous random grid" },
     { file: "adhesion.js", weight: 3, description: "differential adhesion cell sorting" },
     { file: "moire.js", weight: 2, description: "ascii moire patterns" },
@@ -66,7 +67,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* maurer rose
 	* galton board
 	* better mapgen
-	* plasma effect
 	* tunnel effect
 	* water ripples
 	* canopy shyness
@@ -108,7 +108,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* maze generation (wilson's algorithm)
 	* eden growth model (lichen/tumor growth)
 	* more triangle based meshes for raster.js
-	* brian's brain (can probably add to 2d_automata)
 	* wa-tor world (might be a subset of cyclic automata?)
 	* add a database of game of life patterns to spawn in with
 	* lots of strange attractors (with lissajous style animation)
