@@ -43,7 +43,8 @@ export const animations_data = [
     { file: "adhesion.js", weight: 3, description: "differential adhesion cell sorting" },
     { file: "moire.js", weight: 2, description: "ascii moire patterns" },
     { file: "rain.js", weight: 2, description: "rain" },
-    { file: "snow.js", weight: 2, description: "snow" }
+    { file: "snow.js", weight: 2, description: "snow" },
+    { file: "phyllotaxis.js", weight: 2, description: "vogel's model of phyllotaxis" }
 ];
 
 export const animations = new ObjectSampler();
@@ -63,7 +64,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* spirograph
 	* ising model
 	* maurer rose
-	* phyllotaxis
 	* galton board
 	* better mapgen
 	* plasma effect
