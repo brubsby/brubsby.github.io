@@ -42,7 +42,8 @@ export const animations_data = [
     { file: "percolation.js", weight: 2, description: "fluid seeping through a porous random grid" },
     { file: "adhesion.js", weight: 3, description: "differential adhesion cell sorting" },
     { file: "moire.js", weight: 2, description: "ascii moire patterns" },
-    { file: "rain.js", weight: 2, description: "rain" }
+    { file: "rain.js", weight: 2, description: "rain" },
+    { file: "snow.js", weight: 2, description: "snow" }
 ];
 
 export const animations = new ObjectSampler();
