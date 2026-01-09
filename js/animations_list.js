@@ -40,7 +40,8 @@ export const animations_data = [
     { file: "reacdiff.js", weight: 3, description: "grey-scott reaction-diffusion" },
     { file: "fire.js", weight: 3, description: "doom-style fire" },
     { file: "percolation.js", weight: 2, description: "fluid seeping through a porous random grid" },
-    { file: "adhesion.js", weight: 3, description: "differential adhesion cell sorting" }
+    { file: "adhesion.js", weight: 3, description: "differential adhesion cell sorting" },
+    { file: "moire.js", weight: 2, description: "ascii moire patterns" }
 ];
 
 export const animations = new ObjectSampler();
@@ -52,7 +53,6 @@ for (let i = 0; i < animations_data.length; i++) {
 /* here's some more ideas I'll probably get around to:
 	* pathfinding algorithms (a*, etc.)
 	* lattice boltzman method
-	* moire patterns
 	* n-body gravity visualization
 	* double pendulum
 	* add turmites to langton
