@@ -46,7 +46,8 @@ export const animations_data = [
     { file: "rain.js", weight: 2, description: "rain" },
     { file: "snow.js", weight: 2, description: "snow" },
     { file: "phyllotaxis.js", weight: 2, description: "vogel's model of phyllotaxis" },
-    { file: "spirograph.js", weight: 2, description: "hypotrochoids and epitrochoids" }
+    { file: "spirograph.js", weight: 2, description: "hypotrochoids and epitrochoids" },
+    { file: "maurer_rose.js", weight: 2, description: "maurer roses" }
 ];
 
 export const animations = new ObjectSampler();
@@ -64,7 +65,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* ant colony
 	* daisyworld
 	* ising model
-	* maurer rose
 	* galton board
 	* better mapgen
 	* tunnel effect
