@@ -45,7 +45,8 @@ export const animations_data = [
     { file: "moire.js", weight: 2, description: "ascii moire patterns" },
     { file: "rain.js", weight: 2, description: "rain" },
     { file: "snow.js", weight: 2, description: "snow" },
-    { file: "phyllotaxis.js", weight: 2, description: "vogel's model of phyllotaxis" }
+    { file: "phyllotaxis.js", weight: 2, description: "vogel's model of phyllotaxis" },
+    { file: "spirograph.js", weight: 2, description: "hypotrochoids and epitrochoids" }
 ];
 
 export const animations = new ObjectSampler();
@@ -62,7 +63,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* metaballs
 	* ant colony
 	* daisyworld
-	* spirograph
 	* ising model
 	* maurer rose
 	* galton board

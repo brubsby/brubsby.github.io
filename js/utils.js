@@ -448,6 +448,10 @@ export var getUrlParameter = function getUrlParameter(sParam) {
     }
   }
 };
+export var gcd = (a, b) => {
+  return b ? gcd(b, a % b) : a;
+}
+
 export var isInt = (a) => { return (typeof a==='number' && (a%1)===0); };
 export var roundFloat = (a, precision = 2) => {
   if (a === null || a === undefined) return "";
@@ -466,6 +470,30 @@ export var is_grid_offset_in_bounds = (grid, coord, offset) => {
 export var is_grid_offset_true = (grid, coord, offset) => {
   var new_coord = get_coord_offset(coord, offset);
   return grid[new_coord[0]][new_coord[1]];
+}
+
+export var render_grid = (grid, char_func) => {
+  let text = "";
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r].length; c++) {
+      text += char_func(grid[r][c], r, c);
+    }
+    text += "\n";
+  }
+  return text;
+}
+
+export var render_density_grid = (grid) => {
+  let text = "";
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[r].length; c++) {
+      const d = grid[r][c];
+      const char_idx = Math.min(Math.floor(d), density_chars.length - 1);
+      text += density_chars[char_idx];
+    }
+    text += "\n";
+  }
+  return text;
 }
 
 export var smoothstep = (edge0, edge1, x) => {

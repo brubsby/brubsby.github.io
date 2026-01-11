@@ -1,8 +1,4 @@
-import { tooltip, density_chars } from "../utils.js";
-
-function gcd(a, b) {
-  return b ? gcd(b, a % b) : a;
-}
+import { tooltip, density_chars, gcd, render_grid, render_density_grid } from "../utils.js";
 
 export default (this_animation) => {
   if (window.frame_count === 0) {
@@ -86,13 +82,7 @@ export default (this_animation) => {
     }
 
     // Render
-    let text = "";
-    for (let r = 0; r < window.rows; r++) {
-      for (let c = 0; c < window.columns; c++) {
-        text += grid[r][c] ? "o" : ".";
-      }
-      text += "\n";
-    }
+    const text = render_grid(grid, (val) => val ? "o" : ".");
     window.canvas.text(text);
 
   } else {
@@ -129,21 +119,9 @@ export default (this_animation) => {
     // Render grid
     let text = "";
     if (is_rational) {
-      for (let r = 0; r < window.rows; r++) {
-        for (let c = 0; c < window.columns; c++) {
-          text += window.grid[r][c] ? "o" : ".";
-        }
-        text += "\n";
-      }
+      text = render_grid(window.grid, (val) => val ? "o" : ".");
     } else {
-      for (let r = 0; r < window.rows; r++) {
-        for (let c = 0; c < window.columns; c++) {
-          const d = window.grid[r][c];
-          const char_idx = Math.min(d, density_chars.length - 1);
-          text += density_chars[char_idx];
-        }
-        text += "\n";
-      }
+      text = render_density_grid(window.grid);
     }
     window.canvas.text(text);
   }
