@@ -20,65 +20,109 @@ export default (this_animation) => {
     '─', '┴', '┬', '┼'
   ];
 
-  // Initialize state
-  if (
-    !window.toothpick_state ||
-    window.toothpick_state.window_rows !== window.rows ||
-    window.toothpick_state.cols !== window.columns
-  ) {
-    const rows = window.rows;
-    const cols = window.columns;
-    
-    const startR = Math.floor(rows / 2);
-    const startC = Math.floor(cols / 2);
-    
-    const grid = new Uint8Array(rows * cols).fill(0);
-    
-    // Initial toothpick: Vertical
-    // Centered at startR, startC
-    // Points: (startR - Kv, startC) to (startR + Kv, startC)
-    
-    const initialTips = [];
-    
-    // Draw initial vertical toothpick
-    // Vertical line connects Up (1) and Down (2)
-    // Top tip (startR - Kv): Connected Down (2)
-    // Bottom tip (startR + Kv): Connected Up (1)
-    // Middle: Connected Up and Down (3)
-    
-    for (let r = startR - Kv; r <= startR + Kv; r++) {
-       if (r >= 0 && r < rows) {
-           const idx = r * cols + startC;
-           let mask = 0;
-           if (r > startR - Kv) mask |= 1; // Up connection
-           if (r < startR + Kv) mask |= 2; // Down connection
-           
-           grid[idx] |= mask;
-           setCharAtIndex(window.canvas, get_canvas_index(cols, startC, r), CHAR_MAP[grid[idx]]);
-       }
-    }
-    
-    // Add tips
-    // dir: 0 for Vertical (meaning this tip is end of a V-line, needs H-growth), 1 for Horizontal
-    initialTips.push({ r: startR - Kv, c: startC, dir: 1 }); 
-    initialTips.push({ r: startR + Kv, c: startC, dir: 1 }); 
-
-    window.toothpick_state = {
-      window_rows: rows,
-      rows: rows,
-      cols: cols,
-      grid: grid,
-      tips: initialTips,
-      generation: 1,
-      toothpick_count: 1
-    };
-    
-    tooltip(`toothpick sequence<br>gen: 1`);
-  }
-
-  const state = window.toothpick_state;
+    // Initialize state
+    if (
+      !window.toothpick_state ||
+      window.toothpick_state.window_rows !== window.rows ||
+      window.toothpick_state.cols !== window.columns
+    ) {
+      const rows = window.rows;
+      const cols = window.columns;
+      
+      window.sub_animation_size = 5;
+      let mode = window.sub_animation_index;
+      if (isNaN(mode) || mode < 0 || mode >= 5) {
+          mode = Math.floor(Math.random() * 5);
+      }
   
-  if (state.tips.length > 0) {
+      let startVertical = Math.random() < 0.5;
+      let startR, startC;
+  
+      if (mode === 0) {
+          startVertical = true;
+          startR = Math.floor(rows / 2);
+          startC = Math.floor(cols / 2);
+      } else if (mode === 1) {
+          startVertical = false;
+          startR = Math.floor(rows / 2);
+          startC = Math.floor(cols / 2);
+      } else if (mode === 2 || mode === 3) {
+          const edge = Math.floor(Math.random() * 4); // 0:T, 1:B, 2:L, 3:R
+          const atEdgeCenter = (mode === 2);
+          if (edge === 0) { // Top
+              startR = 0;
+              startC = atEdgeCenter ? Math.floor(cols / 2) : Math.floor(Math.random() * cols);
+          } else if (edge === 1) { // Bottom
+              startR = rows - 1;
+              startC = atEdgeCenter ? Math.floor(cols / 2) : Math.floor(Math.random() * cols);
+          } else if (edge === 2) { // Left
+              startR = atEdgeCenter ? Math.floor(rows / 2) : Math.floor(Math.random() * rows);
+              startC = 0;
+          } else { // Right
+              startR = atEdgeCenter ? Math.floor(rows / 2) : Math.floor(Math.random() * rows);
+              startC = cols - 1;
+          }
+      } else { // mode 4
+          startR = Math.floor(Math.random() * rows);
+          startC = Math.floor(Math.random() * cols);
+      }
+      
+      const grid = new Uint8Array(rows * cols).fill(0);
+      
+      // Initial toothpick: Vertical or Horizontal
+      const initialTips = [];
+      
+      if (startVertical) {
+          // Draw initial vertical toothpick
+          for (let r = startR - Kv; r <= startR + Kv; r++) {
+             if (r >= 0 && r < rows) {
+                 const idx = r * cols + startC;
+                 let mask = 0;
+                 if (r > startR - Kv) mask |= 1; // Up connection
+                 if (r < startR + Kv) mask |= 2; // Down connection
+                 
+                 grid[idx] |= mask;
+                 setCharAtIndex(window.canvas, get_canvas_index(cols, startC, r), CHAR_MAP[grid[idx]]);
+             }
+          }
+          // Add tips (grow horizontally)
+          initialTips.push({ r: startR - Kv, c: startC, dir: 1 }); 
+          initialTips.push({ r: startR + Kv, c: startC, dir: 1 }); 
+          
+      } else {
+          // Draw initial horizontal toothpick
+          for (let c = startC - Kh; c <= startC + Kh; c++) {
+             if (c >= 0 && c < cols) {
+                 const idx = startR * cols + c;
+                 let mask = 0;
+                 if (c > startC - Kh) mask |= 4; // Left connection
+                 if (c < startC + Kh) mask |= 8; // Right connection
+                 
+                 grid[idx] |= mask;
+                 setCharAtIndex(window.canvas, get_canvas_index(cols, c, startR), CHAR_MAP[grid[idx]]);
+             }
+          }
+          // Add tips (grow vertically)
+          initialTips.push({ r: startR, c: startC - Kh, dir: 0 }); 
+          initialTips.push({ r: startR, c: startC + Kh, dir: 0 }); 
+      }
+  
+      window.toothpick_state = {
+        window_rows: rows,
+        rows: rows,
+        cols: cols,
+        grid: grid,
+        tips: initialTips,
+        generation: 1,
+        toothpick_count: 1,
+        mode: mode
+      };
+      
+          const modes_short = ['v', 'h', 'ec', 'er', 'r'];
+          tooltip(`toothpick<br>m=${modes_short[mode]} g=1 c=1`, mode);
+        }
+      
+        const state = window.toothpick_state;  if (state.tips.length > 0) {
       const nextGenCandidates = new Map(); // key: "r,c" -> {r, c, dir, count, oldCollision}
       
       // 1. Analyze all tips and potential new endpoints
@@ -174,7 +218,8 @@ export default (this_animation) => {
       state.tips = validTips;
       state.generation++;
       
-      tooltip(`toothpick sequence<br>gen: ${state.generation}<br>cnt: ${state.toothpick_count}`);
+      const modes_short = ['v', 'h', 'ec', 'er', 'r'];
+      tooltip(`toothpick<br>m=${modes_short[state.mode]} g=${state.generation} c=${state.toothpick_count}`, state.mode);
   }
 
   // Next frame
