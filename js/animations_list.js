@@ -47,7 +47,8 @@ export const animations_data = [
     { file: "phyllotaxis.js", weight: 2, description: "vogel's model of phyllotaxis" },
     { file: "spirograph.js", weight: 2, description: "hypotrochoids and epitrochoids" },
     { file: "maurer.js", weight: 2, description: "maurer roses" },
-    { file: "sandpile.js", weight: 3, description: "abelian sand pile" }
+    { file: "sandpile.js", weight: 3, description: "abelian sand pile" },
+    { file: "metaballs.js", weight: 3, description: "metaballs" }
 ];
 
 export const animations = new ObjectSampler();
@@ -61,7 +62,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* hyphae
 	* sundial
 	* rotozoom
-	* metaballs
 	* ant colony
 	* daisyworld
 	* ising model

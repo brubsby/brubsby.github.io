@@ -52,7 +52,7 @@ export default (this_animation) => {
       window.bounces++;
     } else if (window.position_pixels[1] > height - ball_radius_pixels) {
       window.velocity_pixels[1] *= -1;
-      window.position_pixels[0] -= 2 * (window.position_pixels[1] + ball_radius_pixels - height);
+      window.position_pixels[1] -= 2 * (window.position_pixels[1] + ball_radius_pixels - height);
       window.bounces++;
     }
   } else {
