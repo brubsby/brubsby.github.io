@@ -916,6 +916,14 @@ export default async (this_animation) => {
       .put(named_rule("R7,C0,M1,S100..200,B75..170,NM", "Waffle", "an expanding rule by Kellie Evans."), 2)
       .put(
         named_rule(
+          "R1,C2,S0..4,B1,NN",
+          "Ulam-Warburton",
+          "A growth-only rule on the von Neumann neighborhood where cells are born if they have exactly one neighbor.",
+        ),
+        4,
+      )
+      .put(
+        named_rule(
           "R1,C3,S,B2,NM",
           "Brian's Brain",
           "A 3-state cellular automaton by Brian Silverman. Off cells turn On if they have exactly 2 On neighbors. On cells always transition to a Dying state, and Dying cells transition to Off.",

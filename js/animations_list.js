@@ -24,7 +24,7 @@ export const animations_data = [
     { file: "sand.js", weight: 4, description: "falling sand" },
     { file: "fractal.js", weight: 4, description: "ascii based escape time fractal rendering engine" }, // includes mandelbrot, julia, and many more 
     { file: "eca.js", weight: 2, description: "elementary cellular automata" },
-    { file: "automata.js", weight: 6, description: "practically every isotropic cellular automata" }, // includes many named variants, e.g. brian's brain
+    { file: "automata.js", weight: 6, description: "practically every isotropic cellular automata" }, // includes many named variants, e.g. brian's brain, ulam warburton
     { file: "langton.js", weight: 3, description: "langton's ant" },
     { file: "boids.js", weight: 3, description: "my boids" },
     { file: "gas.js", weight: 3, description: "ideal gas simulation" },
@@ -92,7 +92,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* sir/seir epidemic model
 	* add more ants to langton
 	* differential line growth
-	* ulam-warburton automaton
 	* run and tumble chemotaxis
 	* kuramoto model (fireflies)
 	* nagel-schreckenberg traffic
