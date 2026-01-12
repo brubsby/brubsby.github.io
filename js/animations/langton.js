@@ -39,7 +39,7 @@ export default (this_animation) => {
         }
         
         var rule_index = rulesets.index_of(window.ant_rule);
-        tooltip(`langton's ant<br>${window.ant_rule}`, rule_index);
+        tooltip(`langton<br>${window.ant_rule}`, rule_index);
         
         // Init Ant
         window.ant = {

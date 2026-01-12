@@ -8,7 +8,7 @@ export default (this_animation) => {
   var growth_per_frame = Math.floor(window.constant_random_values[0] * window.animation_speed_multiplier * 5 + window.frame_count / 100);
   if (window.frame_count == 0) {
     var number_points = Math.floor(Math.min(Math.random(), Math.random(), Math.random()) * 5) + 2;
-    tooltip(`bresenham bounce<br>p=${number_points} g=${is_growth ? 'T' : 'F'} c=${is_connected ? 'T' : 'F'} f=${growth_per_frame}`);
+    tooltip(`bresenham<br>p=${number_points} g=${is_growth ? 'T' : 'F'} c=${is_connected ? 'T' : 'F'} f=${growth_per_frame}`);
     window.bounces = 0;
     window.line_points = [];
     window.position_pixels = [];

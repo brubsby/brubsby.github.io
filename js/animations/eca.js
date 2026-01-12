@@ -36,7 +36,7 @@ export default (this_animation) => {
               window.rules = rulesets.sample();
             }
             var rules_index = rulesets.index_of(window.rules);
-            tooltip(`1d automata<br>rule ${window.rules["dec"]}`, rules_index);    console.log("Rule " + window.rules["dec"]);
+            tooltip(`eca<br>rule ${window.rules["dec"]}`, rules_index);    console.log("Rule " + window.rules["dec"]);
     window.tile_rules = [".", "o"];
     var RuleLookup = class {
       constructor(wolfram_rule) {

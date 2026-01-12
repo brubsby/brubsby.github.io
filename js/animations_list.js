@@ -8,24 +8,24 @@ export const animations_data = [
     { file: "saw.js", weight: 2, description: "self-avoiding walk" },
     { file: "rndfill.js", weight: 1, description: "random fill" },
     { file: "eratosthenes.js", weight: 2, description: "sieve of eratosthenes" },
-    { file: "knightstour.js", weight: 2, description: "knight's tour algorithm" },
+    { file: "knight.js", weight: 2, description: "knight's tour algorithm" },
     { file: "textgen.js", weight: 3, description: "text being written" },
     { file: "tenprint.js", weight: 3, description: "10 PRINT CHR$(205.5+RND(1)); : GOTO 10" },
     { file: "circ.js", weight: 1, description: "a simple circle" },
     { file: "tris.js", weight: 1, description: "two simple triangles" },
     { file: "heart.js", weight: 0.1, description: "<3 (for my wife)" },
-    { file: "simplex_growth.js", weight: 1.25, description: "simplex noise" },
+    { file: "simplex.js", weight: 1.25, description: "simplex noise" },
     { file: "mapgen.js", weight: 2, description: "ascii map generation" },
     { file: "dvdball.js", weight: 1, description: "dvd logo type beat" },
     { file: "dog.js", weight: 0.75, description: "my dog :)" },
-    { file: "bresenham_bounce.js", weight: 1.5, description: "bresenham lines bouncing around" },
-    { file: "flow_fields.js", weight: 3, description: "particles in simplex flow fields" },
+    { file: "bresenham.js", weight: 1.5, description: "bresenham lines bouncing around" },
+    { file: "flow.js", weight: 3, description: "particles in simplex flow fields" },
     { file: "clock.js", weight: 1, description: "functional ascii clock" },
     { file: "sand.js", weight: 4, description: "falling sand" },
     { file: "fractal.js", weight: 4, description: "ascii based escape time fractal rendering engine" }, // includes mandelbrot, julia, and many more 
-    { file: "1d_automata.js", weight: 2, description: "elementary cellular automata" },
-    { file: "2d_automata.js", weight: 6, description: "practically every isotropic cellular automata" }, // includes many named variants, e.g. brian's brain
-    { file: "langtons_ant.js", weight: 3, description: "langton's ant" },
+    { file: "eca.js", weight: 2, description: "elementary cellular automata" },
+    { file: "automata.js", weight: 6, description: "practically every isotropic cellular automata" }, // includes many named variants, e.g. brian's brain
+    { file: "langton.js", weight: 3, description: "langton's ant" },
     { file: "cyclic_ca.js", weight: 1, description: "cyclic cellular automata" },
     { file: "boids.js", weight: 3, description: "my boids" },
     { file: "gas.js", weight: 3, description: "ideal gas simulation" },
@@ -47,7 +47,7 @@ export const animations_data = [
     { file: "snow.js", weight: 2, description: "snow" },
     { file: "phyllotaxis.js", weight: 2, description: "vogel's model of phyllotaxis" },
     { file: "spirograph.js", weight: 2, description: "hypotrochoids and epitrochoids" },
-    { file: "maurer_rose.js", weight: 2, description: "maurer roses" }
+    { file: "maurer.js", weight: 2, description: "maurer roses" }
 ];
 
 export const animations = new ObjectSampler();

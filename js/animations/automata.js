@@ -1068,7 +1068,7 @@ export default async (this_animation) => {
       link_rule_str = ltl_canon + suffix_str;
     }
 
-    tooltip(`2d automata<br>${display_str}`, rules_index, {
+    tooltip(`automata<br>${display_str}`, rules_index, {
       rule: link_rule_str,
     });
 

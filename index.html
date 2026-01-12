@@ -203,9 +203,9 @@
   if (rule_param) {
     window.forced_rule_string = rule_param;
     if (isNaN(animation_index)) {
-       // Force 2d_automata.js if rule is present and no specific animation is requested
-       // We find the index for 2d_automata.js to be consistent
-       var life_idx = window.animations.index_of("2d_automata.js");
+       // Force automata.js if rule is present and no specific animation is requested
+       // We find the index for automata.js to be consistent
+       var life_idx = window.animations.index_of("automata.js");
        if (life_idx !== -1) {
          animation_index = life_idx;
        }

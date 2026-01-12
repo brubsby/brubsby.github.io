@@ -25,7 +25,7 @@ export default async (this_animation) => {
       sampler_index = window.random_edge_point_sampler.index_of(sampled_func);
     }
     window.current_sampler_index = sampler_index;
-    tooltip(`flow fields<br>p=${roundFloat(expected_value_new_particles_per_frame)} a=${acceleration_or_velocity ? 'T' : 'F'}`, sampler_index);
+    tooltip(`flow<br>p=${roundFloat(expected_value_new_particles_per_frame)} a=${acceleration_or_velocity ? 'T' : 'F'}`, sampler_index);
   }
   var simplex_frequency = window.animation_speed_multiplier * -0.0001635 + 0.00237;
   var simplex_amplitude = 1;

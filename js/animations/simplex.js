@@ -4,7 +4,7 @@ export default async (this_animation) => {
   var simplex_frequency = window.animation_speed_multiplier * -0.0001635 + 0.00237;
   var simplex_amplitude = 1;
   var octaves = Math.floor(window.constant_random_values[0] * Math.min(window.animation_speed_multiplier - 1, 3)) + 1;
-  first_frame_tooltip(`simplex growth<br>oct=${octaves}`)
+  first_frame_tooltip(`simplex<br>oct=${octaves}`)
   await init_simplex_noise();
   init_flat_index_list(window.rows, window.columns, (index1, index2) => {
     var coords1 = get_pixel_coords(window.columns, index1, window.char_width, window.char_height);

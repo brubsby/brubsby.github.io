@@ -6,7 +6,7 @@ import {
 } from "../utils.js";
 
 export default (this_animation) => {
-  first_frame_tooltip("knight's tour");
+  first_frame_tooltip("knight");
 
   const check_solvability = (r, c, sr, sc) => {
     const min = Math.min(r, c);
@@ -59,7 +59,7 @@ export default (this_animation) => {
       startC,
     );
     if (!isSolvable) {
-      tooltip("knight's tour (impossible)");
+      tooltip("knight (impossible)");
     }
 
     window.knight_state = {

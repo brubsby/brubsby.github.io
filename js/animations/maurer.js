@@ -24,7 +24,7 @@ export default (this_animation) => {
       window.grid[r] = new Array(window.columns).fill(0);
     }
     
-    tooltip(`maurer rose<br>n=${n} d=${d}`, 0);
+    tooltip(`maurer<br>n=${n} d=${d}`, 0);
   }
 
   const { n, d } = window.maurer;
