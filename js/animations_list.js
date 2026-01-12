@@ -46,7 +46,8 @@ export const animations_data = [
     { file: "snow.js", weight: 2, description: "snow" },
     { file: "phyllotaxis.js", weight: 2, description: "vogel's model of phyllotaxis" },
     { file: "spirograph.js", weight: 2, description: "hypotrochoids and epitrochoids" },
-    { file: "maurer.js", weight: 2, description: "maurer roses" }
+    { file: "maurer.js", weight: 2, description: "maurer roses" },
+    { file: "sandpile.js", weight: 3, description: "abelian sand pile" }
 ];
 
 export const animations = new ObjectSampler();
@@ -110,7 +111,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* wa-tor world (might be a subset of cyclic automata?)
 	* add a database of game of life patterns to spawn in with
 	* lots of strange attractors (with lissajous style animation)
-	* abelian sand pile (figure out how to do perfect rectangular grids)
 */
 
 /* things that seem like I'd want to do them but I don't (maybe I just need to make them more interesting somehow):
