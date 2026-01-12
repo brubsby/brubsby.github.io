@@ -67,22 +67,18 @@ for (let i = 0; i < animations_data.length; i++) {
 	* daisyworld
 	* ising model
 	* galton board
-	* better mapgen
 	* tunnel effect
 	* water ripples
 	* canopy shyness
 	* chladni plates
 	* hopf fibration
 	* spinning donut
-	* better simplex 
 	* double pendulum
 	* marching squares
-	* forest fire model
 	* fourier epicycles
 	* inverted pendulum
 	* waveform collapse
 	* inverse kinematics
-	* toothpick sequence
 	* auto playing tetris
 	* coupled map lattice
 	* stigmergic termites
@@ -132,6 +128,7 @@ for (let i = 0; i < animations_data.length; i++) {
 	* soft body tetris
 	* voronoi stipling
 	* sorting algorithm
+	* forest fire model
 	* lindenmayer systems
 	* poisson disk sampling
 	* traveling salesman problem
