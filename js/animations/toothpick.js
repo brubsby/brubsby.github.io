@@ -1,73 +1,67 @@
 import {
   tooltip,
-  setCharAtIndex,
-  get_canvas_index,
+  setHalfPixel,
 } from "../utils.js";
 
 export default (this_animation) => {
   // Config
-  const K = 2; // Half-length of toothpick. Total length = 2*K + 1
-  const VAL_INCREMENT = 10;
+  const K = 2; // Half-length of toothpick.
+  // With double vertical resolution (setHalfPixel), pixels are roughly square.
+  // H-line length = 2K+1 columns.
+  // V-line length = 2K+1 half-rows.
+  // Visual physical length is roughly equal.
   
+  const HALF_PIXEL_RULES = ['.', '▄', '▀', '█'];
+
   // Initialize state
   if (
     !window.toothpick_state ||
-    window.toothpick_state.rows !== window.rows ||
+    window.toothpick_state.window_rows !== window.rows ||
     window.toothpick_state.cols !== window.columns
   ) {
-    const startR = Math.floor(window.rows / 2);
-    const startC = Math.floor(window.columns / 2);
+    // Virtual rows = window.rows * 2
+    const vRows = window.rows * 2;
+    const vCols = window.columns;
     
-    const grid = new Uint8Array(window.rows * window.columns).fill(0);
-    const CHAR_V = "|";
-    const CHAR_H = "-";
-    const CHAR_CROSS = "+";
+    const startR = Math.floor(vRows / 2);
+    const startC = Math.floor(vCols / 2);
+    
+    const grid = new Uint8Array(vRows * vCols).fill(0);
     
     // Initial toothpick: Vertical
     // Centered at startR, startC
     // Points: (startR - K, startC) to (startR + K, startC)
-    // Tips: Top and Bottom
     
     const initialTips = [];
     
     // Draw initial vertical toothpick
     for (let r = startR - K; r <= startR + K; r++) {
-       if (r >= 0 && r < window.rows) {
-           const idx = r * window.columns + startC;
-           // 1 for vertical, 2 for horizontal. 3 for cross?
-           // Actually just store direction mask: 1=V, 2=H
+       if (r >= 0 && r < vRows) {
+           const idx = r * vCols + startC;
            grid[idx] |= 1; 
-           setCharAtIndex(window.canvas, get_canvas_index(window.columns, startC, r), CHAR_V);
+           setHalfPixel(window.canvas, startC, r, true, HALF_PIXEL_RULES);
        }
     }
     
     // Add tips
-    // Tip format: { r, c, dir }
     // dir: 0 for Vertical (meaning this tip is end of a V-line, needs H-growth), 1 for Horizontal
-    // Wait, if it's a V-line, growth must be H.
-    initialTips.push({ r: startR - K, c: startC, dir: 1 }); // Top tip, needs H growth
-    initialTips.push({ r: startR + K, c: startC, dir: 1 }); // Bottom tip, needs H growth
+    initialTips.push({ r: startR - K, c: startC, dir: 1 }); 
+    initialTips.push({ r: startR + K, c: startC, dir: 1 }); 
 
     window.toothpick_state = {
-      rows: window.rows,
-      cols: window.columns,
+      window_rows: window.rows,
+      rows: vRows,
+      cols: vCols,
       grid: grid,
       tips: initialTips,
       generation: 1,
-      toothpick_count: 1,
-      chars: { v: CHAR_V, h: CHAR_H, x: CHAR_CROSS }
+      toothpick_count: 1
     };
     
     tooltip(`toothpick sequence<br>gen: 1`);
   }
 
   const state = window.toothpick_state;
-  const chars = state.chars;
-  
-  // Process one generation per frame (or slowed down)
-  // Since it grows exponentially, maybe limit speed?
-  // Let's do 1 generation every few frames?
-  // Or just 1 gen per call.
   
   if (state.tips.length > 0) {
       const nextGenCandidates = new Map(); // key: "r,c" -> {r, c, dir, count, oldCollision}
@@ -76,14 +70,13 @@ export default (this_animation) => {
       for (const tip of state.tips) {
           const r = tip.r;
           const c = tip.c;
-          const dir = tip.dir; // 1 = Horizontal, 0 = Vertical
+          const dir = tip.dir; 
           
           let dr = 0; 
           let dc = 0;
           if (dir === 1) dc = 1; else dr = 1;
 
           // Check if endpoints collide with OLD grid
-          // Tips at +/- K
           const endpoints = [
              { r: r - K * dr, c: c - K * dc },
              { r: r + K * dr, c: c + K * dc }
@@ -128,14 +121,7 @@ export default (this_animation) => {
                   
                   state.grid[idx] |= mask;
                   
-                  // Update canvas
-                  let val = state.grid[idx];
-                  let char = " ";
-                  if (val === 3) char = chars.x;
-                  else if (val === 2) char = chars.h;
-                  else if (val === 1) char = chars.v;
-                  
-                  setCharAtIndex(window.canvas, get_canvas_index(state.cols, nc, nr), char);
+                  setHalfPixel(window.canvas, nc, nr, true, HALF_PIXEL_RULES);
               }
           }
           state.toothpick_count++;
@@ -157,7 +143,6 @@ export default (this_animation) => {
   }
 
   // Next frame
-  // Slow down slightly to make it visible
   setTimeout(() => {
     requestAnimationFrame(this_animation.bind(null, this_animation));
   }, 100); 
