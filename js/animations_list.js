@@ -48,7 +48,8 @@ export const animations_data = [
     { file: "spirograph.js", weight: 2, description: "hypotrochoids and epitrochoids" },
     { file: "maurer.js", weight: 2, description: "maurer roses" },
     { file: "sandpile.js", weight: 3, description: "abelian sand pile" },
-    { file: "metaballs.js", weight: 3, description: "metaballs" }
+    { file: "metaballs.js", weight: 3, description: "metaballs" },
+    { file: "toothpick.js", weight: 2, description: "toothpick sequence" }
 ];
 
 export const animations = new ObjectSampler();
