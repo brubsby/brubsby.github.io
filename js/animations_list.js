@@ -26,7 +26,6 @@ export const animations_data = [
     { file: "eca.js", weight: 2, description: "elementary cellular automata" },
     { file: "automata.js", weight: 6, description: "practically every isotropic cellular automata" }, // includes many named variants, e.g. brian's brain
     { file: "langton.js", weight: 3, description: "langton's ant" },
-    { file: "cyclic_ca.js", weight: 1, description: "cyclic cellular automata" },
     { file: "boids.js", weight: 3, description: "my boids" },
     { file: "gas.js", weight: 3, description: "ideal gas simulation" },
     { file: "voronoi.js", weight: 3, description: "voronoi diagrams" },
