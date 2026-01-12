@@ -1,17 +1,24 @@
 import {
   tooltip,
-  setHalfPixel,
+  setCharAtIndex,
+  get_canvas_index
 } from "../utils.js";
 
 export default (this_animation) => {
   // Config
-  const K = 2; // Half-length of toothpick.
-  // With double vertical resolution (setHalfPixel), pixels are roughly square.
-  // H-line length = 2K+1 columns.
-  // V-line length = 2K+1 half-rows.
-  // Visual physical length is roughly equal.
+  const Kv = 1; // Vertical half-length (Length = 3)
+  const Kh = 2; // Horizontal half-length (Length = 5)
+  // With char aspect ratio ~1:2 (W:H), 
+  // V-length 3 chars = 3 units height
+  // H-length 5 chars = 2.5 units width (roughly)
   
-  const HALF_PIXEL_RULES = ['.', '▄', '▀', '█'];
+  // Bitmask: 1=Up, 2=Down, 4=Left, 8=Right
+  const CHAR_MAP = [
+    ' ', '│', '│', '│', 
+    '─', '┘', '┐', '┤', 
+    '─', '└', '┌', '├', 
+    '─', '┴', '┬', '┼'
+  ];
 
   // Initialize state
   if (
@@ -19,39 +26,47 @@ export default (this_animation) => {
     window.toothpick_state.window_rows !== window.rows ||
     window.toothpick_state.cols !== window.columns
   ) {
-    // Virtual rows = window.rows * 2
-    const vRows = window.rows * 2;
-    const vCols = window.columns;
+    const rows = window.rows;
+    const cols = window.columns;
     
-    const startR = Math.floor(vRows / 2);
-    const startC = Math.floor(vCols / 2);
+    const startR = Math.floor(rows / 2);
+    const startC = Math.floor(cols / 2);
     
-    const grid = new Uint8Array(vRows * vCols).fill(0);
+    const grid = new Uint8Array(rows * cols).fill(0);
     
     // Initial toothpick: Vertical
     // Centered at startR, startC
-    // Points: (startR - K, startC) to (startR + K, startC)
+    // Points: (startR - Kv, startC) to (startR + Kv, startC)
     
     const initialTips = [];
     
     // Draw initial vertical toothpick
-    for (let r = startR - K; r <= startR + K; r++) {
-       if (r >= 0 && r < vRows) {
-           const idx = r * vCols + startC;
-           grid[idx] |= 1; 
-           setHalfPixel(window.canvas, startC, r, true, HALF_PIXEL_RULES);
+    // Vertical line connects Up (1) and Down (2)
+    // Top tip (startR - Kv): Connected Down (2)
+    // Bottom tip (startR + Kv): Connected Up (1)
+    // Middle: Connected Up and Down (3)
+    
+    for (let r = startR - Kv; r <= startR + Kv; r++) {
+       if (r >= 0 && r < rows) {
+           const idx = r * cols + startC;
+           let mask = 0;
+           if (r > startR - Kv) mask |= 1; // Up connection
+           if (r < startR + Kv) mask |= 2; // Down connection
+           
+           grid[idx] |= mask;
+           setCharAtIndex(window.canvas, get_canvas_index(cols, startC, r), CHAR_MAP[grid[idx]]);
        }
     }
     
     // Add tips
     // dir: 0 for Vertical (meaning this tip is end of a V-line, needs H-growth), 1 for Horizontal
-    initialTips.push({ r: startR - K, c: startC, dir: 1 }); 
-    initialTips.push({ r: startR + K, c: startC, dir: 1 }); 
+    initialTips.push({ r: startR - Kv, c: startC, dir: 1 }); 
+    initialTips.push({ r: startR + Kv, c: startC, dir: 1 }); 
 
     window.toothpick_state = {
-      window_rows: window.rows,
-      rows: vRows,
-      cols: vCols,
+      window_rows: rows,
+      rows: rows,
+      cols: cols,
       grid: grid,
       tips: initialTips,
       generation: 1,
@@ -74,7 +89,14 @@ export default (this_animation) => {
           
           let dr = 0; 
           let dc = 0;
-          if (dir === 1) dc = 1; else dr = 1;
+          let K = 0;
+          if (dir === 1) { // Growth is Horizontal
+              dc = 1;
+              K = Kh;
+          } else { // Growth is Vertical
+              dr = 1;
+              K = Kv;
+          }
 
           // Check if endpoints collide with OLD grid
           const endpoints = [
@@ -107,8 +129,15 @@ export default (this_animation) => {
           const r = tip.r;
           const c = tip.c;
           const dir = tip.dir;
-          let dr = 0; let dc = 0;
-          if (dir === 1) dc = 1; else dr = 1;
+          let dr = 0; let dc = 0; let K = 0;
+          
+          if (dir === 1) { // Growth is Horizontal
+              dc = 1;
+              K = Kh;
+          } else { // Growth is Vertical
+              dr = 1;
+              K = Kv;
+          }
           
           for (let k = -K; k <= K; k++) {
               const nr = r + k * dr;
@@ -116,12 +145,18 @@ export default (this_animation) => {
               
               if (nr >= 0 && nr < state.rows && nc >= 0 && nc < state.cols) {
                   const idx = nr * state.cols + nc;
-                  const isVert = (dir === 0);
-                  const mask = isVert ? 1 : 2;
+                  
+                  let mask = 0;
+                  if (dir === 1) { // Horizontal line
+                      if (k > -K) mask |= 4; // Left connection
+                      if (k < K)  mask |= 8; // Right connection
+                  } else { // Vertical line
+                      if (k > -K) mask |= 1; // Up connection
+                      if (k < K)  mask |= 2; // Down connection
+                  }
                   
                   state.grid[idx] |= mask;
-                  
-                  setHalfPixel(window.canvas, nc, nr, true, HALF_PIXEL_RULES);
+                  setCharAtIndex(window.canvas, get_canvas_index(state.cols, nc, nr), CHAR_MAP[state.grid[idx]]);
               }
           }
           state.toothpick_count++;
@@ -147,3 +182,4 @@ export default (this_animation) => {
     requestAnimationFrame(this_animation.bind(null, this_animation));
   }, 100); 
 };
+
