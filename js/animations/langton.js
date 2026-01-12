@@ -39,14 +39,46 @@ export default (this_animation) => {
         }
         
         var rule_index = rulesets.index_of(window.ant_rule);
-        tooltip(`langton<br>${window.ant_rule}`, rule_index);
         
-        // Init Ant
-        window.ant = {
-            x: Math.floor(window.columns / 2),
-            y: Math.floor(window.rows / 2),
-            dir: 0 // 0: Up, 1: Right, 2: Down, 3: Left
-        };
+        // Init Ants
+        window.ants = [];
+        const num_ants = Math.min(
+            Math.floor(Math.random() * 6) + 1,
+            Math.floor(Math.random() * 6) + 1,
+            Math.floor(Math.random() * 6) + 1
+        );
+        const rule_len = window.ant_rule.length;
+        
+        for (let i = 0; i < num_ants; i++) {
+            // Each ant gets a rule of the same length
+            let ant_rule = window.ant_rule;
+            if (i > 0 && Math.random() < 0.5) {
+                // Generate a random rule of the same length
+                ant_rule = "";
+                for (let j = 0; j < rule_len; j++) {
+                    ant_rule += Math.random() < 0.5 ? "R" : "L";
+                }
+            }
+
+            if (num_ants === 1) {
+                window.ants.push({
+                    x: Math.floor(window.columns / 2),
+                    y: Math.floor(window.rows / 2),
+                    dir: 0,
+                    rule: ant_rule
+                });
+            } else {
+                window.ants.push({
+                    x: Math.floor(Math.random() * window.columns),
+                    y: Math.floor(Math.random() * window.rows),
+                    dir: Math.floor(Math.random() * 4),
+                    rule: ant_rule
+                });
+            }
+        }
+        
+        let rules_text = window.ants.map(a => a.rule).join("<br>");
+        tooltip(`langton<br>${rules_text}`, rule_index);
         
         // Init Grid
         window.ant_grid = new Uint8Array(window.columns * window.rows).fill(0);
@@ -80,56 +112,64 @@ export default (this_animation) => {
     
     // --- Simulation Steps ---
     for (let s = 0; s < steps_per_frame; s++) {
-        let x = window.ant.x;
-        let y = window.ant.y;
-        
-        // Wrap coordinates (Toroidal)
-        if (x < 0) x = window.columns - 1;
-        if (x >= window.columns) x = 0;
-        if (y < 0) y = window.rows - 1;
-        if (y >= window.rows) y = 0;
-        
-        let idx = y * window.columns + x;
-        let current_state = window.ant_grid[idx];
-        
-        // Apply Rule
-        // 1. Turn based on current state
-        let turn = rule[current_state]; // 'R' or 'L'
-        
-        if (turn === 'R') {
-            window.ant.dir = (window.ant.dir + 1) % 4;
-        } else if (turn === 'L') {
-            window.ant.dir = (window.ant.dir + 3) % 4; // -1 equivalent
-        } else if (turn === 'U') {
-             window.ant.dir = (window.ant.dir + 2) % 4;
+        for (let a = 0; a < window.ants.length; a++) {
+            let ant = window.ants[a];
+            let x = ant.x;
+            let y = ant.y;
+            
+            // Wrap coordinates (Toroidal)
+            if (x < 0) x = window.columns - 1;
+            if (x >= window.columns) x = 0;
+            if (y < 0) y = window.rows - 1;
+            if (y >= window.rows) y = 0;
+            
+            let idx = y * window.columns + x;
+            let current_state = window.ant_grid[idx];
+            
+            // Apply Rule
+            // 1. Turn based on current state
+            let turn = ant.rule[current_state]; // 'R' or 'L'
+            
+            if (turn === 'R') {
+                ant.dir = (ant.dir + 1) % 4;
+            } else if (turn === 'L') {
+                ant.dir = (ant.dir + 3) % 4; // -1 equivalent
+            } else if (turn === 'U') {
+                 ant.dir = (ant.dir + 2) % 4;
+            }
+            
+            // 2. Change color
+            let next_state = (current_state + 1) % num_states;
+            window.ant_grid[idx] = next_state;
+            
+            // 3. Move forward
+            ant.x = x + directions[ant.dir][0];
+            ant.y = y + directions[ant.dir][1];
+            
+            // Wrap check for next iteration's read
+            if (ant.x < 0) ant.x = window.columns - 1;
+            if (ant.x >= window.columns) ant.x = 0;
+            if (ant.y < 0) ant.y = window.rows - 1;
+            if (ant.y >= window.rows) ant.y = 0;
         }
-        
-        // 2. Change color
-        let next_state = (current_state + 1) % num_states;
-        window.ant_grid[idx] = next_state;
-        
-        // 3. Move forward
-        window.ant.x = x + directions[window.ant.dir][0];
-        window.ant.y = y + directions[window.ant.dir][1];
-        
-        // Wrap check for next iteration's read
-        if (window.ant.x < 0) window.ant.x = window.columns - 1;
-        if (window.ant.x >= window.columns) window.ant.x = 0;
-        if (window.ant.y < 0) window.ant.y = window.rows - 1;
-        if (window.ant.y >= window.rows) window.ant.y = 0;
     }
     
     // --- Rendering ---
     let out = "";
-    // We also want to draw the ant on top
-    let ant_idx = window.ant.y * window.columns + window.ant.x;
+    // We also want to draw the ants on top
     const ant_chars = "^>v<";
+    const ant_map = new Map();
+    for (let a = 0; a < window.ants.length; a++) {
+        let ant = window.ants[a];
+        let idx = ant.y * window.columns + ant.x;
+        ant_map.set(idx, ant_chars[ant.dir]);
+    }
     
     for (let y = 0; y < window.rows; y++) {
         for (let x = 0; x < window.columns; x++) {
             let i = y * window.columns + x;
-            if (i === ant_idx) {
-                out += ant_chars[window.ant.dir];
+            if (ant_map.has(i)) {
+                out += ant_map.get(i);
             } else {
                 out += palette[window.ant_grid[i]];
             }
