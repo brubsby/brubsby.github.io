@@ -49,7 +49,8 @@ export const animations_data = [
     { file: "maurer.js", weight: 2, description: "maurer roses" },
     { file: "sandpile.js", weight: 3, description: "abelian sand pile" },
     { file: "metaballs.js", weight: 3, description: "metaballs" },
-    { file: "toothpick.js", weight: 2, description: "toothpick sequence" }
+    { file: "toothpick.js", weight: 2, description: "toothpick sequence" },
+    { file: "ising.js", weight: 3, description: "ising model of ferromagnetism in statistical mechanics" }
 ];
 
 export const animations = new ObjectSampler();
@@ -65,7 +66,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* rotozoom
 	* ant colony
 	* daisyworld
-	* ising model
 	* galton board
 	* tunnel effect
 	* water ripples
