@@ -74,6 +74,7 @@ for (let i = 0; i < animations_data.length; i++) {
 	* hopf fibration
 	* spinning donut
 	* double pendulum
+	* night sky stars
 	* marching squares
 	* fourier epicycles
 	* inverted pendulum
