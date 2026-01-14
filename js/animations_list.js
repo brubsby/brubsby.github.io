@@ -50,7 +50,8 @@ export const animations_data = [
     { file: "sandpile.js", weight: 3, description: "abelian sand pile" },
     { file: "metaballs.js", weight: 3, description: "metaballs" },
     { file: "toothpick.js", weight: 2, description: "toothpick sequence" },
-    { file: "ising.js", weight: 3, description: "ising model of ferromagnetism in statistical mechanics" }
+    { file: "ising.js", weight: 3, description: "ising model of ferromagnetism in statistical mechanics" },
+    { file: "stars.js", weight: 2, description: "accurate night sky" }
 ];
 
 export const animations = new ObjectSampler();
@@ -74,7 +75,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* hopf fibration
 	* spinning donut
 	* double pendulum
-	* night sky stars
 	* marching squares
 	* fourier epicycles
 	* inverted pendulum
