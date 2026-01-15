@@ -1,6 +1,46 @@
 import { setHalfPixel, tooltip, ObjectSampler, setCharAtIndex, get_canvas_index } from '../utils.js';
 import { stars_data } from '../stars_data.js';
 
+function getSunPos(date) {
+  const J2000 = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
+  const d = (date - J2000) / 86400000;
+  const rad = Math.PI / 180;
+  
+  const L = (280.460 + 0.9856474 * d) % 360;
+  const g = (357.528 + 0.9856003 * d) * rad;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * rad;
+  const obl = (23.439 - 0.0000004 * d) * rad;
+  
+  const ra = Math.atan2(Math.cos(obl) * Math.sin(lam), Math.cos(lam)) / rad;
+  const dec = Math.asin(Math.sin(obl) * Math.sin(lam)) / rad;
+  
+  return { ra: (ra + 360) % 360 / 15, dec: dec };
+}
+
+function getMoonPos(date) {
+  const J2000 = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
+  const d = (date - J2000) / 86400000;
+  const rad = Math.PI / 180;
+  
+  const L = (218.316 + 13.176396 * d) * rad;
+  const M = (134.963 + 13.064993 * d) * rad;
+  const F = (93.272 + 13.229350 * d) * rad;
+  
+  const lam = L + 6.289 * rad * Math.sin(M);
+  const bet = 5.128 * rad * Math.sin(F);
+  
+  const obl = (23.439 - 0.0000004 * d) * rad;
+  
+  const x = Math.cos(bet) * Math.cos(lam);
+  const y = Math.cos(obl) * Math.cos(bet) * Math.sin(lam) - Math.sin(obl) * Math.sin(bet);
+  const z = Math.sin(obl) * Math.cos(bet) * Math.sin(lam) + Math.cos(obl) * Math.sin(bet);
+  
+  const ra = Math.atan2(y, x) / rad;
+  const dec = Math.asin(z) / rad;
+  
+  return { ra: (ra + 360) % 360 / 15, dec: dec };
+}
+
 function toAltAz(ra, dec, lat, lon, date) {
   const J2000 = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
   const d = (date - J2000) / 86400000;
@@ -157,6 +197,35 @@ export default (this_animation) => {
         }
       }
     }
+  });
+
+  const bodies = [
+      { name: "Sun", pos: getSunPos(now), char: 'S' },
+      { name: "Moon", pos: getMoonPos(now), char: 'M' }
+  ];
+
+  bodies.forEach(body => {
+      const pos = toAltAz(body.pos.ra, body.pos.dec, userLocation.lat, userLocation.lon, now);
+      if (pos.alt > 0) {
+          const r = scale * Math.tan((90 - pos.alt) * Math.PI / 360);
+          const theta = (pos.az - 90) * Math.PI / 180;
+          const x = Math.round(center_x - r * Math.cos(theta));
+          const y = Math.round(center_y + r * Math.sin(theta));
+          
+          if (x >= 0 && x < width && y >= 0 && y < height) {
+              const idx = get_canvas_index(window.columns, x, Math.floor(y / 2));
+              setCharAtIndex(window.canvas, idx, body.char);
+              
+              // Check mouse
+              const dx = x - mouse_grid_x;
+              const dy = y - mouse_grid_y;
+              const d2 = dx*dx + dy*dy;
+              if (d2 < closestDistSq) {
+                  closestDistSq = d2;
+                  closestStarName = body.name;
+              }
+          }
+      }
   });
 
   if (closestStarName) {
