@@ -107,9 +107,6 @@ export default (this_animation) => {
     window.sorted_stars = [...stars_data].sort((a, b) => b[2] - a[2]);
   }
 
-  const minMag = -1.5;
-  const magRange = magThreshold - minMag;
-
   // Mouse calc
   let mouse_grid_x = -1000;
   let mouse_grid_y = -1000;
@@ -139,12 +136,12 @@ export default (this_animation) => {
       const y = Math.round(center_y + r * Math.sin(theta));
 
       if (x >= 0 && x < width && y >= 0 && y < height) {
-        if (mag > magThreshold - 0.25 * magRange) {
+        if (mag > 3.25) {
           setHalfPixel(window.canvas, x, y);
         } else {
           let char = '+';
-          if (mag <= magThreshold - 0.75 * magRange) char = 'o';
-          else if (mag <= magThreshold - 0.50 * magRange) char = '*';
+          if (mag <= 1.0) char = 'o';
+          else if (mag <= 2.0) char = '*';
           
           const idx = get_canvas_index(window.columns, x, Math.floor(y / 2));
           setCharAtIndex(window.canvas, idx, char);
