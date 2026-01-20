@@ -21,14 +21,11 @@ export default (this_animation) => {
         const s2 = 0.20 + Math.random() * 0.40;
         const density = Math.abs(s1 - target) < Math.abs(s2 - target) ? s1 : s2;
         
-        for (let i = 0; i < window.bml_grid.length; i++) {
-            if (Math.random() < density) {
-                // Split 50/50 between East and South moving cars
-                window.bml_grid[i] = Math.random() < 0.5 ? 1 : 2;
-            } else {
-                window.bml_grid[i] = 0;
-            }
-        }
+        window.bml_target_density = density;
+        
+        // Start empty for "feed in" effect
+        // 0: Empty (.), 1: East (>), 2: South (v)
+        // Grid is already zero-initialized by new Int8Array
         
         first_frame_tooltip(`bml<br>d=${density.toFixed(3)}`);
         
@@ -48,12 +45,47 @@ export default (this_animation) => {
     // Update Logic
     // Odd steps: Move East (>)
     // Even steps: Move South (v)
-    const move_east = window.frame_count % 2 === 0; // Let's start with East on 0 (even) for simplicity, or swap.
-    // Actually, usually it alternates. Let's say Even=East, Odd=South.
+    const move_east = window.frame_count % 2 === 0; 
     
     const next_grid = new Int8Array(window.bml_grid); // Copy current state
     const rows = window.rows;
     const cols = window.columns;
+
+    // Feed in new cars if below density
+    // Count current cars first (optimization: maybe maintain count? but grid is small enough)
+    let current_cars = 0;
+    for(let i=0; i<window.bml_grid.length; i++) {
+        if(window.bml_grid[i] !== 0) current_cars++;
+    }
+    const current_density = current_cars / window.bml_grid.length;
+
+    if (current_density < window.bml_target_density) {
+        // Injection Phase
+        // If moving East, inject at Left Edge (Col 0)
+        // If moving South, inject at Top Edge (Row 0)
+        const injection_prob = 0.1; 
+
+        if (move_east) {
+            for (let r = 0; r < rows; r++) {
+                const idx = r * cols + 0;
+                // Only inject if empty
+                if (window.bml_grid[idx] === 0 && Math.random() < injection_prob) {
+                    // We modify window.bml_grid directly so it can move immediately in this step
+                    // OR we modify next_grid? 
+                    // To be safe and let them "enter" naturally, let's modify bml_grid
+                    // so the movement logic picks them up.
+                    window.bml_grid[idx] = 1;
+                }
+            }
+        } else {
+            for (let c = 0; c < cols; c++) {
+                const idx = 0 * cols + c;
+                if (window.bml_grid[idx] === 0 && Math.random() < injection_prob) {
+                    window.bml_grid[idx] = 2;
+                }
+            }
+        }
+    }
     
     if (move_east) {
         // Move East-moving cars (1)
