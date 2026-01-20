@@ -52,7 +52,8 @@ export const animations_data = [
     { file: "toothpick.js", weight: 2, description: "toothpick sequence" },
     { file: "ising.js", weight: 3, description: "ising model of ferromagnetism in statistical mechanics" },
     { file: "stars.js", weight: 2, description: "accurate night sky" },
-    { file: "rotozoom.js", weight: 2, description: "classic rotozoom effect" }
+    { file: "rotozoom.js", weight: 2, description: "classic rotozoom effect" },
+    { file: "bml.js", weight: 3, description: "biham–middleton–levine traffic model" }
 ];
 
 export const animations = new ObjectSampler();
@@ -100,7 +101,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* schelling's model of segregation
 	* pathfinding algorithms (a*, etc.)
 	* belousov-zhabotinsky (bz) reaction
-	* biham–middleton–levine traffic model
 	* maze generation (wilson's algorithm)
 	* eden growth model (lichen/tumor growth)
 	* more triangle based meshes for raster.js
