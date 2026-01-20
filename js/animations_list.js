@@ -51,7 +51,8 @@ export const animations_data = [
     { file: "metaballs.js", weight: 3, description: "metaballs" },
     { file: "toothpick.js", weight: 2, description: "toothpick sequence" },
     { file: "ising.js", weight: 3, description: "ising model of ferromagnetism in statistical mechanics" },
-    { file: "stars.js", weight: 2, description: "accurate night sky" }
+    { file: "stars.js", weight: 2, description: "accurate night sky" },
+    { file: "rotozoom.js", weight: 2, description: "classic rotozoom effect" }
 ];
 
 export const animations = new ObjectSampler();
@@ -64,7 +65,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* xylem
 	* hyphae
 	* sundial
-	* rotozoom
 	* ant colony
 	* daisyworld
 	* galton board
@@ -88,7 +88,6 @@ for (let i = 0; i < animations_data.length; i++) {
 	* lattice boltzman method
 	* lenia (continuous life)
 	* sir/seir epidemic model
-	* add more ants to langton
 	* differential line growth
 	* run and tumble chemotaxis
 	* kuramoto model (fireflies)
