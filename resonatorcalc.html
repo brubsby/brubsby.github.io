@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="assets/favicon.png" rel="icon" data-n-head="true" type="image/png">
+    <meta name="title" content="Resonator Calc">
+    <meta name="description" content="Calculate how many fully deployed portals you can build with your current inventory.">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <title>Resonator Calc</title>
+    <style>
+
+    @font-face {
+      font-family: 'DF';
+      src: url('assets/LessPerfectDOSVGA.woff') format('woff'),
+       url('assets/LessPerfectDOSVGA.ttf') format('truetype');
+    }
+
+    @media (prefers-color-scheme: no-preference), (prefers-color-scheme: dark) {
+      body {
+        background: black;
+        color: white;
+      }
+      input {
+        background: #222;
+        color: white;
+        border: 1px solid #555;
+      }
+      button {
+        background: #333;
+        color: white;
+        border: 1px solid #666;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      body {
+        background: white;
+        color: black;
+      }
+      input {
+        background: #eee;
+        color: black;
+        border: 1px solid #ccc;
+      }
+      button {
+        background: #ddd;
+        color: black;
+        border: 1px solid #aaa;
+      }
+    }
+
+    @media (orientation: landscape) {
+        div.contentcontainer {
+          grid-area: 1 / 2 / span 2 / span 1;
+        }
+        div.menu {
+          grid-area: 1 / 1 / span 2 / span 1;
+        }
+      }
+
+    @media (orientation: portrait) {
+      div.contentcontainer {
+        grid-area: 2 / 1 / span 1 / span 2;
+      }
+      div.menu {
+        grid-area: 1 / 1 / span 1 / span 2;
+      }
+    }
+
+    html {
+      display: flex;
+      min-height: 100%;
+      position: relative;
+    }
+
+    body {
+      font-size: 1.25em;
+      font-family: Courier, monospace;
+      margin: auto;
+    }
+
+    div.container {
+      display: grid;
+      justify-content: center;
+      align-content: center;
+      grid-column-gap: 68px;
+      grid-row-gap: 10px;
+      grid-template-columns: min-content auto;
+      grid-template-rows: min-content auto;
+      height: 100%;
+      margin: 1em;
+    }
+    div.contentcontainer {
+      width: min(100vw - 2em, 640px);
+    }
+    div {
+    	font-weight: normal;
+    }
+    ol, li {
+      list-style-type: none;
+      padding-left: 8px;
+      white-space: nowrap;
+    }
+    li {
+      line-height: 1.25em;
+      -webkit-touch-callout: none;
+        -webkit-user-select: none;
+         -khtml-user-select: none;
+           -moz-user-select: none;
+            -ms-user-select: none;
+                user-select: none;
+    }
+    div.menu {
+      margin: 0;
+      justify-self: center;
+    }
+    h1 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: 1.5em;
+    }
+    h2 {
+      margin: 0;
+      font-weight: normal;
+      style: none;
+      font-size: 1em;
+      font-family: "DF", monospace;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      margin-bottom: 0.5em;
+    }
+    h3 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: .85em;
+      font-family: "DF", monospace;
+    }
+    h3#tooltip {
+      position: absolute;
+      top: .25em;
+      left: .25em;
+    }
+    h4 {
+      margin: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      style: none;
+      font-size: .75em;
+      font-family: "DF", monospace;
+    }
+    h4 > a {
+      text-decoration: underline;
+    }
+    h4 > a:hover {
+      font-style: oblique;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    a:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    hr {
+      border-style: solid;
+      margin-top: .3em;
+      margin-bottom: .3em;
+    }
+    
+    .input-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      align-items: center;
+    }
+    .input-row label {
+      font-family: "DF", monospace;
+      width: 40px;
+    }
+    .input-row input {
+      font-family: Courier, monospace;
+      font-size: 1em;
+      width: 100px;
+      text-align: right;
+    }
+    .buttons {
+      margin-top: 1em;
+      margin-bottom: 1em;
+      text-align: right;
+    }
+    button {
+      font-family: "DF", monospace;
+      font-size: 1em;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    textarea.results {
+      color: inherit;
+      background-color: inherit;
+      width: 100%;
+      height: 200px;
+      font-family: Courier, monospace;
+      border: 1px solid #777;
+    }
+    </style>
+    </head>
+    <body>
+      <h3 id="tooltip">&nbsp</h3>
+      <div class="container">
+        <div class="menu">
+          <h4><a onmouseover="tooltip('visit my homepage!')" onmouseout="tooltip()"  href="index.html">BRUBSBY'S</a></h4>
+          <h1>RESONATOR CALC</h1>
+          <br>
+          <h2>RESONATOR COUNTS:</h2>
+          <div id="inputs">
+            <div class="input-row"><label for="r8">L8</label><input type="number" id="r8" min="0" value="0"></div>
+            <div class="input-row"><label for="r7">L7</label><input type="number" id="r7" min="0" value="0"></div>
+            <div class="input-row"><label for="r6">L6</label><input type="number" id="r6" min="0" value="0"></div>
+            <div class="input-row"><label for="r5">L5</label><input type="number" id="r5" min="0" value="0"></div>
+            <div class="input-row"><label for="r4">L4</label><input type="number" id="r4" min="0" value="0"></div>
+            <div class="input-row"><label for="r3">L3</label><input type="number" id="r3" min="0" value="0"></div>
+            <div class="input-row"><label for="r2">L2</label><input type="number" id="r2" min="0" value="0"></div>
+            <div class="input-row"><label for="r1">L1</label><input type="number" id="r1" min="0" value="0"></div>
+          </div>
+          <div class="buttons">
+             <button id="clear">CLEAR</button>
+             <button id="calculate">CALCULATE</button>
+          </div>
+        </div>
+        <div class="contentcontainer">
+          <h2>RESULTS:</h2>
+          <textarea readonly class="results" id="output"></textarea>
+        </div>
+      </div>
+
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-152720878-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-152720878-1');
+      </script>
+      <script>
+
+      $(document).ready(function() {
+        // Inputs hardcoded in HTML
+
+        var hasStorage = typeof(Storage) !== "undefined";
+
+        // Load from localStorage
+        if (hasStorage) {
+          for (var i = 1; i <= 8; i++) {
+              var val = localStorage.getItem("r" + i);
+              if (val) $("#r" + i).val(val);
+          }
+        }
+
+        $("#clear").click(function() {
+          $("input[type=number]").val(0);
+          $("#output").val("");
+          if (hasStorage) {
+            for (var i = 1; i <= 8; i++) localStorage.removeItem("r" + i);
+          }
+        });
+
+        $("#calculate").click(function() {
+          calculate(hasStorage);
+        });
+      });
+
+      function tooltip(msg = "") {
+        document.querySelector("h3#tooltip").textContent = msg;
+      }
+
+      function calculate(hasStorage) {
+        // Get counts
+        var counts = {};
+        for (var i = 1; i <= 8; i++) {
+          var val = parseInt($("#r" + i).val()) || 0;
+          counts[i] = val;
+          if (hasStorage) {
+            localStorage.setItem("r" + i, val);
+          }
+        }
+
+        // Constraints per portal for 1 agent
+        var limits = {
+          8: 1,
+          7: 1,
+          6: 2,
+          5: 2,
+          4: 4,
+          3: 4,
+          2: 4,
+          1: 8
+        };
+
+        var portalsBuilt = 0;
+        
+        // Simulation
+        // While we can build a full portal (8 slots)
+        while (true) {
+          var tempCounts = Object.assign({}, counts);
+          var slotsFilled = 0;
+          var portalLimits = {
+             8: 0, 7: 0, 6: 0, 5: 0, 4: 0, 3: 0, 2: 0, 1: 0
+          };
+
+          // Try to fill 8 slots greedily from highest level
+          for (var slot = 0; slot < 8; slot++) {
+            var filledSlot = false;
+            for (var level = 8; level >= 1; level--) {
+               if (tempCounts[level] > 0 && portalLimits[level] < limits[level]) {
+                 tempCounts[level]--;
+                 portalLimits[level]++;
+                 slotsFilled++;
+                 filledSlot = true;
+                 break;
+               }
+            }
+            if (!filledSlot) break; // Ran out of resonators that fit limits
+          }
+
+          if (slotsFilled === 8) {
+            counts = tempCounts; // Commit changes
+            portalsBuilt++;
+          } else {
+            break; // Cannot build more full portals
+          }
+        }
+
+        // Output
+        var output = "Portals Fully Built: " + portalsBuilt + "\n\n";
+        output += "Leftover Resonators:\n";
+        for (var i = 8; i >= 1; i--) {
+          output += "L" + i + ": " + counts[i] + "\n";
+        }
+
+        $("#output").val(output);
+      }
+    </script>
+  </body>
+</html>
